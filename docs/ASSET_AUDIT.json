@@ -1,0 +1,802 @@
+{
+  "schema": "3.0",
+  "sourceKit": "Crystal_Creatures_2D_3D_Game_Asset_Kit_v1_0.zip",
+  "sourceKitSha256": "486a68054d21c4ce1326bd8c4b48e06a0f1b4cd08c22a845e5d89ee194069cf3",
+  "charCount": 24,
+  "characters": [
+    {
+      "id": "pebble_wisp",
+      "name": "Pebble Wisp",
+      "rarity": "common",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/common/pebble_wisp/3d/head.glb",
+          "sizeBytes": 21948,
+          "triangleCount": 1920
+        },
+        "body": {
+          "path": "app/assets/characters/common/pebble_wisp/3d/body.glb",
+          "sizeBytes": 6784,
+          "triangleCount": 320
+        },
+        "tail": {
+          "path": "app/assets/characters/common/pebble_wisp/3d/tail.glb",
+          "sizeBytes": 4428,
+          "triangleCount": 104
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/common/pebble_wisp/3d/preview_10_parts.glb",
+          "sizeBytes": 44004,
+          "triangleCount": 4584
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/pebble_wisp_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/pebble_wisp.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/pebble_wisp_8frames_192.png"
+      }
+    },
+    {
+      "id": "leafling",
+      "name": "Leafling",
+      "rarity": "common",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/common/leafling/3d/head.glb",
+          "sizeBytes": 23356,
+          "triangleCount": 1936
+        },
+        "body": {
+          "path": "app/assets/characters/common/leafling/3d/body.glb",
+          "sizeBytes": 4964,
+          "triangleCount": 112
+        },
+        "tail": {
+          "path": "app/assets/characters/common/leafling/3d/tail.glb",
+          "sizeBytes": 4460,
+          "triangleCount": 104
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/common/leafling/3d/preview_10_parts.glb",
+          "sizeBytes": 48904,
+          "triangleCount": 2936
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/leafling_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/leafling.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/leafling_8frames_192.png"
+      }
+    },
+    {
+      "id": "bubbletail",
+      "name": "Bubbletail",
+      "rarity": "common",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/common/bubbletail/3d/head.glb",
+          "sizeBytes": 21980,
+          "triangleCount": 1920
+        },
+        "body": {
+          "path": "app/assets/characters/common/bubbletail/3d/body.glb",
+          "sizeBytes": 6800,
+          "triangleCount": 320
+        },
+        "tail": {
+          "path": "app/assets/characters/common/bubbletail/3d/tail.glb",
+          "sizeBytes": 4460,
+          "triangleCount": 104
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/common/bubbletail/3d/preview_10_parts.glb",
+          "sizeBytes": 44068,
+          "triangleCount": 4584
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/bubbletail_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/bubbletail.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/bubbletail_8frames_192.png"
+      }
+    },
+    {
+      "id": "rockcoil",
+      "name": "Rockcoil",
+      "rarity": "common",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/common/rockcoil/3d/head.glb",
+          "sizeBytes": 21964,
+          "triangleCount": 1920
+        },
+        "body": {
+          "path": "app/assets/characters/common/rockcoil/3d/body.glb",
+          "sizeBytes": 4640,
+          "triangleCount": 104
+        },
+        "tail": {
+          "path": "app/assets/characters/common/rockcoil/3d/tail.glb",
+          "sizeBytes": 4460,
+          "triangleCount": 104
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/common/rockcoil/3d/preview_10_parts.glb",
+          "sizeBytes": 44280,
+          "triangleCount": 2856
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/rockcoil_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/rockcoil.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/rockcoil_8frames_192.png"
+      }
+    },
+    {
+      "id": "aqua_crystal",
+      "name": "Aqua Crystal",
+      "rarity": "uncommon",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/uncommon/aqua_crystal/3d/head.glb",
+          "sizeBytes": 24212,
+          "triangleCount": 1952
+        },
+        "body": {
+          "path": "app/assets/characters/uncommon/aqua_crystal/3d/body.glb",
+          "sizeBytes": 3956,
+          "triangleCount": 96
+        },
+        "tail": {
+          "path": "app/assets/characters/uncommon/aqua_crystal/3d/tail.glb",
+          "sizeBytes": 4412,
+          "triangleCount": 104
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/uncommon/aqua_crystal/3d/preview_10_parts.glb",
+          "sizeBytes": 42144,
+          "triangleCount": 2824
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/aqua_crystal_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/aqua_crystal.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/aqua_crystal_8frames_192.png"
+      }
+    },
+    {
+      "id": "forest_sprite",
+      "name": "Forest Sprite",
+      "rarity": "uncommon",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/uncommon/forest_sprite/3d/head.glb",
+          "sizeBytes": 23324,
+          "triangleCount": 1936
+        },
+        "body": {
+          "path": "app/assets/characters/uncommon/forest_sprite/3d/body.glb",
+          "sizeBytes": 4936,
+          "triangleCount": 112
+        },
+        "tail": {
+          "path": "app/assets/characters/uncommon/forest_sprite/3d/tail.glb",
+          "sizeBytes": 4428,
+          "triangleCount": 104
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/uncommon/forest_sprite/3d/preview_10_parts.glb",
+          "sizeBytes": 48844,
+          "triangleCount": 2936
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/forest_sprite_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/forest_sprite.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/forest_sprite_8frames_192.png"
+      }
+    },
+    {
+      "id": "flame_wisp",
+      "name": "Flame Wisp",
+      "rarity": "uncommon",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/uncommon/flame_wisp/3d/head.glb",
+          "sizeBytes": 24244,
+          "triangleCount": 1952
+        },
+        "body": {
+          "path": "app/assets/characters/uncommon/flame_wisp/3d/body.glb",
+          "sizeBytes": 3972,
+          "triangleCount": 96
+        },
+        "tail": {
+          "path": "app/assets/characters/uncommon/flame_wisp/3d/tail.glb",
+          "sizeBytes": 4428,
+          "triangleCount": 104
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/uncommon/flame_wisp/3d/preview_10_parts.glb",
+          "sizeBytes": 42176,
+          "triangleCount": 2824
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/flame_wisp_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/flame_wisp.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/flame_wisp_8frames_192.png"
+      }
+    },
+    {
+      "id": "frost_scale",
+      "name": "Frost Scale",
+      "rarity": "uncommon",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/uncommon/frost_scale/3d/head.glb",
+          "sizeBytes": 24240,
+          "triangleCount": 1952
+        },
+        "body": {
+          "path": "app/assets/characters/uncommon/frost_scale/3d/body.glb",
+          "sizeBytes": 3968,
+          "triangleCount": 96
+        },
+        "tail": {
+          "path": "app/assets/characters/uncommon/frost_scale/3d/tail.glb",
+          "sizeBytes": 4424,
+          "triangleCount": 104
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/uncommon/frost_scale/3d/preview_10_parts.glb",
+          "sizeBytes": 42168,
+          "triangleCount": 2824
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/frost_scale_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/frost_scale.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/frost_scale_8frames_192.png"
+      }
+    },
+    {
+      "id": "crystal_fox",
+      "name": "Crystal Fox",
+      "rarity": "rare",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/rare/crystal_fox/3d/head.glb",
+          "sizeBytes": 23280,
+          "triangleCount": 1936
+        },
+        "body": {
+          "path": "app/assets/characters/rare/crystal_fox/3d/body.glb",
+          "sizeBytes": 4440,
+          "triangleCount": 104
+        },
+        "tail": {
+          "path": "app/assets/characters/rare/crystal_fox/3d/tail.glb",
+          "sizeBytes": 4424,
+          "triangleCount": 104
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/rare/crystal_fox/3d/preview_10_parts.glb",
+          "sizeBytes": 45180,
+          "triangleCount": 2872
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/crystal_fox_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/crystal_fox.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/crystal_fox_8frames_192.png"
+      }
+    },
+    {
+      "id": "lunar_bunny",
+      "name": "Lunar Bunny",
+      "rarity": "rare",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/rare/lunar_bunny/3d/head.glb",
+          "sizeBytes": 23284,
+          "triangleCount": 1936
+        },
+        "body": {
+          "path": "app/assets/characters/rare/lunar_bunny/3d/body.glb",
+          "sizeBytes": 4440,
+          "triangleCount": 104
+        },
+        "tail": {
+          "path": "app/assets/characters/rare/lunar_bunny/3d/tail.glb",
+          "sizeBytes": 4428,
+          "triangleCount": 104
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/rare/lunar_bunny/3d/preview_10_parts.glb",
+          "sizeBytes": 45184,
+          "triangleCount": 2872
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/lunar_bunny_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/lunar_bunny.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/lunar_bunny_8frames_192.png"
+      }
+    },
+    {
+      "id": "thunder_cub",
+      "name": "Thunder Cub",
+      "rarity": "rare",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/rare/thunder_cub/3d/head.glb",
+          "sizeBytes": 23284,
+          "triangleCount": 1936
+        },
+        "body": {
+          "path": "app/assets/characters/rare/thunder_cub/3d/body.glb",
+          "sizeBytes": 4428,
+          "triangleCount": 104
+        },
+        "tail": {
+          "path": "app/assets/characters/rare/thunder_cub/3d/tail.glb",
+          "sizeBytes": 4412,
+          "triangleCount": 104
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/rare/thunder_cub/3d/preview_10_parts.glb",
+          "sizeBytes": 45172,
+          "triangleCount": 2872
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/thunder_cub_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/thunder_cub.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/thunder_cub_8frames_192.png"
+      }
+    },
+    {
+      "id": "shadow_pup",
+      "name": "Shadow Pup",
+      "rarity": "rare",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/rare/shadow_pup/3d/head.glb",
+          "sizeBytes": 23284,
+          "triangleCount": 1936
+        },
+        "body": {
+          "path": "app/assets/characters/rare/shadow_pup/3d/body.glb",
+          "sizeBytes": 4444,
+          "triangleCount": 104
+        },
+        "tail": {
+          "path": "app/assets/characters/rare/shadow_pup/3d/tail.glb",
+          "sizeBytes": 4428,
+          "triangleCount": 104
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/rare/shadow_pup/3d/preview_10_parts.glb",
+          "sizeBytes": 45188,
+          "triangleCount": 2872
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/shadow_pup_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/shadow_pup.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/shadow_pup_8frames_192.png"
+      }
+    },
+    {
+      "id": "neon_dragonling",
+      "name": "Neon Dragonling",
+      "rarity": "epic",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/epic/neon_dragonling/3d/head.glb",
+          "sizeBytes": 24256,
+          "triangleCount": 1952
+        },
+        "body": {
+          "path": "app/assets/characters/epic/neon_dragonling/3d/body.glb",
+          "sizeBytes": 4436,
+          "triangleCount": 104
+        },
+        "tail": {
+          "path": "app/assets/characters/epic/neon_dragonling/3d/tail.glb",
+          "sizeBytes": 5392,
+          "triangleCount": 120
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/epic/neon_dragonling/3d/preview_10_parts.glb",
+          "sizeBytes": 46920,
+          "triangleCount": 2904
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/neon_dragonling_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/neon_dragonling.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/neon_dragonling_8frames_192.png"
+      }
+    },
+    {
+      "id": "solar_wyvern",
+      "name": "Solar Wyvern",
+      "rarity": "epic",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/epic/solar_wyvern/3d/head.glb",
+          "sizeBytes": 24244,
+          "triangleCount": 1952
+        },
+        "body": {
+          "path": "app/assets/characters/epic/solar_wyvern/3d/body.glb",
+          "sizeBytes": 4424,
+          "triangleCount": 104
+        },
+        "tail": {
+          "path": "app/assets/characters/epic/solar_wyvern/3d/tail.glb",
+          "sizeBytes": 5376,
+          "triangleCount": 120
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/epic/solar_wyvern/3d/preview_10_parts.glb",
+          "sizeBytes": 46904,
+          "triangleCount": 2904
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/solar_wyvern_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/solar_wyvern.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/solar_wyvern_8frames_192.png"
+      }
+    },
+    {
+      "id": "void_serpent",
+      "name": "Void Serpent",
+      "rarity": "epic",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/epic/void_serpent/3d/head.glb",
+          "sizeBytes": 24260,
+          "triangleCount": 1952
+        },
+        "body": {
+          "path": "app/assets/characters/epic/void_serpent/3d/body.glb",
+          "sizeBytes": 4440,
+          "triangleCount": 104
+        },
+        "tail": {
+          "path": "app/assets/characters/epic/void_serpent/3d/tail.glb",
+          "sizeBytes": 5392,
+          "triangleCount": 120
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/epic/void_serpent/3d/preview_10_parts.glb",
+          "sizeBytes": 46920,
+          "triangleCount": 2904
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/void_serpent_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/void_serpent.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/void_serpent_8frames_192.png"
+      }
+    },
+    {
+      "id": "ocean_leviathan",
+      "name": "Ocean Leviathan",
+      "rarity": "epic",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/epic/ocean_leviathan/3d/head.glb",
+          "sizeBytes": 24252,
+          "triangleCount": 1952
+        },
+        "body": {
+          "path": "app/assets/characters/epic/ocean_leviathan/3d/body.glb",
+          "sizeBytes": 4448,
+          "triangleCount": 104
+        },
+        "tail": {
+          "path": "app/assets/characters/epic/ocean_leviathan/3d/tail.glb",
+          "sizeBytes": 5400,
+          "triangleCount": 120
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/epic/ocean_leviathan/3d/preview_10_parts.glb",
+          "sizeBytes": 46956,
+          "triangleCount": 2904
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/ocean_leviathan_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/ocean_leviathan.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/ocean_leviathan_8frames_192.png"
+      }
+    },
+    {
+      "id": "celestial_dragon",
+      "name": "Celestial Dragon",
+      "rarity": "legendary",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/legendary/celestial_dragon/3d/head.glb",
+          "sizeBytes": 26352,
+          "triangleCount": 1984
+        },
+        "body": {
+          "path": "app/assets/characters/legendary/celestial_dragon/3d/body.glb",
+          "sizeBytes": 9708,
+          "triangleCount": 336
+        },
+        "tail": {
+          "path": "app/assets/characters/legendary/celestial_dragon/3d/tail.glb",
+          "sizeBytes": 5420,
+          "triangleCount": 120
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/legendary/celestial_dragon/3d/preview_10_parts.glb",
+          "sizeBytes": 69732,
+          "triangleCount": 4792
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/celestial_dragon_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/celestial_dragon.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/celestial_dragon_8frames_192.png"
+      }
+    },
+    {
+      "id": "crimson_phoenix",
+      "name": "Crimson Phoenix",
+      "rarity": "legendary",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/legendary/crimson_phoenix/3d/head.glb",
+          "sizeBytes": 26312,
+          "triangleCount": 1984
+        },
+        "body": {
+          "path": "app/assets/characters/legendary/crimson_phoenix/3d/body.glb",
+          "sizeBytes": 9664,
+          "triangleCount": 336
+        },
+        "tail": {
+          "path": "app/assets/characters/legendary/crimson_phoenix/3d/tail.glb",
+          "sizeBytes": 5392,
+          "triangleCount": 120
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/legendary/crimson_phoenix/3d/preview_10_parts.glb",
+          "sizeBytes": 69648,
+          "triangleCount": 4792
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/crimson_phoenix_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/crimson_phoenix.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/crimson_phoenix_8frames_192.png"
+      }
+    },
+    {
+      "id": "galactic_serpent",
+      "name": "Galactic Serpent",
+      "rarity": "legendary",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/legendary/galactic_serpent/3d/head.glb",
+          "sizeBytes": 26312,
+          "triangleCount": 1984
+        },
+        "body": {
+          "path": "app/assets/characters/legendary/galactic_serpent/3d/body.glb",
+          "sizeBytes": 9664,
+          "triangleCount": 336
+        },
+        "tail": {
+          "path": "app/assets/characters/legendary/galactic_serpent/3d/tail.glb",
+          "sizeBytes": 5392,
+          "triangleCount": 120
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/legendary/galactic_serpent/3d/preview_10_parts.glb",
+          "sizeBytes": 69648,
+          "triangleCount": 4792
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/galactic_serpent_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/galactic_serpent.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/galactic_serpent_8frames_192.png"
+      }
+    },
+    {
+      "id": "emerald_kirin",
+      "name": "Emerald Kirin",
+      "rarity": "legendary",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/legendary/emerald_kirin/3d/head.glb",
+          "sizeBytes": 24428,
+          "triangleCount": 1952
+        },
+        "body": {
+          "path": "app/assets/characters/legendary/emerald_kirin/3d/body.glb",
+          "sizeBytes": 9708,
+          "triangleCount": 336
+        },
+        "tail": {
+          "path": "app/assets/characters/legendary/emerald_kirin/3d/tail.glb",
+          "sizeBytes": 5424,
+          "triangleCount": 120
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/legendary/emerald_kirin/3d/preview_10_parts.glb",
+          "sizeBytes": 67980,
+          "triangleCount": 4760
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/emerald_kirin_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/emerald_kirin.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/emerald_kirin_8frames_192.png"
+      }
+    },
+    {
+      "id": "infinity_dragon",
+      "name": "Infinity Dragon",
+      "rarity": "mythic",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/mythic/infinity_dragon/3d/head.glb",
+          "sizeBytes": 31032,
+          "triangleCount": 2208
+        },
+        "body": {
+          "path": "app/assets/characters/mythic/infinity_dragon/3d/body.glb",
+          "sizeBytes": 9648,
+          "triangleCount": 336
+        },
+        "tail": {
+          "path": "app/assets/characters/mythic/infinity_dragon/3d/tail.glb",
+          "sizeBytes": 10108,
+          "triangleCount": 344
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/mythic/infinity_dragon/3d/preview_10_parts.glb",
+          "sizeBytes": 73440,
+          "triangleCount": 5240
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/infinity_dragon_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/infinity_dragon.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/infinity_dragon_8frames_192.png"
+      }
+    },
+    {
+      "id": "nebula_phoenix",
+      "name": "Nebula Phoenix",
+      "rarity": "mythic",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/mythic/nebula_phoenix/3d/head.glb",
+          "sizeBytes": 31060,
+          "triangleCount": 2208
+        },
+        "body": {
+          "path": "app/assets/characters/mythic/nebula_phoenix/3d/body.glb",
+          "sizeBytes": 9660,
+          "triangleCount": 336
+        },
+        "tail": {
+          "path": "app/assets/characters/mythic/nebula_phoenix/3d/tail.glb",
+          "sizeBytes": 10136,
+          "triangleCount": 344
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/mythic/nebula_phoenix/3d/preview_10_parts.glb",
+          "sizeBytes": 73484,
+          "triangleCount": 5240
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/nebula_phoenix_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/nebula_phoenix.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/nebula_phoenix_8frames_192.png"
+      }
+    },
+    {
+      "id": "time_wyrm",
+      "name": "Time Wyrm",
+      "rarity": "mythic",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/mythic/time_wyrm/3d/head.glb",
+          "sizeBytes": 31060,
+          "triangleCount": 2208
+        },
+        "body": {
+          "path": "app/assets/characters/mythic/time_wyrm/3d/body.glb",
+          "sizeBytes": 9664,
+          "triangleCount": 336
+        },
+        "tail": {
+          "path": "app/assets/characters/mythic/time_wyrm/3d/tail.glb",
+          "sizeBytes": 10136,
+          "triangleCount": 344
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/mythic/time_wyrm/3d/preview_10_parts.glb",
+          "sizeBytes": 73484,
+          "triangleCount": 5240
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/time_wyrm_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/time_wyrm.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/time_wyrm_8frames_192.png"
+      }
+    },
+    {
+      "id": "astra_leviathan",
+      "name": "Astra Leviathan",
+      "rarity": "mythic",
+      "parts": {
+        "head": {
+          "path": "app/assets/characters/mythic/astra_leviathan/3d/head.glb",
+          "sizeBytes": 31048,
+          "triangleCount": 2208
+        },
+        "body": {
+          "path": "app/assets/characters/mythic/astra_leviathan/3d/body.glb",
+          "sizeBytes": 9664,
+          "triangleCount": 336
+        },
+        "tail": {
+          "path": "app/assets/characters/mythic/astra_leviathan/3d/tail.glb",
+          "sizeBytes": 10140,
+          "triangleCount": 344
+        },
+        "preview_10_parts": {
+          "path": "app/assets/characters/mythic/astra_leviathan/3d/preview_10_parts.glb",
+          "sizeBytes": 73476,
+          "triangleCount": 5240
+        }
+      },
+      "death": {
+        "meshPath": "app/assets/death_effects/3d/astra_leviathan_peak_burst.glb",
+        "configPath": "app/assets/death_effects/configs/astra_leviathan.json",
+        "2dAtlasPath": "app/assets/death_effects/2d/astra_leviathan_8frames_192.png"
+      }
+    }
+  ],
+  "food3D": [
+    "app/assets/food/3d/coin_core.glb",
+    "app/assets/food/3d/crystal_shard.glb",
+    "app/assets/food/3d/element_gem.glb",
+    "app/assets/food/3d/energy_orb.glb",
+    "app/assets/food/3d/event_star.glb",
+    "app/assets/food/3d/galaxy_orb.glb",
+    "app/assets/food/3d/heart_core.glb",
+    "app/assets/food/3d/mystic_cube.glb",
+    "app/assets/food/3d/star_dust.glb",
+    "app/assets/food/3d/xp_crystal.glb"
+  ],
+  "trails3D": [
+    "app/assets/trails/3d/basic_trail_sample.glb",
+    "app/assets/trails/3d/crystal_trail_sample.glb",
+    "app/assets/trails/3d/flame_trail_sample.glb",
+    "app/assets/trails/3d/galaxy_trail_sample.glb",
+    "app/assets/trails/3d/mythic_aura_sample.glb",
+    "app/assets/trails/3d/neon_trail_sample.glb"
+  ],
+  "deathMeshCount": 24,
+  "limitations": [
+    "Mesh presence does not equal premium render fidelity",
+    "death burst is static 3D peak, not animation",
+    "no rigging or PBR texture atlases confirmed"
+  ]
+}

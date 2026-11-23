@@ -1,0 +1,514 @@
+{
+  "schema": "3.0",
+  "primarySource": "PRIMARY_v2",
+  "sourceImages": {
+    "PRIMARY_v2": {
+      "path": "app/references/LOCKED_BLUEPRINT_SHEET_v2.png",
+      "sha256": "22ea093f4d998bfd55eabf7893eae963d1d83d3c163883cc29a34f3bdc41aca9",
+      "dimensions": [
+        1536,
+        1024
+      ]
+    },
+    "SECONDARY_v1": {
+      "path": "app/references/LOCKED_GAME_FLOW_SHEET_v1.png",
+      "sha256": "516350b293efe6a50ec0979298130b78b52a2f94498ab8feaecb67cece164508",
+      "dimensions": [
+        1536,
+        1024
+      ]
+    }
+  },
+  "designBase": {
+    "width": 1920,
+    "height": 1080,
+    "orientation": "landscape",
+    "safeArea": "OS insets; touch target >=48 CSS px",
+    "pixelExact": "not valid until individually art-approved layered screens exist"
+  },
+  "screens": [
+    {
+      "screenId": "S00",
+      "runtimeRoute": "splash",
+      "title": "Splash / loading",
+      "sourcePrimaryPosterPanel": {
+        "source": "PRIMARY_v2",
+        "rectPixels": [
+          8,
+          93,
+          443,
+          331
+        ],
+        "crop": "app/references/00_splash.png",
+        "sha256": "f84444603f2c0df9954603b31a04a1b22f95e89cf462f11f7fdfbf5b358ef47c"
+      },
+      "mustHave": [
+        "crystal environment",
+        "illuminated logo",
+        "loading progress",
+        "3D ornamental glow"
+      ],
+      "targetAnchorRectNormalized": {
+        "logo": [
+          0.22,
+          0.15,
+          0.6,
+          0.4
+        ],
+        "progress": [
+          0.28,
+          0.76,
+          0.44,
+          0.1
+        ]
+      },
+      "fidelity": "REFERENCE_LOCKED_TARGET / NOT PIXEL-ACCEPTED",
+      "functionalStatus": "PARTIAL_LOCAL_PROTOTYPE"
+    },
+    {
+      "screenId": "S01",
+      "runtimeRoute": "consent",
+      "title": "First-use consent",
+      "sourcePrimaryPosterPanel": {
+        "source": "PRIMARY_v2",
+        "rectPixels": [
+          450,
+          93,
+          813,
+          332
+        ],
+        "crop": "app/references/01_consent.png",
+        "sha256": "2b5d25520e5663ecbd799f4b4ec11254cbcfcd5805229f1efad94f27a0e90acd"
+      },
+      "mustHave": [
+        "crystal crest",
+        "legal notice",
+        "explicit checkbox",
+        "accept CTA"
+      ],
+      "targetAnchorRectNormalized": {
+        "dialog": [
+          0.3,
+          0.15,
+          0.4,
+          0.72
+        ],
+        "accept": [
+          0.36,
+          0.75,
+          0.28,
+          0.11
+        ]
+      },
+      "fidelity": "REFERENCE_LOCKED_TARGET / NOT PIXEL-ACCEPTED",
+      "functionalStatus": "PARTIAL_LOCAL_PROTOTYPE"
+    },
+    {
+      "screenId": "S02",
+      "runtimeRoute": "home",
+      "title": "Game lobby",
+      "sourcePrimaryPosterPanel": {
+        "source": "PRIMARY_v2",
+        "rectPixels": [
+          821,
+          92,
+          1528,
+          332
+        ],
+        "crop": "app/references/02_home.png",
+        "sha256": "be1d385a1cf1681aec4288a538adf9c1b7cf25b584c318f5a8c6ea39a2bb92fb"
+      },
+      "mustHave": [
+        "3D creature on pedestal",
+        "player bar",
+        "currencies",
+        "gold Play Arena",
+        "left nav",
+        "bottom creature/shop buttons"
+      ],
+      "targetAnchorRectNormalized": {
+        "profile": [
+          0.04,
+          0.02,
+          0.22,
+          0.1
+        ],
+        "resources": [
+          0.59,
+          0.02,
+          0.37,
+          0.1
+        ],
+        "leftMenu": [
+          0.03,
+          0.23,
+          0.09,
+          0.55
+        ],
+        "hero3D": [
+          0.13,
+          0.13,
+          0.48,
+          0.7
+        ],
+        "playCTA": [
+          0.66,
+          0.28,
+          0.29,
+          0.16
+        ],
+        "quickModes": [
+          0.64,
+          0.47,
+          0.32,
+          0.14
+        ],
+        "bottomNav": [
+          0.22,
+          0.82,
+          0.74,
+          0.14
+        ]
+      },
+      "fidelity": "REFERENCE_LOCKED_TARGET / NOT PIXEL-ACCEPTED",
+      "functionalStatus": "PARTIAL_LOCAL_PROTOTYPE"
+    },
+    {
+      "screenId": "S03",
+      "runtimeRoute": "arena",
+      "title": "Playable 3D arena",
+      "sourcePrimaryPosterPanel": {
+        "source": "PRIMARY_v2",
+        "rectPixels": [
+          8,
+          356,
+          647,
+          617
+        ],
+        "crop": "app/references/03_arena.png",
+        "sha256": "2be04f137dde796b2fefd8024512fe44f28c3e7edeaf584e3196e10e71aa2956"
+      },
+      "mustHave": [
+        "world rendered from 3D models",
+        "collectibles as GLB",
+        "leaderboard",
+        "minimap",
+        "mass objective",
+        "joystick",
+        "boost/powerups"
+      ],
+      "targetAnchorRectNormalized": {
+        "leaderboard": [
+          0.02,
+          0.02,
+          0.22,
+          0.27
+        ],
+        "goal": [
+          0.4,
+          0.02,
+          0.22,
+          0.13
+        ],
+        "minimap": [
+          0.86,
+          0.13,
+          0.11,
+          0.2
+        ],
+        "joystick": [
+          0.03,
+          0.78,
+          0.12,
+          0.2
+        ],
+        "controls": [
+          0.72,
+          0.78,
+          0.25,
+          0.19
+        ]
+      },
+      "fidelity": "REFERENCE_LOCKED_TARGET / NOT PIXEL-ACCEPTED",
+      "functionalStatus": "PARTIAL_LOCAL_PROTOTYPE"
+    },
+    {
+      "screenId": "S04",
+      "runtimeRoute": "revive",
+      "title": "Last chance & revive",
+      "sourcePrimaryPosterPanel": {
+        "source": "PRIMARY_v2",
+        "rectPixels": [
+          655,
+          356,
+          1075,
+          617
+        ],
+        "crop": "app/references/04_revive.png",
+        "sha256": "07d1c340c84e1584c6fa3960d2a66bfd4c3ca21fe613149deedacc097c9e149f"
+      },
+      "mustHave": [
+        "darkened match",
+        "3D burst",
+        "countdown circle",
+        "rank/mass",
+        "revive/skip"
+      ],
+      "targetAnchorRectNormalized": {
+        "dialog": [
+          0.27,
+          0.11,
+          0.46,
+          0.79
+        ],
+        "countdown": [
+          0.45,
+          0.35,
+          0.1,
+          0.17
+        ],
+        "actions": [
+          0.3,
+          0.71,
+          0.4,
+          0.13
+        ]
+      },
+      "fidelity": "REFERENCE_LOCKED_TARGET / NOT PIXEL-ACCEPTED",
+      "functionalStatus": "PARTIAL_LOCAL_PROTOTYPE"
+    },
+    {
+      "screenId": "S05",
+      "runtimeRoute": "result",
+      "title": "Match result",
+      "sourcePrimaryPosterPanel": {
+        "source": "PRIMARY_v2",
+        "rectPixels": [
+          1084,
+          356,
+          1529,
+          616
+        ],
+        "crop": "app/references/05_results.png",
+        "sha256": "3060f85ba8a103b3df1bd33fd68898cba0e4ce05081b73ea6e81a40eca2dad7d"
+      },
+      "mustHave": [
+        "gold trophy 3D visual target",
+        "rank",
+        "score/defeats/lifetime/XP",
+        "share/restart/home"
+      ],
+      "targetAnchorRectNormalized": {
+        "trophy": [
+          0.42,
+          0.1,
+          0.18,
+          0.36
+        ],
+        "stats": [
+          0.28,
+          0.52,
+          0.44,
+          0.2
+        ],
+        "actions": [
+          0.22,
+          0.8,
+          0.56,
+          0.13
+        ]
+      },
+      "fidelity": "REFERENCE_LOCKED_TARGET / NOT PIXEL-ACCEPTED",
+      "functionalStatus": "PARTIAL_LOCAL_PROTOTYPE"
+    },
+    {
+      "screenId": "S06",
+      "runtimeRoute": "shop",
+      "title": "Shop: offers",
+      "sourcePrimaryPosterPanel": {
+        "source": "PRIMARY_v2",
+        "rectPixels": [
+          8,
+          640,
+          385,
+          859
+        ],
+        "crop": "app/references/06_shop_offers.png",
+        "sha256": "c394c0006254feb78436e55ef7053131c535d4a6de55dc6276400db21ebd3da6"
+      },
+      "mustHave": [
+        "4-tab shared shop",
+        "3D chest & bundles",
+        "free chest",
+        "no ads not yet enabled"
+      ],
+      "targetAnchorRectNormalized": {
+        "header": [
+          0.04,
+          0.02,
+          0.92,
+          0.13
+        ],
+        "tabs": [
+          0.05,
+          0.14,
+          0.9,
+          0.1
+        ],
+        "cards": [
+          0.1,
+          0.29,
+          0.8,
+          0.64
+        ]
+      },
+      "fidelity": "REFERENCE_LOCKED_TARGET / NOT PIXEL-ACCEPTED",
+      "functionalStatus": "PARTIAL_LOCAL_PROTOTYPE"
+    },
+    {
+      "screenId": "S07",
+      "runtimeRoute": "shop",
+      "title": "Shop: energy",
+      "sourcePrimaryPosterPanel": {
+        "source": "PRIMARY_v2",
+        "rectPixels": [
+          393,
+          641,
+          767,
+          859
+        ],
+        "crop": "app/references/07_shop_energy.png",
+        "sha256": "da54842868e7bc2c00c28a7fec36fa7359c01ef537e5947fd05bb60333c9b34e"
+      },
+      "mustHave": [
+        "energy resource card variants",
+        "cost labels",
+        "no artificial competitive advantage"
+      ],
+      "targetAnchorRectNormalized": {
+        "header": [
+          0.04,
+          0.02,
+          0.92,
+          0.13
+        ],
+        "tabs": [
+          0.05,
+          0.14,
+          0.9,
+          0.1
+        ],
+        "cards": [
+          0.1,
+          0.29,
+          0.8,
+          0.64
+        ]
+      },
+      "fidelity": "REFERENCE_LOCKED_TARGET / NOT PIXEL-ACCEPTED",
+      "functionalStatus": "PARTIAL_LOCAL_PROTOTYPE"
+    },
+    {
+      "screenId": "S08",
+      "runtimeRoute": "shop",
+      "title": "Shop: coins",
+      "sourcePrimaryPosterPanel": {
+        "source": "PRIMARY_v2",
+        "rectPixels": [
+          769,
+          641,
+          1135,
+          859
+        ],
+        "crop": "app/references/08_shop_coins.png",
+        "sha256": "9a61cfcd6eaa3b784a37e0c440209d5fc67bfb84b1d1be9209814e25bd64b3e6"
+      },
+      "mustHave": [
+        "coin amounts",
+        "pricing placeholders",
+        "store integration pending"
+      ],
+      "targetAnchorRectNormalized": {
+        "header": [
+          0.04,
+          0.02,
+          0.92,
+          0.13
+        ],
+        "tabs": [
+          0.05,
+          0.14,
+          0.9,
+          0.1
+        ],
+        "cards": [
+          0.1,
+          0.29,
+          0.8,
+          0.64
+        ]
+      },
+      "fidelity": "REFERENCE_LOCKED_TARGET / NOT PIXEL-ACCEPTED",
+      "functionalStatus": "PARTIAL_LOCAL_PROTOTYPE"
+    },
+    {
+      "screenId": "S09",
+      "runtimeRoute": "shop",
+      "title": "Shop: powerups",
+      "sourcePrimaryPosterPanel": {
+        "source": "PRIMARY_v2",
+        "rectPixels": [
+          1140,
+          641,
+          1529,
+          859
+        ],
+        "crop": "app/references/09_shop_powerups.png",
+        "sha256": "91588da55ce3fd576945e33cc420b756d45147a947d6b18e1e9cbefd8f53a51a"
+      },
+      "mustHave": [
+        "magnet",
+        "speed",
+        "shield",
+        "inventory quantities and purchase state"
+      ],
+      "targetAnchorRectNormalized": {
+        "header": [
+          0.04,
+          0.02,
+          0.92,
+          0.13
+        ],
+        "tabs": [
+          0.05,
+          0.14,
+          0.9,
+          0.1
+        ],
+        "cards": [
+          0.1,
+          0.29,
+          0.8,
+          0.64
+        ]
+      },
+      "fidelity": "REFERENCE_LOCKED_TARGET / NOT PIXEL-ACCEPTED",
+      "functionalStatus": "PARTIAL_LOCAL_PROTOTYPE"
+    }
+  ],
+  "palette": {
+    "status": "proposed-from-visual-reference-not-exact-sampled-master",
+    "background": "#08062c",
+    "panel": "#11164b",
+    "cyan": "#43e8ff",
+    "purple": "#9448fc",
+    "magenta": "#d543ff",
+    "gold": "#ffc343",
+    "green": "#10df74"
+  },
+  "approvedHero": {
+    "target": "Glowing premium blue-purple crystal dragon with expressive eyes, golden/pink ornamentation as in v2 sheet",
+    "current": "Procedural low-poly GLB; not target quality",
+    "uses3D": true
+  }
+}

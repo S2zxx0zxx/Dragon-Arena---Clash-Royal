@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.DS_Store
+node_modules/
+/tmp/
+# Restored binary assets are reconstructed from packs; do not track both archives and expanded copies
+app/assets/
+app/references/
+app/icons/
