@@ -1,4 +1,6 @@
 import {CrystalArena, RULES} from '../engine/arena.mjs';
+import {chooseNpcRoster} from './npc.mjs';
+import {syncEnergy,spendEnergy,grantEnergy} from './energy.mjs';
 import {CrystalRenderer} from './renderer.js';
 import {initProgress,recordMatch,visitLab,claimMission,claimEvent,claimMilestone,claimLogin} from './progression.mjs';
 import {renderSecondaryPanel,SECONDARY_TITLES,ENVIRONMENTS} from './secondary.js';
@@ -12,10 +14,10 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const STORAGE_KEY='dragon-arena-v4-demo';
 const defaultSave={name:'DragonPilot',level:1,xp:0,coins:9750,gems:125,energy:20,skin:'neon_dragonling',ownedSkins:['pebble_wisp','leafling','bubbletail','rockcoil','neon_dragonling'],inventory:{magnet:3,speed:3,shield:2},played:0};
 let saved;try{saved={...defaultSave,...JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}')}}catch{saved={...defaultSave}};
-initProgress(saved);
+initProgress(saved);syncEnergy(saved);
 const audio=makeAudio(()=>saved.settings.sound);
 const save=()=>{try{localStorage.setItem(STORAGE_KEY,JSON.stringify(saved))}catch{}};
-let finishedMatch=false,secondaryTab='local',startingArena=false,lastMinimapAt=0;
+let finishedMatch=false,secondaryTab='local',startingArena=false,lastMinimapAt=0,activeMode='quick';
 function applyPreferences(){if(!renderer)return;renderer.graphicsQuality=saved.settings.graphics;renderer.glowEnabled=saved.settings.glow;renderer.arenaTheme=saved.arenaTheme;$('#app').classList.toggle('reduce-motion',!saved.settings.motion);}
 let countedDeaths=new Set();
 if('serviceWorker' in navigator && location.protocol!=='file:'){navigator.serviceWorker.register('./sw.js').catch(e=>console.warn('Offline cache unavailable',e));}
@@ -26,7 +28,7 @@ let previewSkin=saved.skin;
 const SCREENS=['splash','consent','home','arena','revive','result','shop','creatures','secondary'];
 const refs={splash:'00_splash',consent:'01_consent',home:'02_home',arena:'03_arena',revive:'04_revive',result:'05_results',shop:()=>({offers:'06_shop_offers',energy:'07_shop_energy',coins:'08_shop_coins',powerups:'09_shop_powerups'}[shopTab]),creatures:'02_home',secondary:'02_home'};
 function toast(message){const t=$('#toast');t.textContent=message;t.classList.remove('hidden');clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.add('hidden'),3500);}
-function renderStats(){ $$('[data-coins]').forEach(el=>el.textContent=fmt(saved.coins));$$('[data-gems]').forEach(el=>el.textContent=fmt(saved.gems));$$('[data-energy]').forEach(el=>el.textContent=fmt(saved.energy));$$('[data-level]').forEach(el=>el.textContent=saved.level);$$('[data-xpbar]').forEach(el=>el.style.width=`${Math.min(100,saved.xp/(saved.level*1000)*100)}%`);$('#player-handle').textContent=saved.name; }
+function renderStats(){syncEnergy(saved);$('[data-coins]').forEach(el=>el.textContent=fmt(saved.coins));$$('[data-gems]').forEach(el=>el.textContent=fmt(saved.gems));$$('[data-energy]').forEach(el=>el.textContent=fmt(saved.energy));$$('[data-level]').forEach(el=>el.textContent=saved.level);$$('[data-xpbar]').forEach(el=>el.style.width=`${Math.min(100,saved.xp/(saved.level*1000)*100)}%`);$('#player-handle').textContent=saved.name; }
 function setScreen(name){if(!SCREENS.includes(name))return;active=name;$$('.screen').forEach(s=>s.classList.toggle('active',s.id===name));
  if(renderer)renderer.scene=({splash:'splash',home:'home',creatures:'creatures',arena:'arena',revive:'revive'})[name]||'none';
  if(name==='creatures')renderer?.resetShowcase?.();
@@ -39,7 +41,7 @@ function currentSkin(){return manifest?.characters?.find(c=>c.id===(active==='cr
 async function changeSkin(skin){if(skinLoading||!manifest.characters.some(c=>c.id===skin))return;skinLoading=true;previewSkin=skin;
  try{await renderer.useSkin(skin);await renderer.prime();renderer?.resetShowcase?.();
   const next=manifest.characters.find(c=>c.id===skin);document.querySelector('#creatures').dataset.rarity=next?.rarity||'common';
-  if((saved.ownedSkins||[]).includes(skin)){saved.skin=skin;save();}
+  // Selecting a preview never silently changes the equipped skin.
   $('#hero-name').textContent=currentSkin().name;$('#selected-skin-label').textContent=currentSkin().name.toUpperCase();
  }catch(e){console.error(e);toast('3D model load failed: '+e.message)}
  finally{skinLoading=false;buildLab();}
@@ -51,33 +53,56 @@ function unlockSkin(){
  if(saved.coins<price){toast(`Need ${fmt(price)} demo coins to unlock ${c.name}`);return}
  saved.coins-=price;owned.add(c.id);saved.ownedSkins=[...owned];saved.skin=c.id;save();renderStats();buildLab();toast(`${c.name} unlocked — cosmetic only!`);
 }
-function makeBot(i){const skins=['aqua_crystal','flame_wisp','frost_scale','leafling','crystal_fox','neon_dragonling','shadow_pup','solar_wyvern'];return skins[i%skins.length]}
-async function startArena(){
+async function startArena(mode='quick'){
  if(startingArena)return;
- if(!renderer){toast('WebGL2 is required. Use a supported browser.');return}
+ if(!renderer||!manifest){toast('3D assets have not loaded');return;}
+ syncEnergy(saved);
+ if(mode!=='practice'&&saved.energy<1){toast('No energy available — Practice is free. Visit Shop for daily charge.');renderStats();return;}
  startingArena=true;
  try{
-  arena=new CrystalArena((Math.random()*1e9)>>>0);arena.addPlayer({id:'you',skin:saved.skin,x:90,y:90,angle:0});
-  for(let i=0;i<7;i++){let a=i*Math.PI*2/7,d=9+i*1.4;arena.addPlayer({id:'bot-'+i,skin:makeBot(i),x:90+Math.cos(a)*d,y:90+Math.sin(a)*d,angle:a+Math.PI,isBot:true})}
-  arena.seedFood(160);for(let i=0;i<38;i++){let a=Math.random()*Math.PI*2,d=Math.random()*11+1;arena.addFood({x:90+Math.cos(a)*d,y:90+Math.sin(a)*d,type:i%6===0?'galaxy_orb':i%4===0?'crystal_shard':'energy_orb',mass:i%6===0?5:i%4===0?2:1})}
-  renderer.arena=arena;await renderer.prime();for(let i=0;i<8;i++){let id=makeBot(i),m=manifest.characters.find(c=>c.id===id);if(!m)continue;for(let part of ['head','body','tail'])await renderer.ready(`assets/characters/${m.rarity}/${id}/3d/${part}.glb`);}
-  elapsed=0;kills=0;finishedMatch=false;countedDeaths.clear();paused=false;acc=0;currentlyBoost=false;setScreen('arena');renderHUD();
- }catch(e){console.error(e);toast('Could not start arena: '+e.message)}finally{startingArena=false}
+  const seed=((Date.now()>>>0)^((saved.played+1)*2654435761))>>>0;
+  const next=new CrystalArena(seed);
+  next.addPlayer({id:'you',skin:saved.skin,displayName:saved.name,x:90,y:90,angle:0});
+  const rivals=chooseNpcRoster(manifest,saved.settings.graphics==='battery'?7:9,saved.played);
+  rivals.forEach((bot,i)=>{const a=i*Math.PI*2/rivals.length,d=21+(i%3)*5;
+   next.addPlayer({...bot,x:90+Math.cos(a)*d,y:90+Math.sin(a)*d,angle:a+Math.PI,isBot:true});});
+  next.seedFood(155);
+  for(let i=0;i<22;i++){const a=next.random()*Math.PI*2,d=2+next.random()*13,food=next.rollFood();
+   next.addFood({x:90+Math.cos(a)*d,y:90+Math.sin(a)*d,type:food.id,mass:food.mass,source:'opening'});}
+  renderer.arena=next;await renderer.prime();
+  for(const rival of rivals){const model=manifest.characters.find(ch=>ch.id===rival.skin);
+   if(!model)throw Error('Missing NPC model '+rival.skin);
+   for(const part of ['head','body','tail'])await renderer.ready('assets/characters/'+model.rarity+'/'+model.id+'/3d/'+part+'.glb');}
+  if(mode!=='practice'&&!spendEnergy(saved,1)){toast('Not enough energy');return;}
+  save();arena=next;elapsed=0;kills=0;finishedMatch=false;countedDeaths.clear();
+  paused=false;acc=0;currentlyBoost=false;activeMode=mode;setScreen('arena');renderHUD();
+ }catch(e){console.error(e);toast('Arena failed to initialize: '+e.message);}finally{startingArena=false;}
 }
 function doDeath(){if(active!=='arena')return;const p=arena.players.find(p=>p.id==='you');deathPosition={x:p.x,y:p.y};reviveLeft=5;reviveTick=performance.now();let ranking=arena.players.filter(x=>x.alive||x.id==='you').sort((a,b)=>b.score-a.score);let rank=1+ranking.findIndex(x=>x.id==='you');if(rank<=0)rank=8;
  $('#death-rank').textContent='#'+rank;$('#death-mass').textContent=fmt(p.score);$('#revive-clock').textContent='5';audio.play('death');setScreen('revive');}
 function finalize(){if(finishedMatch)return;if(!arena){setScreen('home');return}finishedMatch=true;const p=arena.players.find(p=>p.id==='you');let rank=1+arena.players.filter(x=>x.score>p.score).length;
- let xp=Math.min(2000,Math.round(p.score*2+elapsed*1.6+kills*35));let earned=Math.min(1500,Math.floor(p.score/3)+kills*15);saved.coins+=earned;saved.xp+=xp;saved.played++;recordMatch(saved,{mass:p.score,kills,seconds:elapsed,rank,skin:saved.skin,players:arena.players.map(pl=>({name:pl.id==='you'?saved.name:pl.id,score:pl.score,isYou:pl.id==='you'}))});while(saved.xp>=saved.level*1000){saved.xp-=saved.level*1000;saved.level++}save();
+ let xp=Math.min(2000,Math.round(p.score*2+elapsed*1.6+kills*35));let earned=Math.min(1500,Math.floor(p.score/3)+kills*15);saved.coins+=earned;saved.xp+=xp;saved.played++;recordMatch(saved,{mass:p.score,kills,seconds:elapsed,rank,skin:saved.skin,players:arena.players.map(pl=>({name:pl.id==='you'?saved.name:pl.displayName,score:pl.score,isYou:pl.id==='you'}))});while(saved.xp>=saved.level*1000){saved.xp-=saved.level*1000;saved.level++}save();
  $('#final-rank').textContent='#'+rank;$('#final-collected').textContent=fmt(p.score);$('#final-kills').textContent=fmt(kills);$('#final-time').textContent=`${Math.floor(elapsed/60)}m ${Math.floor(elapsed%60)}s`;$('#final-xp').textContent='+'+fmt(xp);setScreen('result');audio.play('reward');toast(`Earned ${fmt(earned)} demo coins`);
 }
 function revive(){if(active!=='revive'||saved.coins<250){toast('Not enough demo coins');return}saved.coins-=250;save();let p=arena.players.find(p=>p.id==='you');const loc=arena.point(20);p.alive=true;p.x=loc.x;p.y=loc.y;p.angle=0;p.aimAngle=0;p.history=[];for(let i=0;i<250;i++)p.history.push({x:p.x-i*.62,y:p.y});p.body=arena.sampleBody(p);arena.effects=[];paused=false;setScreen('arena');toast('Rejoined locally — score and mass retained')}
 function renderHUD(){if(!arena)return;const p=arena.players.find(p=>p.id==='you');$('#live-score').textContent=fmt(p.score);$('#live-length').textContent=p.segmentCount;$('#quest-progress').style.width=Math.min(100,p.mass/2200*100)+'%';$('#quest-text').textContent=fmt(p.mass)+' / 2,200';
- const rank=[...arena.players].sort((a,b)=>b.score-a.score);$('#arena-leaders').replaceChildren(...rank.slice(0,6).map(pl=>{const li=document.createElement('li');li.className=pl.id==='you'?'you':'';li.textContent=`${pl.id==='you'?saved.name:pl.id} — ${fmt(pl.score)}`;return li}));
+ const rank=[...arena.players].sort((a,b)=>b.score-a.score);$('#arena-leaders').replaceChildren(...rank.slice(0,6).map(pl=>{const li=document.createElement('li');li.className=pl.id==='you'?'you':'';li.textContent=`${pl.id==='you'?saved.name:pl.displayName} — ${fmt(pl.score)}`;return li}));
  if(performance.now()-lastMinimapAt>90){drawMinimap($('#minimap-canvas'),arena);lastMinimapAt=performance.now();}
  for(let k of ['magnet','speed','shield'])$('#'+k+'-count').textContent=saved.inventory[k]||0;
+ const status=$('#active-power-status');if(status){const buffs=[];for(const kind of ['speed','magnet','shield']){const until=p[kind==='shield'?'shieldUntilTick':kind+'UntilTick']||0;if(until>arena.tick)buffs.push(kind.toUpperCase()+' '+Math.ceil((until-arena.tick)*RULES.fixedDt)+'s');}status.textContent=buffs.join(' · ');}
 }
-function usePower(kind){if(active!=='arena')return;const n=saved.inventory[kind]||0;if(!n){toast(`${kind} not in inventory — visit Shop`);return}saved.inventory[kind]=n-1;save();if(kind==='speed'){const p=arena.players.find(p=>p.id==='you');p.boostExpires=performance.now()+4000;p.boost=true}else if(kind==='magnet'){const p=arena.players.find(p=>p.id==='you');let near=arena.food.filter(f=>Math.hypot(p.x-f.x,p.y-f.y)<6).slice(0,20);let ids=new Set(near.map(f=>f.id));p.mass+=near.reduce((s,f)=>s+f.mass,0);p.score+=near.reduce((s,f)=>s+f.mass,0);arena.food=arena.food.filter(f=>!ids.has(f.id));}else if(kind==='shield'){const p=arena.players.find(p=>p.id==='you');p.shieldUntilTick=arena.tick+Math.round(10/RULES.fixedDt);}
- audio.play('power');toast(kind.toUpperCase()+' activated');renderHUD();}
+function usePower(kind){
+ if(active!=='arena'||!arena||paused)return;
+ const p=arena.players.find(x=>x.id==='you');if(!p?.alive)return;
+ if(!['speed','magnet','shield'].includes(kind))return;
+ const timer=kind==='shield'?'shieldUntilTick':kind+'UntilTick';
+ if(p[timer]>arena.tick){toast(kind.toUpperCase()+' is already active');return;}
+ const count=saved.inventory[kind]||0;if(!count){toast(kind.toUpperCase()+' out of stock — visit Shop');return;}
+ saved.inventory[kind]=count-1;
+ const duration=kind==='speed'?4:kind==='magnet'?7:10;
+ p[timer]=arena.tick+Math.round(duration/RULES.fixedDt);
+ save();audio.play('power');toast(kind.toUpperCase()+' active for '+duration+'s');renderHUD();
+}
 const shopData={
  offers:[['FREE CHEST','Once per UTC day','🎁','FREE','daily'],['DRAGON STARTER','Featured preview','💠','PREVIEW','preview'],['NO ADS','Billing not integrated','🚫','COMING SOON','unavailable'],['DRAGON TREASURY','Premium art preview','🐉','PREVIEW','preview'],['WELCOME BONUS','Demo coins × 150','🪙','CLAIM','welcome'],['EVENT CRYSTAL','Coming soon','💎','LOCKED','unavailable']],
  energy:[['DAILY CHARGE','Restore 5 energy','⚡','FREE','energy'],['ENERGY ×20','Demo economy only','⚡','COMING SOON','unavailable'],['ENERGY ×100','Demo economy only','⚡','COMING SOON','unavailable'],['INFINITE ENERGY','Not enabled','♾','COMING SOON','unavailable'],['ARENA PASS','Never pay-to-win','🎟','INFO','info'],['BONUS ENERGY','Event system pending','✨','LOCKED','unavailable']],
@@ -91,8 +116,8 @@ function updateShop(){ $$('.shop-tabs button').forEach(b=>b.classList.toggle('ac
  if((action==='daily'&&saved.dailyChestDay===new Date().toISOString().slice(0,10))||(action==='energy'&&saved.dailyEnergyDay===new Date().toISOString().slice(0,10))||(action==='welcome'&&saved.welcome)){b.textContent='CLAIMED';b.disabled=true;}
  card.append(title,pic,sub,b);return card}));
 }
-function buy(action){if(action==='play'){startArena();return}if(action==='daily'){const day=new Date().toISOString().slice(0,10);if(saved.dailyChestDay===day){toast('Daily chest already claimed today');return}saved.dailyChestDay=day;saved.coins+=50;toast('Demo chest: +50 coins');}else if(action==='welcome'){if(saved.welcome){toast('Welcome reward already claimed');return}saved.welcome=true;saved.coins+=150;toast('+150 demo coins');}
- else if(action==='energy'){const day=new Date().toISOString().slice(0,10);if(saved.dailyEnergyDay===day){toast('Free energy claimed today');return}saved.dailyEnergyDay=day;saved.energy=Math.min(20,saved.energy+5);toast('Energy restored up to cap');}else if(['magnet','speed','shield','magnet3','speed3'].includes(action)){const count=action.endsWith('3')?3:1;const kind=action.replace('3','');let cost=count===3?850:300;if(saved.coins<cost){toast('Not enough coins');return}saved.coins-=cost;saved.inventory[kind]=(saved.inventory[kind]||0)+count;toast(`Bought ${count} ${kind} for ${cost} demo coins`)}else if(action==='preview'){toast('Concept preview only; paid storefront not integrated');return}else if(action==='info'){toast('Energy never grants competitive advantage in this local prototype');return}else{toast('Not available: no payments or rewarded ads are connected');return}save();renderStats();updateShop();}
+function buy(action){if(action==='play'){startArena('quick');return}if(action==='daily'){const day=new Date().toISOString().slice(0,10);if(saved.dailyChestDay===day){toast('Daily chest already claimed today');return}saved.dailyChestDay=day;saved.coins+=50;toast('Demo chest: +50 coins');}else if(action==='welcome'){if(saved.welcome){toast('Welcome reward already claimed');return}saved.welcome=true;saved.coins+=150;toast('+150 demo coins');}
+ else if(action==='energy'){const day=new Date().toISOString().slice(0,10);if(saved.dailyEnergyDay===day){toast('Free energy claimed today');return}const added=grantEnergy(saved,5);if(!added){toast('Energy already full');return}saved.dailyEnergyDay=day;toast('+'+added+' energy restored');}else if(['magnet','speed','shield','magnet3','speed3'].includes(action)){const count=action.endsWith('3')?3:1;const kind=action.replace('3','');let cost=count===3?850:300;if(saved.coins<cost){toast('Not enough coins');return}saved.coins-=cost;saved.inventory[kind]=(saved.inventory[kind]||0)+count;toast(`Bought ${count} ${kind} for ${cost} demo coins`)}else if(action==='preview'){toast('Concept preview only; paid storefront not integrated');return}else if(action==='info'){toast('Energy never grants competitive advantage in this local prototype');return}else{toast('Not available: no payments or rewarded ads are connected');return}save();renderStats();updateShop();}
 function buildLab(){
  if(!manifest)return;
  const owned=new Set(saved.ownedSkins||[]),parent=$('#skin-picker');
@@ -138,7 +163,7 @@ function changeSetting(kind,value){
 function editProfile(){const n=prompt('Choose a local pilot name (2–24 characters)',saved.name);if(n===null)return;const candidate=n.trim().replace(/[<>]/g,'');if(candidate.length<2||candidate.length>24){toast('Name must contain 2–24 characters');return;}saved.name=candidate;save();renderStats();renderSecondary();}
 function toggleRef(){refOpen=!refOpen;$('#reference-view').classList.toggle('hidden',!refOpen);if(refOpen){const a=typeof refs[active]==='function'?refs[active]():refs[active];$('#reference-image').src='references/'+a+'.png';$('#reference-caption').textContent=`Approved source: ${a} • Reference-only image — the live game is behind this viewer.`;}}
 async function doAction(action){switch(action){case 'start':setScreen(saved.consent?'home':'consent');break;case 'agree':if(!$('#notice-check').checked){toast('Please review and accept the preview notice');break}saved.consent=true;save();setScreen('home');break;
- case 'play':case 'practice':await startArena();break;case 'friends':toast('Online friend matches require a verified multiplayer server; unavailable offline. Practice or Quick Play works locally.');break;case 'home':paused=false;setScreen('home');$('#pause-layer').classList.add('hidden');break;case 'pause':paused=true;$('#pause-layer').classList.remove('hidden');break;case 'resume':paused=false;$('#pause-layer').classList.add('hidden');break;
+ case 'play':await startArena('quick');break;case 'practice':await startArena('practice');break;case 'friends':toast('Online friend matches require a verified multiplayer server; unavailable offline. Practice or Quick Play works locally.');break;case 'home':paused=false;setScreen('home');$('#pause-layer').classList.add('hidden');break;case 'pause':paused=true;$('#pause-layer').classList.remove('hidden');break;case 'resume':paused=false;$('#pause-layer').classList.add('hidden');break;
  case 'boost':/* Hold-to-boost is handled on pointerdown/up to avoid sticky tap boost. */break;case 'magnet':case 'speed':case 'shield':usePower(action);break;
  case 'result':finalize();break;case 'revive-coins':revive();break;case 'share':try{await navigator.clipboard.writeText(`Dragon Arena demo: rank ${$('#final-rank').textContent}, collected ${$('#final-collected').textContent} mass!`);toast('Match summary copied')}catch{toast('Share needs clipboard permissions')}break;
  case 'shop':shopTab='offers';setScreen('shop');break;case 'shop-energy':shopTab='energy';setScreen('shop');break;case 'shop-coins':shopTab='coins';setScreen('shop');break;case 'shop-offers':shopTab='offers';setScreen('shop');break;
@@ -149,7 +174,7 @@ async function doAction(action){switch(action){case 'start':setScreen(saved.cons
 }}
 document.addEventListener('click',e=>{const env=e.target.closest('[data-environment]');if(env){changeEnvironment(Number(env.dataset.environment));return}const tab=e.target.closest('[data-panel-tab]');if(tab){secondaryTab=tab.dataset.panelTab;renderSecondary();return}const shop=e.target.closest('[data-shop]');if(shop){shopTab=shop.dataset.shop;updateShop();return}const unlockCard=e.target.closest('[data-unlock-skin]');if(unlockCard){if(previewSkin!==unlockCard.dataset.unlockSkin){changeSkin(unlockCard.dataset.unlockSkin).then(unlockSkin);return}unlockSkin();return}const skin=e.target.closest('[data-skin]');if(skin){changeSkin(skin.dataset.skin);return}const buyButton=e.target.closest('[data-purchase]');if(buyButton){buy(buyButton.dataset.purchase);return}const target=e.target.closest('[data-action]');if(target){audio.play('tap');doAction(target.dataset.action);}});
 document.addEventListener('change',e=>{const setting=e.target.closest('[data-setting]');if(setting)changeSetting(setting.dataset.setting,setting.type==='checkbox'?setting.checked:setting.value);});
-const keys=new Set();window.addEventListener('keydown',e=>{if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();keys.add(e.code);if(e.code==='Escape'){if(refOpen)toggleRef();else if(active==='arena')doAction('pause');else if(!$('#pause-layer').classList.contains('hidden'))doAction('resume');else if(active!=='home')doAction('home')}});window.addEventListener('keyup',e=>keys.delete(e.code));
+const keys=new Set();window.addEventListener('keydown',e=>{if(active==='arena'&&!e.target.closest?.('input,textarea,select')&&['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();keys.add(e.code);if(e.code==='Escape'){if(refOpen)toggleRef();else if(active==='arena')doAction('pause');else if(!$('#pause-layer').classList.contains('hidden'))doAction('resume');else if(active!=='home')doAction('home')}});window.addEventListener('keyup',e=>keys.delete(e.code));
 const joystick=$('#joystick');function moveAim(x,y){let p=arena?.players.find(p=>p.id==='you');if(!p||!p.alive)return;const norm=Math.hypot(x,y)||1;p.aimAngle=Math.atan2(y/norm,x/norm)}
 function joystickMove(e){const rect=joystick.getBoundingClientRect(),dx=e.clientX-rect.left-rect.width/2,dy=e.clientY-rect.top-rect.height/2;moveAim(dx,dy);const len=Math.hypot(dx,dy),scale=Math.min(.25,len/rect.width),x=dx/(len||1)*scale*100,y=dy/(len||1)*scale*100;$('#stick').style.transform=`translate(${x}%,${y}%)`;}
 joystick.addEventListener('pointerdown',e=>{joystickHeld=true;joystick.setPointerCapture(e.pointerId);joystickMove(e)});joystick.addEventListener('pointermove',e=>{if(joystickHeld)joystickMove(e)});const joyStop=()=>{joystickHeld=false;$('#stick').style.transform='none'};joystick.addEventListener('pointerup',joyStop);joystick.addEventListener('pointercancel',joyStop);
@@ -159,10 +184,15 @@ labGesture?.addEventListener('pointermove',e=>{if(!labPointers.has(e.pointerId))
 for(const ev of ['pointerup','pointercancel','lostpointercapture'])labGesture?.addEventListener(ev,e=>{labPointers.delete(e.pointerId);lastPinch=null});
 labGesture?.addEventListener('wheel',e=>{if(active!=='creatures')return;e.preventDefault();renderer?.zoomShowcase(e.deltaY>0?-.12:.12)},{passive:false});
 labGesture?.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){renderer?.rotateShowcase(e.key==='ArrowLeft'?-0.2:0.2);e.preventDefault()}});
-const boost=$('#boost-btn');boost.addEventListener('pointerdown',()=>currentlyBoost=true);boost.addEventListener('pointerup',()=>currentlyBoost=false);boost.addEventListener('pointercancel',()=>currentlyBoost=false);
+const boost=$('#boost-btn');
+boost.addEventListener('pointerdown',e=>{if(active!=='arena'||paused)return;currentlyBoost=true;boost.setPointerCapture?.(e.pointerId);boost.classList.add('is-held');e.preventDefault()});
+const releaseBoost=()=>{currentlyBoost=false;boost.classList.remove('is-held')};
+for(const event of ['pointerup','pointercancel','lostpointercapture','pointerleave'])boost.addEventListener(event,releaseBoost);
+window.addEventListener('blur',()=>{releaseBoost();keys.clear();joystickHeld=false;$('#stick').style.transform='none';});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&active==='arena'&&!paused){paused=true;releaseBoost();$('#pause-layer').classList.remove('hidden');}});
 $('#arena').addEventListener('pointermove',e=>{if(joystickHeld||e.target.closest('button')||e.pointerType==='touch')return;const x=e.clientX-innerWidth/2,y=e.clientY-innerHeight/2;moveAim(x,y)});
 function frame(time){let dt=Math.min(.08,(time-lastRender)/1000||.016);lastRender=time;
- if(active==='arena'&&arena&&!paused){const p=arena.players.find(p=>p.id==='you');const dx=(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),dy=(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0);if(dx||dy)p.aimAngle=Math.atan2(dy,dx);p.boost=currentlyBoost||keys.has('Space')||(p.boostExpires||0)>time;acc+=dt;let ticks=0;while(acc>=RULES.fixedDt&&ticks<5){const massBefore=p.mass;arena.step(RULES.fixedDt);if(p.mass>massBefore)audio.play('pickup');for(const fx of arena.effects){if(fx.killerId==='you'&&!countedDeaths.has(fx.id)){countedDeaths.add(fx.id);kills++;}}acc-=RULES.fixedDt;ticks++;elapsed+=RULES.fixedDt;if(!p.alive){doDeath();break;}}if(ticks||Math.floor(time)%50===0)renderHUD();}
+ if(active==='arena'&&arena&&!paused){const p=arena.players.find(p=>p.id==='you');const dx=(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),dy=(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0);if(dx||dy)p.aimAngle=Math.atan2(dy,dx);p.boost=currentlyBoost||keys.has('Space');acc+=dt;let ticks=0;while(acc>=RULES.fixedDt&&ticks<5){const massBefore=p.mass;arena.step(RULES.fixedDt);if(p.mass>massBefore)audio.play('pickup');for(const fx of arena.effects){if(fx.killerId==='you'&&!countedDeaths.has(fx.id)){countedDeaths.add(fx.id);kills++;}}acc-=RULES.fixedDt;ticks++;elapsed+=RULES.fixedDt;if(!p.alive){doDeath();break;}}if(ticks||Math.floor(time)%50===0)renderHUD();}
  if(active==='revive'){if(time-reviveTick>=1000){reviveLeft=Math.max(0,reviveLeft-1);reviveTick=time;$('#revive-clock').textContent=reviveLeft;if(!reviveLeft)finalize();}}
  if(renderer)try{renderer.render(dt)}catch(e){console.error('Renderer frame failure',e);$('#render-status').textContent='RENDER ERROR: '+e.message;renderer=null;}requestAnimationFrame(frame);
 }
