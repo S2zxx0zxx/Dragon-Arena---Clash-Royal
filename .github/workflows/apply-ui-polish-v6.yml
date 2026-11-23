@@ -40,7 +40,7 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add .github/workflows/android-preview.yml android/app/build.gradle README.md app/engine/arena.mjs app/index.html app/src/main.js app/src/renderer.js app/src/polish.css app/src/polish.mjs app/tests/polish.test.mjs docs/UI_POLISH_v6_ACCEPTANCE.md
+          git add android/app/build.gradle README.md app/engine/arena.mjs app/index.html app/src/main.js app/src/renderer.js app/src/polish.css app/src/polish.mjs app/tests/polish.test.mjs docs/UI_POLISH_v6_ACCEPTANCE.md
           git commit -m 'Polish 3D lobby, live minimap, arena boundary and mobile game UI'
           git push origin 'HEAD:feat/reference-locked-premium-3d-ui'
       - uses: actions/setup-java@v4
