@@ -119,11 +119,23 @@ export class CrystalRenderer {
   if(arena){gl.uniformMatrix4fv(this.u.uModel,false,identity());gl.uniform1f(this.u.uGround,1);for(const p of this.ground.parts){gl.bindVertexArray(p.vao);gl.drawElements(gl.TRIANGLES,p.count,gl.UNSIGNED_INT,0)}gl.bindVertexArray(null);}
   else if(home){
    const m=this.manifest?.characters?.find(c=>c.id===this.skin);if(!m)return;let base=`assets/characters/${m.rarity}/${m.id}/3d/`;
-   const model=this.resolved?.get(base+'preview_10_parts.glb');
    const stage=this.resolved?.get('assets/scene/lobby_stage.glb');
-   // World-space 3D portal, floating hero and genuinely faceted crystal geometry.
-   this.drawModel(stage,.38,-.32,-.10,this.t*.09,1.05,.90);
-   this.drawModel(model,-2.65,-.26+Math.sin(this.t*1.24)*.14,0,Math.sin(this.t*.45)*.20,1.11,.84,matMultiply(Ry(.26),Rx(Math.sin(this.t*.73)*.024)));
+   const head=this.resolved?.get(base+'head.glb'),body=this.resolved?.get(base+'body.glb'),tail=this.resolved?.get(base+'tail.glb');
+   // Live procedural spine: each GLB is a real mesh and the complete 3D creature
+   // curves, breathes and trails without flipping a pre-rendered image sheet.
+   this.drawModel(stage,.38,-.32,-.10,this.t*.09,1.05,.83);
+   const count=14,points=[];
+   for(let i=0;i<count;i++){
+    const f=i/(count-1),wave=Math.sin(f*5.1-this.t*.96),breath=Math.sin(this.t*1.4)*.10;
+    points.push({x:-3.72+i*.52,h:.06+breath+Math.sin(f*3.7-this.t*.5)*.20,z:wave*.58});
+   }
+   const scale=.83;
+   const spine=points.slice(1,-1);
+   this.drawSegments(body,spine,scale,.84);
+   const p0=points[0],p1=points[1],tip=points[count-1],prev=points[count-2];
+   const direction=Math.atan2(p1.z-p0.z,p1.x-p0.x);
+   this.drawModel(head,p0.x,p0.h+.06,p0.z,0,.99,.92,matMultiply(Ry(-direction*.36),Rx(Math.sin(this.t*.8)*.022)));
+   this.drawModel(tail,tip.x,tip.h,tip.z,Math.atan2(tip.z-prev.z,tip.x-prev.x)*.35,.80,.75);
    return;
   }else if(burst){
    const fx=this.resolved?.get(`assets/death_effects/3d/${this.skin}_peak_burst.glb`);

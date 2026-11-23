@@ -4,27 +4,40 @@ const $=selector=>document.querySelector(selector), $$=selector=>[...document.qu
 const fmt=n=>Math.round(n).toLocaleString('en-US');
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const STORAGE_KEY='dragon-arena-v4-demo';
-const defaultSave={name:'DragonPilot',level:1,xp:0,coins:9750,gems:125,energy:20,skin:'neon_dragonling',inventory:{magnet:3,speed:3,shield:2},played:0};
+const defaultSave={name:'DragonPilot',level:1,xp:0,coins:9750,gems:125,energy:20,skin:'neon_dragonling',ownedSkins:['pebble_wisp','leafling','bubbletail','rockcoil','neon_dragonling'],inventory:{magnet:3,speed:3,shield:2},played:0};
 let saved;try{saved={...defaultSave,...JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}')}}catch{saved={...defaultSave}};
 const save=()=>{try{localStorage.setItem(STORAGE_KEY,JSON.stringify(saved))}catch{}};
 let countedDeaths=new Set();
 if('serviceWorker' in navigator && location.protocol!=='file:'){navigator.serviceWorker.register('./sw.js').catch(e=>console.warn('Offline cache unavailable',e));}
 let renderer=null,manifest=null,active='splash',shopTab='offers',arena=null,paused=false,acc=0,elapsed=0,kills=0,lastRender=performance.now(),reviveLeft=5,reviveTick=0,skinLoading=false,refOpen=false,currentlyBoost=false,joystickHeld=false,deathPosition=null;
 const SKIN_NAMES={};
+const SKIN_PRICES={common:0,uncommon:400,rare:1600,epic:3900,legendary:10500,mythic:28000};
+let previewSkin=saved.skin;
 const SCREENS=['splash','consent','home','arena','revive','result','shop','creatures','secondary'];
 const refs={splash:'00_splash',consent:'01_consent',home:'02_home',arena:'03_arena',revive:'04_revive',result:'05_results',shop:()=>({offers:'06_shop_offers',energy:'07_shop_energy',coins:'08_shop_coins',powerups:'09_shop_powerups'}[shopTab]),creatures:'02_home',secondary:'02_home'};
 function toast(message){const t=$('#toast');t.textContent=message;t.classList.remove('hidden');clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.add('hidden'),3500);}
-function renderStats(){ $$('[data-coins]').forEach(el=>el.textContent=fmt(saved.coins));$$('[data-gems]').forEach(el=>el.textContent=fmt(saved.gems));$$('[data-energy]').forEach(el=>el.textContent=fmt(saved.energy));$$('[data-level]').forEach(el=>el.textContent=saved.level);$$('[data-xpbar]').forEach(el=>el.style.width=`${(saved.xp%1000)/10}%`);$('#player-handle').textContent=saved.name; }
+function renderStats(){ $$('[data-coins]').forEach(el=>el.textContent=fmt(saved.coins));$$('[data-gems]').forEach(el=>el.textContent=fmt(saved.gems));$$('[data-energy]').forEach(el=>el.textContent=fmt(saved.energy));$$('[data-level]').forEach(el=>el.textContent=saved.level);$$('[data-xpbar]').forEach(el=>el.style.width=`${Math.min(100,saved.xp/(saved.level*1000)*100)}%`);$('#player-handle').textContent=saved.name; }
 function setScreen(name){if(!SCREENS.includes(name))return;active=name;$$('.screen').forEach(s=>s.classList.toggle('active',s.id===name));
  if(renderer)renderer.scene=({home:'home',creatures:'creatures',arena:'arena',revive:'revive'})[name]||'none';
- renderStats();if(name==='shop')updateShop();if(name==='creatures')buildLab();if(name==='secondary')renderSecondary();
+ renderStats();if(name==='shop')updateShop();if(name==='creatures'){previewSkin=saved.skin;buildLab();}
+ if(name==='home'){const owned=manifest?.characters?.find(c=>c.id===saved.skin);if(owned)$('#hero-name').textContent=owned.name;
+  if(renderer&&renderer.skin!==saved.skin)renderer.useSkin(saved.skin).then(()=>renderer.prime()).catch(e=>console.error('Could not restore owned skin',e));}if(name==='secondary')renderSecondary();
  $('#render-status').textContent=renderer?`WEBGL2 · ${renderer.scene.toUpperCase()} · LOCAL DEMO`:'3D ENGINE UNAVAILABLE';
 }
-function currentSkin(){return manifest?.characters?.find(c=>c.id===saved.skin)};
-async function changeSkin(skin){if(skinLoading||!manifest.characters.some(c=>c.id===skin))return;skinLoading=true;saved.skin=skin;save();
- try{await renderer.useSkin(skin);await renderer.prime();$('#hero-name').textContent=currentSkin().name;$('#selected-skin-label').textContent=currentSkin().name.toUpperCase();}
- catch(e){console.error(e);toast('3D model load failed: '+e.message)}
+function currentSkin(){return manifest?.characters?.find(c=>c.id===(active==='creatures'?previewSkin:saved.skin))};
+async function changeSkin(skin){if(skinLoading||!manifest.characters.some(c=>c.id===skin))return;skinLoading=true;previewSkin=skin;
+ try{await renderer.useSkin(skin);await renderer.prime();
+  if((saved.ownedSkins||[]).includes(skin)){saved.skin=skin;save();}
+  $('#hero-name').textContent=currentSkin().name;$('#selected-skin-label').textContent=currentSkin().name.toUpperCase();
+ }catch(e){console.error(e);toast('3D model load failed: '+e.message)}
  finally{skinLoading=false;buildLab();}
+}
+function unlockSkin(){
+ const c=manifest?.characters?.find(x=>x.id===previewSkin);if(!c)return;
+ const owned=new Set(saved.ownedSkins||[]);if(owned.has(c.id)){saved.skin=c.id;save();buildLab();toast('DRAGON EQUIPPED');return}
+ const price=SKIN_PRICES[c.rarity]||0;
+ if(saved.coins<price){toast(`Need ${fmt(price)} demo coins to unlock ${c.name}`);return}
+ saved.coins-=price;owned.add(c.id);saved.ownedSkins=[...owned];saved.skin=c.id;save();renderStats();buildLab();toast(`${c.name} unlocked — cosmetic only!`);
 }
 function makeBot(i){const skins=['aqua_crystal','flame_wisp','frost_scale','leafling','crystal_fox','neon_dragonling','shadow_pup','solar_wyvern'];return skins[i%skins.length]}
 async function startArena(){
@@ -52,7 +65,7 @@ function renderHUD(){if(!arena)return;const p=arena.players.find(p=>p.id==='you'
 function usePower(kind){if(active!=='arena')return;const n=saved.inventory[kind]||0;if(!n){toast(`${kind} not in inventory — visit Shop`);return}saved.inventory[kind]=n-1;save();if(kind==='speed'){const p=arena.players.find(p=>p.id==='you');p.boostExpires=performance.now()+4000;p.boost=true}else if(kind==='magnet'){const p=arena.players.find(p=>p.id==='you');let near=arena.food.filter(f=>Math.hypot(p.x-f.x,p.y-f.y)<6).slice(0,20);let ids=new Set(near.map(f=>f.id));p.mass+=near.reduce((s,f)=>s+f.mass,0);p.score+=near.reduce((s,f)=>s+f.mass,0);arena.food=arena.food.filter(f=>!ids.has(f.id));}else if(kind==='shield'){toast('Shield visual prototype only; collision protection is NOT implemented yet');saved.inventory[kind]++;save();return}
  toast(kind.toUpperCase()+' activated');renderHUD();}
 const shopData={
- offers:[['FREE CHEST','Daily reward','🎁','FREE','daily'],['CRYSTAL STARTER','Featured preview','💠','PREVIEW','preview'],['NO ADS','Billing not integrated','🚫','COMING SOON','unavailable'],['DRAGON TREASURY','Premium art preview','🐉','PREVIEW','preview'],['WELCOME BONUS','Demo coins × 150','🪙','CLAIM','welcome'],['EVENT CRYSTAL','Coming soon','💎','LOCKED','unavailable']],
+ offers:[['FREE CHEST','Once per UTC day','🎁','FREE','daily'],['DRAGON STARTER','Featured preview','💠','PREVIEW','preview'],['NO ADS','Billing not integrated','🚫','COMING SOON','unavailable'],['DRAGON TREASURY','Premium art preview','🐉','PREVIEW','preview'],['WELCOME BONUS','Demo coins × 150','🪙','CLAIM','welcome'],['EVENT CRYSTAL','Coming soon','💎','LOCKED','unavailable']],
  energy:[['DAILY CHARGE','Restore 5 energy','⚡','FREE','energy'],['ENERGY ×20','Demo economy only','⚡','COMING SOON','unavailable'],['ENERGY ×100','Demo economy only','⚡','COMING SOON','unavailable'],['INFINITE ENERGY','Not enabled','♾','COMING SOON','unavailable'],['ARENA PASS','Never pay-to-win','🎟','INFO','info'],['BONUS ENERGY','Event system pending','✨','LOCKED','unavailable']],
  coins:[['COINS ×300','Earn by playing','🪙','PLAY TO EARN','play'],['COINS ×1,250','Real store not connected','🪙','COMING SOON','unavailable'],['COINS ×7,000','Real store not connected','🪙','COMING SOON','unavailable'],['COINS ×16,000','Real store not connected','💰','COMING SOON','unavailable'],['COINS ×50,000','Real store not connected','💰','COMING SOON','unavailable'],['COINS ×125,000','Real store not connected','💰','COMING SOON','unavailable']],
  powerups:[['MAGNET','Pull nearby food','🧲','300 COINS','magnet'],['SPEED BOOST','4s faster movement','⚡','300 COINS','speed'],['SHIELD','Requires collision integration','🛡','UNAVAILABLE','unavailable'],['MAGNET ×3','Bundle','🧲','850 COINS','magnet3'],['SPEED ×3','Bundle','⚡','850 COINS','speed3'],['TRAIL EFFECT','Visual cosmetics pending','🌌','PREVIEW','preview']]
@@ -61,12 +74,16 @@ function updateShop(){ $$('.shop-tabs button').forEach(b=>b.classList.toggle('ac
  const grid=$('#shop-items');grid.replaceChildren(...shopData[shopTab].map(([name,desc,emoji,label,action],i)=>{const card=document.createElement('article');card.className='shop-card';
  let graphic=i%3===0?'crystal_shard':i%3===1?'coin_core':'element_gem';let file=`assets/food/2d/${graphic}.png`;
  const title=document.createElement('strong');title.textContent=name;const pic=document.createElement('img');pic.src=file;pic.alt='';const sub=document.createElement('small');sub.textContent=desc;const b=document.createElement('button');b.className='btn '+(action==='unavailable'?'navy':'green');b.dataset.purchase=action;b.textContent=label;
+ if((action==='daily'&&saved.dailyChestDay===new Date().toISOString().slice(0,10))||(action==='energy'&&saved.dailyEnergyDay===new Date().toISOString().slice(0,10))||(action==='welcome'&&saved.welcome)){b.textContent='CLAIMED';b.disabled=true;}
  card.append(title,pic,sub,b);return card}));
 }
-function buy(action){if(action==='play'){startArena();return}if(action==='daily'){saved.coins+=50;toast('Demo chest: +50 coins');}else if(action==='welcome'){if(saved.welcome){toast('Welcome reward already claimed');return}saved.welcome=true;saved.coins+=150;toast('+150 demo coins');}
- else if(action==='energy'){saved.energy=Math.min(20,saved.energy+5);toast('Energy restored up to cap');}else if(['magnet','speed','magnet3','speed3'].includes(action)){const count=action.endsWith('3')?3:1;const kind=action.replace('3','');let cost=count===3?850:300;if(saved.coins<cost){toast('Not enough coins');return}saved.coins-=cost;saved.inventory[kind]=(saved.inventory[kind]||0)+count;toast(`Bought ${count} ${kind} for ${cost} demo coins`)}else if(action==='preview'){toast('Concept preview only; paid storefront not integrated');return}else if(action==='info'){toast('Energy never grants competitive advantage in this local prototype');return}else{toast('Not available: no payments or rewarded ads are connected');return}save();renderStats();}
+function buy(action){if(action==='play'){startArena();return}if(action==='daily'){const day=new Date().toISOString().slice(0,10);if(saved.dailyChestDay===day){toast('Daily chest already claimed today');return}saved.dailyChestDay=day;saved.coins+=50;toast('Demo chest: +50 coins');}else if(action==='welcome'){if(saved.welcome){toast('Welcome reward already claimed');return}saved.welcome=true;saved.coins+=150;toast('+150 demo coins');}
+ else if(action==='energy'){const day=new Date().toISOString().slice(0,10);if(saved.dailyEnergyDay===day){toast('Free energy claimed today');return}saved.dailyEnergyDay=day;saved.energy=Math.min(20,saved.energy+5);toast('Energy restored up to cap');}else if(['magnet','speed','magnet3','speed3'].includes(action)){const count=action.endsWith('3')?3:1;const kind=action.replace('3','');let cost=count===3?850:300;if(saved.coins<cost){toast('Not enough coins');return}saved.coins-=cost;saved.inventory[kind]=(saved.inventory[kind]||0)+count;toast(`Bought ${count} ${kind} for ${cost} demo coins`)}else if(action==='preview'){toast('Concept preview only; paid storefront not integrated');return}else if(action==='info'){toast('Energy never grants competitive advantage in this local prototype');return}else{toast('Not available: no payments or rewarded ads are connected');return}save();renderStats();updateShop();}
 function buildLab(){if(!manifest)return;const parent=$('#skin-picker');if(parent.childElementCount!==manifest.characters.length){parent.replaceChildren(...manifest.characters.map(c=>{const b=document.createElement('button');b.className='skin-card';b.dataset.skin=c.id;let pic=document.createElement('img');pic.src=`assets/characters/${c.rarity}/${c.id}/2d/preview_transparent.png`;pic.alt='Selection thumbnail — in-arena model is GLB 3D';b.append(pic);let t=document.createElement('b');t.textContent=c.name;b.append(t);let sub=document.createElement('small');sub.textContent=c.rarity.toUpperCase();b.append(sub);return b;}))}
- $$('#skin-picker button').forEach(b=>b.classList.toggle('active',b.dataset.skin===saved.skin));$('#selected-skin-label').textContent=currentSkin()?.name?.toUpperCase()||'';
+ const owned=new Set(saved.ownedSkins||[]);
+ $$('#skin-picker button').forEach(b=>{const active=b.dataset.skin===previewSkin;b.classList.toggle('active',active);b.classList.toggle('locked',!owned.has(b.dataset.skin));b.setAttribute('aria-pressed',String(active));});
+ const c=currentSkin();$('#selected-skin-label').textContent=c?.name?.toUpperCase()||'';
+ const unlock=$('#skin-unlock-button');if(unlock&&c){const isOwned=owned.has(c.id);unlock.textContent=isOwned?(saved.skin===c.id?'✓ EQUIPPED':'✓ EQUIP DRAGON'):`🔒 UNLOCK · ${fmt(SKIN_PRICES[c.rarity])} COINS`;unlock.disabled=isOwned&&saved.skin===c.id;}
 }
 const SECONDARY={settings:['SETTINGS','<h2>GAME SETTINGS</h2><div class="setting-row"><span>🔉 Sound effects</span><input id="setting-sound" type="checkbox" checked></div><div class="setting-row"><span>✨ Glow / visual effects</span><input id="setting-vfx" type="checkbox" checked></div><p>3D game renders with WebGL2. Texture/LOD/device performance acceptance is pending.</p>'],profile:['PROFILE','<h2>YOUR PILOT PROFILE</h2><p>Guest-first profile saved locally on this device.</p><div class="setting-row">Level <b id="local-level"></b></div><div class="setting-row">Matches <b id="local-matches"></b></div>'],friends:['FRIENDS','<h2>FRIENDS — FUTURE FEATURE</h2><p>Online invite, contacts, private rooms and presence need networking and privacy implementation.</p><button class="btn gold" data-action="play">PLAY LOCAL ARENA</button>'],missions:['MISSIONS','<h2>DAILY MISSIONS</h2><p>Collect 2,200 mass in a local arena. Mission server and reward persistence are not yet implemented.</p><button class="btn gold" data-action="play">PLAY NOW</button>'],leaderboard:['LEADERBOARD','<h2>ARENA RANKINGS</h2><p>The live match shows local bots only. Global ranks need an authoritative leaderboard service.</p><button class="btn gold" data-action="play">PRACTICE RANKING</button>'],rewards:['REWARDS','<h2>DAILY DEMO REWARDS</h2><p>Try the free Welcome Bonus inside Shop offers.</p><button class="btn gold" data-action="shop">OPEN SHOP</button>'],inventory:['WORKSHOP & INVENTORY','<h2>POWER-UP INVENTORY</h2><div class="setting-row">Magnet <b id="inv-magnet"></b></div><div class="setting-row">Speed Boost <b id="inv-speed"></b></div><div class="setting-row">Shield (not functional) <b id="inv-shield"></b></div><p>Character selection and 3D previews are in Creature Lab.</p><button class="btn blue" data-action="creatures">OPEN CREATURE LAB</button>'],events:['EVENTS','<h2>EVENTS — NOT LIVE</h2><p>Seasonal events require scheduling, backend state and rewards validation.</p>'],practice:['PRACTICE','<h2>3D LOCAL PRACTICE</h2><p>Move with your pointer, virtual joystick, arrow keys or WASD. Hold Space or BOOST to accelerate.</p><button class="btn gold" data-action="play">PLAY LOCAL PRACTICE</button>']};
 let secondaryKey='settings';function renderSecondary(){const [title,body]=SECONDARY[secondaryKey]||SECONDARY.settings;$('#secondary-title').textContent=title;$('#secondary-content').innerHTML=body;
@@ -78,7 +95,7 @@ async function doAction(action){switch(action){case 'start':setScreen(saved.cons
  case 'boost':currentlyBoost=!currentlyBoost;toast('Boost '+(currentlyBoost?'ON':'OFF'));break;case 'magnet':case 'speed':case 'shield':usePower(action);break;
  case 'result':finalize();break;case 'revive-coins':revive();break;case 'share':try{await navigator.clipboard.writeText(`Dragon Arena demo: rank ${$('#final-rank').textContent}, collected ${$('#final-collected').textContent} mass!`);toast('Match summary copied')}catch{toast('Share needs clipboard permissions')}break;
  case 'shop':shopTab='offers';setScreen('shop');break;case 'shop-energy':shopTab='energy';setScreen('shop');break;case 'shop-coins':shopTab='coins';setScreen('shop');break;case 'shop-offers':shopTab='offers';setScreen('shop');break;
- case 'creatures':setScreen('creatures');break;case 'reference':toggleRef();break;case 'close-ref':if(refOpen)toggleRef();break;
+ case 'creatures':setScreen('creatures');break;case 'unlock-skin':unlockSkin();break;case 'reference':toggleRef();break;case 'close-ref':if(refOpen)toggleRef();break;
  case 'notice':toast('Prototype use: local demo only; no commercial product terms are active.');break;case 'privacy':toast('Save state is stored in browser localStorage. This demo has no backend or analytics.');break;
  default:if(SECONDARY[action])showSecondary(action);else toast('Feature not implemented');
 }}

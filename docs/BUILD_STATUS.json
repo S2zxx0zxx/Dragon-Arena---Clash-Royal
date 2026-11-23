@@ -18,7 +18,10 @@
     "GPU-instanced segment renderer",
     "3D lobby portal asset",
     "offline-first PWA shell and icon",
-    "reference UI QA contract tests"
+    "reference UI QA contract tests",
+    "customizable 24-variant Dragon Lab cosmetic unlock economy",
+    "animated segmented 3D hero spine",
+    "once-per-day local free reward caps"
   ],
   "tests": {
     "javascriptSyntax": "pass",

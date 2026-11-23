@@ -22,3 +22,7 @@
 @media (prefers-reduced-motion:reduce){.stars,.play-btn,.splash-glow{animation:none!important}.btn,.shop-card{transition:none!important}}
 @media (max-aspect-ratio:1.42){.game-topbar{left:2%;right:2%}.home-left{left:1.4%}.home-actions{right:2%;width:36%}.home-bottom{left:17%;right:3%}.hero-platform{left:10%;width:53%}.currency-row{gap:3px}.currency{padding:3px}}
 @media (orientation:portrait){.app-shell:after{display:none}.app-shell:before{display:none}.screen.active:after{font-size:0}.app-shell{transform:none}.hero-platform{top:20%;height:44%;width:78%;left:10%}.home-actions{top:58%;left:13%;width:74%}.home-bottom{bottom:2%;left:3%;right:3%;gap:3px}.home-bottom button{font-size:9px;padding:7px 4px}.home-left{top:18%;width:13%}.nav-tile{height:40px;font-size:9px}.game-topbar{gap:3px}.currency{font-size:10px}.profile-pill{min-width:0}.hero-label{display:none}}
+
+/* Creature Lab: active 3D preview with clearly separated cosmetic ownership. */
+.skin-card.locked{filter:saturate(.64)}.skin-card.locked:after{content:'◆';position:absolute;top:5px;right:6px;color:#ffd86b;text-shadow:0 0 9px #ff9f21}
+.lab-unlock{position:absolute;right:4.2%;bottom:5%;min-width:min(250px,31vw);z-index:5;min-height:44px}

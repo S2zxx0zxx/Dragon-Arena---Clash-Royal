@@ -10,7 +10,7 @@ const manifest=JSON.parse(read('manifest/game_assets.json'));
 test('all reference-locked UI screens and four shop tabs are present',()=>{
   for(const id of ['splash','consent','home','arena','revive','result','shop','creatures','secondary'])assert.match(html,new RegExp(`id="${id}"`),id);
   for(const tab of ['offers','energy','coins','powerups'])assert.match(html,new RegExp(`data-shop="${tab}"`));
-  for(const id of ['joystick','minimap','revive-clock','live-score','skin-picker','shop-items'])assert.match(html,new RegExp(`id="${id}"`));
+  for(const id of ['joystick','minimap','revive-clock','live-score','skin-picker','skin-unlock-button','shop-items'])assert.match(html,new RegExp(`id="${id}"`));
   assert.match(html,/data-visual-contract="92541-primary-92540-secondary"/);
 });
 test('all interactive controls have legal action bindings and no duplicate screen IDs',()=>{
@@ -32,6 +32,7 @@ test('true WebGL2 renderer uses instanced 3D bodies and original 3D stage',()=>{
   assert.match(renderer,/drawElementsInstanced/);
   assert.match(renderer,/assets\/scene\/lobby_stage\.glb/);
   assert.match(renderer,/webgl2/);
+  assert.match(renderer,/Live procedural spine/);
   assert.ok(fs.statSync(path.join(root,'assets/scene/lobby_stage.glb')).size>5000);
 });
 test('reduced motion, responsive viewport and PWA offline shell are in package',()=>{
