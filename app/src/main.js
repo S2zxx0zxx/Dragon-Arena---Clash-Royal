@@ -10,7 +10,7 @@ const defaultSave={name:'DragonPilot',level:1,xp:0,coins:9750,gems:125,energy:20
 let saved;try{saved={...defaultSave,...JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}')}}catch{saved={...defaultSave}};
 initProgress(saved);
 const save=()=>{try{localStorage.setItem(STORAGE_KEY,JSON.stringify(saved))}catch{}};
-let finishedMatch=false,secondaryTab='local';
+let finishedMatch=false,secondaryTab='local',startingArena=false;
 function applyPreferences(){if(!renderer)return;renderer.graphicsQuality=saved.settings.graphics;renderer.glowEnabled=saved.settings.glow;renderer.arenaTheme=saved.arenaTheme;$('#app').classList.toggle('reduce-motion',!saved.settings.motion);}
 let countedDeaths=new Set();
 if('serviceWorker' in navigator && location.protocol!=='file:'){navigator.serviceWorker.register('./sw.js').catch(e=>console.warn('Offline cache unavailable',e));}
@@ -46,14 +46,16 @@ function unlockSkin(){
 }
 function makeBot(i){const skins=['aqua_crystal','flame_wisp','frost_scale','leafling','crystal_fox','neon_dragonling','shadow_pup','solar_wyvern'];return skins[i%skins.length]}
 async function startArena(){
+ if(startingArena)return;
  if(!renderer){toast('WebGL2 is required. Use a supported browser.');return}
+ startingArena=true;
  try{
   arena=new CrystalArena((Math.random()*1e9)>>>0);arena.addPlayer({id:'you',skin:saved.skin,x:90,y:90,angle:0});
   for(let i=0;i<7;i++){let a=i*Math.PI*2/7,d=9+i*1.4;arena.addPlayer({id:'bot-'+i,skin:makeBot(i),x:90+Math.cos(a)*d,y:90+Math.sin(a)*d,angle:a+Math.PI,isBot:true})}
   arena.seedFood(160);for(let i=0;i<38;i++){let a=Math.random()*Math.PI*2,d=Math.random()*11+1;arena.addFood({x:90+Math.cos(a)*d,y:90+Math.sin(a)*d,type:i%6===0?'galaxy_orb':i%4===0?'crystal_shard':'energy_orb',mass:i%6===0?5:i%4===0?2:1})}
   renderer.arena=arena;await renderer.prime();for(let i=0;i<8;i++){let id=makeBot(i),m=manifest.characters.find(c=>c.id===id);if(!m)continue;for(let part of ['head','body','tail'])await renderer.ready(`assets/characters/${m.rarity}/${id}/3d/${part}.glb`);}
   elapsed=0;kills=0;finishedMatch=false;countedDeaths.clear();paused=false;acc=0;currentlyBoost=false;setScreen('arena');renderHUD();
- }catch(e){console.error(e);toast('Could not start arena: '+e.message)}
+ }catch(e){console.error(e);toast('Could not start arena: '+e.message)}finally{startingArena=false}
 }
 function doDeath(){if(active!=='arena')return;const p=arena.players.find(p=>p.id==='you');deathPosition={x:p.x,y:p.y};reviveLeft=5;reviveTick=performance.now();let ranking=arena.players.filter(x=>x.alive||x.id==='you').sort((a,b)=>b.score-a.score);let rank=1+ranking.findIndex(x=>x.id==='you');if(rank<=0)rank=8;
  $('#death-rank').textContent='#'+rank;$('#death-mass').textContent=fmt(p.score);$('#revive-clock').textContent='5';setScreen('revive');}
@@ -116,7 +118,7 @@ function editProfile(){const n=prompt('Choose a local pilot name (2–24 charact
 function toggleRef(){refOpen=!refOpen;$('#reference-view').classList.toggle('hidden',!refOpen);if(refOpen){const a=typeof refs[active]==='function'?refs[active]():refs[active];$('#reference-image').src='references/'+a+'.png';$('#reference-caption').textContent=`Approved source: ${a} • Reference-only image — the live game is behind this viewer.`;}}
 async function doAction(action){switch(action){case 'start':setScreen(saved.consent?'home':'consent');break;case 'agree':if(!$('#notice-check').checked){toast('Please review and accept the preview notice');break}saved.consent=true;save();setScreen('home');break;
  case 'play':await startArena();break;case 'home':paused=false;setScreen('home');$('#pause-layer').classList.add('hidden');break;case 'pause':paused=true;$('#pause-layer').classList.remove('hidden');break;case 'resume':paused=false;$('#pause-layer').classList.add('hidden');break;
- case 'boost':currentlyBoost=!currentlyBoost;toast('Boost '+(currentlyBoost?'ON':'OFF'));break;case 'magnet':case 'speed':case 'shield':usePower(action);break;
+ case 'boost':/* Hold-to-boost is handled on pointerdown/up to avoid sticky tap boost. */break;case 'magnet':case 'speed':case 'shield':usePower(action);break;
  case 'result':finalize();break;case 'revive-coins':revive();break;case 'share':try{await navigator.clipboard.writeText(`Dragon Arena demo: rank ${$('#final-rank').textContent}, collected ${$('#final-collected').textContent} mass!`);toast('Match summary copied')}catch{toast('Share needs clipboard permissions')}break;
  case 'shop':shopTab='offers';setScreen('shop');break;case 'shop-energy':shopTab='energy';setScreen('shop');break;case 'shop-coins':shopTab='coins';setScreen('shop');break;case 'shop-offers':shopTab='offers';setScreen('shop');break;
  case 'creatures':setScreen('creatures');break;case 'unlock-skin':unlockSkin();break;case 'reference':toggleRef();break;case 'close-ref':if(refOpen)toggleRef();break;

@@ -40,9 +40,9 @@ def validate():
     h=HTMLAudit();h.feed((APP/'index.html').read_text())
     assert len(h.ids)==len(set(h.ids)),'duplicate HTML ids'
     assert all(i in h.ids for i in ('scene3d','home','arena','revive','result','shop','creatures','secondary'))
-    js=(APP/'src/main.js').read_text()
+    js=(APP/'src/main.js').read_text() + '\n' + (APP/'src/secondary.js').read_text() + '\n' + (APP/'src/progression.mjs').read_text()
     for a in set(h.actions):
-        assert f"'{a}'" in js or f'"{a}"' in js or f"{a}:[" in js,a
+        assert f"'{a}'" in js or f'"{a}"' in js or f"{a}:[" in js or f"{a}:" in js,a
     assert 'new CrystalRenderer' in js and 'new CrystalArena' in js
     for f in list((APP/'src').glob('*.js'))+list((APP/'engine').glob('*.mjs')):
         cp=subprocess.run(['node','--check',str(f)],capture_output=True,text=True)

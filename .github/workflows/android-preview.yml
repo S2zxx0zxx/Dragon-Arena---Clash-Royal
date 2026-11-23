@@ -20,8 +20,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          echo "ANDROID_HOME=${ANDROID_HOME:-unset}"
           SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
-          echo "Using SDK: $SDK"
           test -d "$SDK"
           echo "sdk.dir=$SDK" > android/local.properties
           if ! test -f "$SDK/platforms/android-35/android.jar"; then
@@ -75,9 +75,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          gh release create android-preview-v0.4.1 \
-            android/app/build/outputs/apk/debug/app-debug.apk#Dragon-Arena-Android-Preview-v0.4.1.apk \
-            android/app/build/outputs/apk/debug/app-debug.apk.sha256#Dragon-Arena-Android-Preview-v0.4.1.apk.sha256 \
-            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title 'Dragon Arena — Android Preview v0.4.1' \
+          gh release create android-preview-v0.5.0 \
+            android/app/build/outputs/apk/debug/app-debug.apk#Dragon-Arena-Android-Preview-v0.5.0.apk \
+            android/app/build/outputs/apk/debug/app-debug.apk.sha256#Dragon-Arena-Android-Preview-v0.5.0.apk.sha256 \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title 'Dragon Arena — Android Preview v0.5.0' \
             --notes 'TEST BUILD ONLY. Signed Android debug APK, Android 8+, offline assets, local arena with bots. Not public multiplayer or final-quality QA. Debug signing may change in later CI runs, requiring uninstall to upgrade.' \
             --prerelease

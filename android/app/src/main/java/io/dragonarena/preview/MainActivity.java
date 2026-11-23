@@ -18,11 +18,12 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-/** Offline Android preview: all 3D GLB, JS, CSS and UI resources are bundled. */
+/** Offline, fullscreen Android preview: serves packaged game assets from an HTTPS origin. */
 public final class MainActivity extends Activity {
     private static final String HOST = "appassets.androidplatform.net";
     private static final String ENTRY = "https://" + HOST + "/assets/index.html";
     private WebView game;
+
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().getDecorView().setSystemUiVisibility(5894 | 1024 | 512);
@@ -41,7 +42,7 @@ public final class MainActivity extends Activity {
         web.setMediaPlaybackRequiresUserGesture(false);
         web.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         web.setDefaultTextEncodingName("UTF-8");
-        web.setUserAgentString(web.getUserAgentString() + " DragonArenaAndroidPreview/0.4.1");
+        web.setUserAgentString(web.getUserAgentString() + " DragonArenaAndroidPreview/0.5.0");
         game.setWebChromeClient(new WebChromeClient());
         game.setWebViewClient(new WebViewClient() {
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
