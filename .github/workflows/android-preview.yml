@@ -35,6 +35,12 @@ jobs:
           gradle-version: '8.9'
       - name: Restore verified 3D game asset bundle
         run: python3 tools/unpack_assets.py
+      - name: Generate all 24 distinct 3D character silhouettes
+        run: |
+          python3 -m pip install --disable-pip-version-check numpy trimesh pillow
+          python3 tools/shape_variants_v8.py
+      - name: Run offline gameplay and interaction tests
+        run: node --test app/tests/*.test.mjs
       - name: Package complete offline web runtime
         shell: bash
         run: |
@@ -75,17 +81,17 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          if gh release view android-preview-v0.7.0 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            gh release upload android-preview-v0.7.0 \
-              android/app/build/outputs/apk/debug/app-debug.apk#Dragon-Arena-Android-Preview-v0.7.0.apk \
-              android/app/build/outputs/apk/debug/app-debug.apk.sha256#Dragon-Arena-Android-Preview-v0.7.0.apk.sha256 \
+          if gh release view android-preview-v0.8.0 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload android-preview-v0.8.0 \
+              android/app/build/outputs/apk/debug/app-debug.apk#Dragon-Arena-Android-Preview-v0.8.0.apk \
+              android/app/build/outputs/apk/debug/app-debug.apk.sha256#Dragon-Arena-Android-Preview-v0.8.0.apk.sha256 \
               --repo "$GITHUB_REPOSITORY" --clobber
-            gh release edit android-preview-v0.7.0 --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA"
+            gh release edit android-preview-v0.8.0 --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA"
           else
-          gh release create android-preview-v0.7.0 \
-            android/app/build/outputs/apk/debug/app-debug.apk#Dragon-Arena-Android-Preview-v0.7.0.apk \
-            android/app/build/outputs/apk/debug/app-debug.apk.sha256#Dragon-Arena-Android-Preview-v0.7.0.apk.sha256 \
-            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title 'Dragon Arena — Android Preview v0.7.0' \
+          gh release create android-preview-v0.8.0 \
+            android/app/build/outputs/apk/debug/app-debug.apk#Dragon-Arena-Android-Preview-v0.8.0.apk \
+            android/app/build/outputs/apk/debug/app-debug.apk.sha256#Dragon-Arena-Android-Preview-v0.8.0.apk.sha256 \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title 'Dragon Arena — Android Preview v0.8.0' \
             --notes 'TEST BUILD ONLY. Signed Android debug APK, Android 8+, offline assets, local arena with bots. Not public multiplayer or final-quality QA. Debug signing may change in later CI runs, requiring uninstall to upgrade.' \
             --prerelease
           fi
