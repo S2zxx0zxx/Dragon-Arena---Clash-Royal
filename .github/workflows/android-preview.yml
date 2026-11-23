@@ -2,7 +2,7 @@ name: Build installable Android preview APK
 on:
   push:
     branches: [feat/reference-locked-premium-3d-ui]
-    paths: ['android/**', '.github/workflows/android-preview.yml', 'tools/unpack_assets.py', 'packs/**', 'app/**']
+    paths: ['android/**', '.github/workflows/android-preview.yml', 'tools/unpack_assets.py', 'tools/browser_smoke.py', 'packs/**', 'app/**']
   workflow_dispatch:
 permissions:
   contents: write
