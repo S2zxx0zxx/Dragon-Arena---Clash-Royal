@@ -1,0 +1,9 @@
+<resources>
+    <style name="DragonArenaTheme" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowBackground">#080529</item>
+        <item name="android:navigationBarColor">#080529</item>
+        <item name="android:statusBarColor">#080529</item>
+    </style>
+</resources>

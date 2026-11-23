@@ -1,0 +1,70 @@
+name: Build installable Android preview APK
+on:
+  push:
+    branches: [feat/reference-locked-premium-3d-ui]
+    paths: ['android/**', '.github/workflows/android-preview.yml', 'tools/unpack_assets.py', 'packs/**', 'app/**']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  android-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Restore verified 3D game asset bundle
+        run: python3 tools/unpack_assets.py
+      - name: Package complete offline web runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p android/app/src/main/assets/www
+          cp -a app/. android/app/src/main/assets/www/
+          rm -rf android/app/src/main/assets/www/tests
+          sed -i "s/if('serviceWorker' in navigator \&\& location.protocol!=='file:')/if('serviceWorker' in navigator \&\& location.protocol!=='file:' \&\& !navigator.userAgent.includes('DragonArenaAndroidPreview'))/" android/app/src/main/assets/www/src/main.js
+          python3 - <<'PY'
+          import json, pathlib
+          r=pathlib.Path('android/app/src/main/assets/www')
+          m=json.loads((r/'manifest/game_assets.json').read_text())
+          assert len(m['characters'])==24
+          assert (r/'src/renderer.js').exists() and (r/'index.html').exists()
+          glbs=list(r.rglob('*.glb'))
+          assert len(glbs)>=80, f'Missing 3D models: {len(glbs)}'
+          print(f'Packaged offline 3D game: {len(glbs)} GLB meshes, {len(list(r.rglob("*")))} entries')
+          PY
+      - name: Assemble signed debug install APK
+        working-directory: android
+        run: gradle --no-daemon :app:assembleDebug
+      - name: Inspect generated APK
+        shell: bash
+        run: |
+          test -s android/app/build/outputs/apk/debug/app-debug.apk
+          sha256sum android/app/build/outputs/apk/debug/app-debug.apk > android/app/build/outputs/apk/debug/app-debug.apk.sha256
+          ls -lh android/app/build/outputs/apk/debug/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Dragon-Arena-Android-Preview-APK
+          path: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+            android/app/build/outputs/apk/debug/app-debug.apk.sha256
+          if-no-files-found: error
+      - name: Publish unmerged Android test build
+        if: github.ref == 'refs/heads/feat/reference-locked-premium-3d-ui'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release create android-preview-v0.4.1 \
+            android/app/build/outputs/apk/debug/app-debug.apk#Dragon-Arena-Android-Preview-v0.4.1.apk \
+            android/app/build/outputs/apk/debug/app-debug.apk.sha256#Dragon-Arena-Android-Preview-v0.4.1.apk.sha256 \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title 'Dragon Arena — Android Preview v0.4.1' \
+            --notes 'TEST BUILD ONLY. Signed Android debug APK, Android 8+, offline assets, local arena with bots. Not public multiplayer or final-quality QA. Debug signing may change in later CI runs, requiring uninstall to upgrade.' \
+            --prerelease
