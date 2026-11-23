@@ -4,6 +4,8 @@ import {initProgress,recordMatch,visitLab,claimMission,claimEvent,claimMilestone
 import {renderSecondaryPanel,SECONDARY_TITLES,ENVIRONMENTS} from './secondary.js';
 import {makeAudio} from './sound.mjs';
 import {drawMinimap,PRESENTATION} from './polish.mjs';
+import {mountCosmicBackdrop} from './cosmic.mjs';
+mountCosmicBackdrop(document.querySelector('#cosmic-backdrop'));
 const $=selector=>document.querySelector(selector), $$=selector=>[...document.querySelectorAll(selector)];
 const fmt=n=>Math.round(n).toLocaleString('en-US');
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -140,7 +142,7 @@ async function doAction(action){switch(action){case 'start':setScreen(saved.cons
  case 'boost':/* Hold-to-boost is handled on pointerdown/up to avoid sticky tap boost. */break;case 'magnet':case 'speed':case 'shield':usePower(action);break;
  case 'result':finalize();break;case 'revive-coins':revive();break;case 'share':try{await navigator.clipboard.writeText(`Dragon Arena demo: rank ${$('#final-rank').textContent}, collected ${$('#final-collected').textContent} mass!`);toast('Match summary copied')}catch{toast('Share needs clipboard permissions')}break;
  case 'shop':shopTab='offers';setScreen('shop');break;case 'shop-energy':shopTab='energy';setScreen('shop');break;case 'shop-coins':shopTab='coins';setScreen('shop');break;case 'shop-offers':shopTab='offers';setScreen('shop');break;
- case 'creatures':setScreen('creatures');break;case 'unlock-skin':unlockSkin();break;case 'rotate-dragon':renderer?.rotateShowcase(Math.PI/4);break;case 'reset-dragon':renderer?.resetShowcase();break;case 'reference':toggleRef();break;case 'close-ref':if(refOpen)toggleRef();break;
+ case 'creatures':setScreen('creatures');break;case 'unlock-skin':unlockSkin();break;case 'lab-prev':case 'lab-next':{const arr=manifest?.characters||[];const pos=arr.findIndex(c=>c.id===previewSkin);if(arr.length)await changeSkin(arr[(pos+(action==='lab-next'?1:-1)+arr.length)%arr.length].id);break;}case 'rotate-dragon':renderer?.rotateShowcase(Math.PI/4);break;case 'reset-dragon':renderer?.resetShowcase();break;case 'reference':toggleRef();break;case 'close-ref':if(refOpen)toggleRef();break;
  case 'edit-profile':editProfile();break;case 'claim-login':claimAction(action);break;
  case 'notice':toast('Prototype use: local demo only; no commercial product terms are active.');break;case 'privacy':toast('Save state is stored in browser localStorage. This demo has no backend or analytics.');break;
  default:if(action.startsWith('claim-'))claimAction(action);else if(SECONDARY_TITLES[action])showSecondary(action);else toast('Feature not available in this offline preview');
@@ -151,10 +153,10 @@ const keys=new Set();window.addEventListener('keydown',e=>{if(['Space','ArrowUp'
 const joystick=$('#joystick');function moveAim(x,y){let p=arena?.players.find(p=>p.id==='you');if(!p||!p.alive)return;const norm=Math.hypot(x,y)||1;p.aimAngle=Math.atan2(y/norm,x/norm)}
 function joystickMove(e){const rect=joystick.getBoundingClientRect(),dx=e.clientX-rect.left-rect.width/2,dy=e.clientY-rect.top-rect.height/2;moveAim(dx,dy);const len=Math.hypot(dx,dy),scale=Math.min(.25,len/rect.width),x=dx/(len||1)*scale*100,y=dy/(len||1)*scale*100;$('#stick').style.transform=`translate(${x}%,${y}%)`;}
 joystick.addEventListener('pointerdown',e=>{joystickHeld=true;joystick.setPointerCapture(e.pointerId);joystickMove(e)});joystick.addEventListener('pointermove',e=>{if(joystickHeld)joystickMove(e)});const joyStop=()=>{joystickHeld=false;$('#stick').style.transform='none'};joystick.addEventListener('pointerup',joyStop);joystick.addEventListener('pointercancel',joyStop);
-const labGesture=$('#lab-gesture');let dragPointer=null,dragX=0;
-labGesture?.addEventListener('pointerdown',e=>{dragPointer=e.pointerId;dragX=e.clientX;labGesture.setPointerCapture(e.pointerId)});
-labGesture?.addEventListener('pointermove',e=>{if(e.pointerId!==dragPointer)return;renderer?.rotateShowcase((e.clientX-dragX)*.014);dragX=e.clientX});
-for(const ev of ['pointerup','pointercancel'])labGesture?.addEventListener(ev,()=>{dragPointer=null});
+const labGesture=$('#lab-gesture');const labPointers=new Map();let lastPinch=null;
+labGesture?.addEventListener('pointerdown',e=>{labPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});lastPinch=null;labGesture.setPointerCapture(e.pointerId)});
+labGesture?.addEventListener('pointermove',e=>{if(!labPointers.has(e.pointerId))return;const last=labPointers.get(e.pointerId);labPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(labPointers.size===1){renderer?.rotateShowcase((e.clientX-last.x)*.014);return;}const [a,b]=[...labPointers.values()];const distance=Math.hypot(a.x-b.x,a.y-b.y);if(lastPinch!==null)renderer?.zoomShowcase(Math.max(-.05,Math.min(.05,(distance-lastPinch)*.004)));lastPinch=distance;});
+for(const ev of ['pointerup','pointercancel','lostpointercapture'])labGesture?.addEventListener(ev,e=>{labPointers.delete(e.pointerId);lastPinch=null});
 labGesture?.addEventListener('wheel',e=>{if(active!=='creatures')return;e.preventDefault();renderer?.zoomShowcase(e.deltaY>0?-.12:.12)},{passive:false});
 labGesture?.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){renderer?.rotateShowcase(e.key==='ArrowLeft'?-0.2:0.2);e.preventDefault()}});
 const boost=$('#boost-btn');boost.addEventListener('pointerdown',()=>currentlyBoost=true);boost.addEventListener('pointerup',()=>currentlyBoost=false);boost.addEventListener('pointercancel',()=>currentlyBoost=false);

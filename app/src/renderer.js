@@ -183,7 +183,7 @@ export class CrystalRenderer {
   }
   const x=arena?this.cameraAt.x:0,z=arena?this.cameraAt.y:0;
   const isLab=this.scene==='creatures';
-  const eye=arena?[x,30,z+5]:isLab?[2.2,5.25,12.2]:splash?[.0,5.5,13.5]:[3.0,6.1,12.2];
+  const eye=arena?[x,30,z+5]:isLab?[1.5,4.6,10.2]:splash?[0,5.05,12.3]:[2.6,5.85,11.8];
   const target=arena?[x,0,z]:[0,.6,0];
   const vp=matMultiply(arena?ortho(viewWidth,viewHeight,.1,300):perspective(43*RAD,asp,.1,300),lookAt(eye,target));
   gl.uniformMatrix4fv(this.u.uVP,false,vp);gl.uniform3fv(this.u.uCam,eye);gl.uniform1f(this.u.uTime,this.t);gl.uniform1i(this.u.uArenaTheme,this.arenaTheme||0);
@@ -198,8 +198,8 @@ export class CrystalRenderer {
    // Live procedural spine: each GLB is a real mesh and the complete 3D creature
    // curves, breathes and trails without flipping a pre-rendered image sheet.
    // Stage and floating dragon have distinct world-space height; this is NOT a flat portrait.
-   const rotate=isLab?this.previewRotation:Math.sin(this.t*.30)*.12;
-   const zoom=isLab?this.previewZoom:1;
+   const rotate=isLab?this.previewRotation+Math.sin(this.t*.36)*.10:Math.sin(this.t*.30)*.12;
+   const zoom=isLab?this.previewZoom*1.07:splash?1.05:1;
    const rise=1.5+Math.sin(this.t*1.45)*.14;
    const count=18,points=[];
    for(let i=0;i<count;i++){
