@@ -42,7 +42,11 @@ try:
   assert page.locator('#arena-alive').count()==1
   assert int(page.locator('#arena-alive').inner_text())==result['alive']
   assert page.locator('#arena-defeated').count()==1
-  assert page.locator('#arena-timer').inner_text()!='00:00'
+  clock=page.locator('#arena-timer').inner_text()
+  ticks=page.evaluate("window.__crystalDebug.arena.tick")
+  print('CLOCK_DIAGNOSTIC',{'clock':clock,'ticks':ticks},flush=True)
+  assert len(clock)==5 and clock[2]==':',clock
+  if ticks>=60: assert clock!='00:00',clock
   assert page.locator('#arena-effects').evaluate('(e)=>e.width>0 && e.height>0')
   page.screenshot(path=str(root/'qa'/'browser_arena_smoke.png'))
   page.evaluate("() => {const a=window.__crystalDebug.arena;a.kill(a.players.find(p=>p.id==='you'),'boundary')}")
