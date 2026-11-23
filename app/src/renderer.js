@@ -157,7 +157,7 @@ export class CrystalRenderer {
   const m=this.manifest?.characters?.find(c=>c.id===this.skin);if(!m)return;
   const base=`assets/characters/${m.rarity}/${m.id}/3d/`;
   await Promise.all(['head','body','tail','preview_10_parts'].map(k=>this.ready(base+k+'.glb')));
-  for(const food of ['energy_orb','crystal_shard','star_dust','galaxy_orb','heart_core'])await this.ready(`assets/food/3d/${food}.glb`);
+  for(const food of (this.manifest?.food||[]).map(f=>f.id))await this.ready(`assets/food/3d/${food}.glb`);
   await this.ready(`assets/death_effects/3d/${m.id}_peak_burst.glb`);
   await this.ready('assets/scene/lobby_stage.glb');
   // Two additional 3D dragons on the loading screen; never static wallpaper.
@@ -232,7 +232,7 @@ export class CrystalRenderer {
   }else return;
   if(!this.arena)return;
   const visible=this.arena.food.filter(f=>Math.abs(f.x-x)<27&&Math.abs(f.y-z)<21).slice(0,95);
-  for(const f of visible){const mesh=this.resolved?.get(`assets/food/3d/${f.type}.glb`);this.drawModel(mesh,f.x,.45+Math.sin(this.t*3+f.id)*.12,f.y,this.t*.7+f.id,.92,.95);}
+  for(const f of visible){const mesh=this.resolved?.get(`assets/food/3d/${f.type}.glb`);this.drawModel(mesh,f.x,.52+Math.sin(this.t*2.6+f.id)*.15,f.y,this.t*.65+f.id,1.22+(f.mass>=3?.16:0),.93);}
   for(const p of this.arena.players){if(!p.alive||Math.abs(p.x-x)>30||Math.abs(p.y-z)>25)continue;
    const m=this.manifest?.characters?.find(c=>c.id===p.skin);if(!m)continue;const b=`assets/characters/${m.rarity}/${p.skin}/3d/`;
    const head=this.resolved?.get(b+'head.glb'),body=this.resolved?.get(b+'body.glb'),tail=this.resolved?.get(b+'tail.glb');
