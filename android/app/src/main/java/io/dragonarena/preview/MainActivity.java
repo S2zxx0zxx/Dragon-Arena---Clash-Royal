@@ -42,7 +42,7 @@ public final class MainActivity extends Activity {
         web.setMediaPlaybackRequiresUserGesture(false);
         web.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         web.setDefaultTextEncodingName("UTF-8");
-        web.setUserAgentString(web.getUserAgentString() + " DragonArenaAndroidPreview/0.5.0");
+        web.setUserAgentString(web.getUserAgentString() + " DragonArenaAndroidPreview/0.5.1");
         game.setWebChromeClient(new WebChromeClient());
         game.setWebViewClient(new WebViewClient() {
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {

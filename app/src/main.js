@@ -2,6 +2,7 @@ import {CrystalArena, RULES} from '../engine/arena.mjs';
 import {CrystalRenderer} from './renderer.js';
 import {initProgress,recordMatch,visitLab,claimMission,claimEvent,claimMilestone,claimLogin} from './progression.mjs';
 import {renderSecondaryPanel,SECONDARY_TITLES,ENVIRONMENTS} from './secondary.js';
+import {makeAudio} from './sound.mjs';
 const $=selector=>document.querySelector(selector), $$=selector=>[...document.querySelectorAll(selector)];
 const fmt=n=>Math.round(n).toLocaleString('en-US');
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -9,6 +10,7 @@ const STORAGE_KEY='dragon-arena-v4-demo';
 const defaultSave={name:'DragonPilot',level:1,xp:0,coins:9750,gems:125,energy:20,skin:'neon_dragonling',ownedSkins:['pebble_wisp','leafling','bubbletail','rockcoil','neon_dragonling'],inventory:{magnet:3,speed:3,shield:2},played:0};
 let saved;try{saved={...defaultSave,...JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}')}}catch{saved={...defaultSave}};
 initProgress(saved);
+const audio=makeAudio(()=>saved.settings.sound);
 const save=()=>{try{localStorage.setItem(STORAGE_KEY,JSON.stringify(saved))}catch{}};
 let finishedMatch=false,secondaryTab='local',startingArena=false;
 function applyPreferences(){if(!renderer)return;renderer.graphicsQuality=saved.settings.graphics;renderer.glowEnabled=saved.settings.glow;renderer.arenaTheme=saved.arenaTheme;$('#app').classList.toggle('reduce-motion',!saved.settings.motion);}
@@ -58,10 +60,10 @@ async function startArena(){
  }catch(e){console.error(e);toast('Could not start arena: '+e.message)}finally{startingArena=false}
 }
 function doDeath(){if(active!=='arena')return;const p=arena.players.find(p=>p.id==='you');deathPosition={x:p.x,y:p.y};reviveLeft=5;reviveTick=performance.now();let ranking=arena.players.filter(x=>x.alive||x.id==='you').sort((a,b)=>b.score-a.score);let rank=1+ranking.findIndex(x=>x.id==='you');if(rank<=0)rank=8;
- $('#death-rank').textContent='#'+rank;$('#death-mass').textContent=fmt(p.score);$('#revive-clock').textContent='5';setScreen('revive');}
+ $('#death-rank').textContent='#'+rank;$('#death-mass').textContent=fmt(p.score);$('#revive-clock').textContent='5';audio.play('death');setScreen('revive');}
 function finalize(){if(finishedMatch)return;if(!arena){setScreen('home');return}finishedMatch=true;const p=arena.players.find(p=>p.id==='you');let rank=1+arena.players.filter(x=>x.score>p.score).length;
  let xp=Math.min(2000,Math.round(p.score*2+elapsed*1.6+kills*35));let earned=Math.min(1500,Math.floor(p.score/3)+kills*15);saved.coins+=earned;saved.xp+=xp;saved.played++;recordMatch(saved,{mass:p.score,kills,seconds:elapsed,rank,skin:saved.skin,players:arena.players.map(pl=>({name:pl.id==='you'?saved.name:pl.id,score:pl.score,isYou:pl.id==='you'}))});while(saved.xp>=saved.level*1000){saved.xp-=saved.level*1000;saved.level++}save();
- $('#final-rank').textContent='#'+rank;$('#final-collected').textContent=fmt(p.score);$('#final-kills').textContent=fmt(kills);$('#final-time').textContent=`${Math.floor(elapsed/60)}m ${Math.floor(elapsed%60)}s`;$('#final-xp').textContent='+'+fmt(xp);setScreen('result');toast(`Earned ${fmt(earned)} demo coins`);
+ $('#final-rank').textContent='#'+rank;$('#final-collected').textContent=fmt(p.score);$('#final-kills').textContent=fmt(kills);$('#final-time').textContent=`${Math.floor(elapsed/60)}m ${Math.floor(elapsed%60)}s`;$('#final-xp').textContent='+'+fmt(xp);setScreen('result');audio.play('reward');toast(`Earned ${fmt(earned)} demo coins`);
 }
 function revive(){if(active!=='revive'||saved.coins<250){toast('Not enough demo coins');return}saved.coins-=250;save();let p=arena.players.find(p=>p.id==='you');const loc=arena.point(20);p.alive=true;p.x=loc.x;p.y=loc.y;p.angle=0;p.aimAngle=0;p.history=[];for(let i=0;i<250;i++)p.history.push({x:p.x-i*.62,y:p.y});p.body=arena.sampleBody(p);arena.effects=[];paused=false;setScreen('arena');toast('Rejoined locally — score and mass retained')}
 function renderHUD(){if(!arena)return;const p=arena.players.find(p=>p.id==='you');$('#live-score').textContent=fmt(p.score);$('#live-length').textContent=p.segmentCount;$('#quest-progress').style.width=Math.min(100,p.mass/2200*100)+'%';$('#quest-text').textContent=fmt(p.mass)+' / 2,200';
@@ -70,7 +72,7 @@ function renderHUD(){if(!arena)return;const p=arena.players.find(p=>p.id==='you'
  for(let k of ['magnet','speed','shield'])$('#'+k+'-count').textContent=saved.inventory[k]||0;
 }
 function usePower(kind){if(active!=='arena')return;const n=saved.inventory[kind]||0;if(!n){toast(`${kind} not in inventory — visit Shop`);return}saved.inventory[kind]=n-1;save();if(kind==='speed'){const p=arena.players.find(p=>p.id==='you');p.boostExpires=performance.now()+4000;p.boost=true}else if(kind==='magnet'){const p=arena.players.find(p=>p.id==='you');let near=arena.food.filter(f=>Math.hypot(p.x-f.x,p.y-f.y)<6).slice(0,20);let ids=new Set(near.map(f=>f.id));p.mass+=near.reduce((s,f)=>s+f.mass,0);p.score+=near.reduce((s,f)=>s+f.mass,0);arena.food=arena.food.filter(f=>!ids.has(f.id));}else if(kind==='shield'){const p=arena.players.find(p=>p.id==='you');p.shieldUntilTick=arena.tick+Math.round(10/RULES.fixedDt);}
- toast(kind.toUpperCase()+' activated');renderHUD();}
+ audio.play('power');toast(kind.toUpperCase()+' activated');renderHUD();}
 const shopData={
  offers:[['FREE CHEST','Once per UTC day','🎁','FREE','daily'],['DRAGON STARTER','Featured preview','💠','PREVIEW','preview'],['NO ADS','Billing not integrated','🚫','COMING SOON','unavailable'],['DRAGON TREASURY','Premium art preview','🐉','PREVIEW','preview'],['WELCOME BONUS','Demo coins × 150','🪙','CLAIM','welcome'],['EVENT CRYSTAL','Coming soon','💎','LOCKED','unavailable']],
  energy:[['DAILY CHARGE','Restore 5 energy','⚡','FREE','energy'],['ENERGY ×20','Demo economy only','⚡','COMING SOON','unavailable'],['ENERGY ×100','Demo economy only','⚡','COMING SOON','unavailable'],['INFINITE ENERGY','Not enabled','♾','COMING SOON','unavailable'],['ARENA PASS','Never pay-to-win','🎟','INFO','info'],['BONUS ENERGY','Event system pending','✨','LOCKED','unavailable']],
@@ -101,7 +103,7 @@ function showSecondary(key){secondaryKey=key;secondaryTab=key==='leaderboard'?'l
 function claimAction(action){
  const [kind,id]=action.split(':');
  const result=kind==='claim-login'?claimLogin(saved):kind==='claim-mission'?claimMission(saved,id):kind==='claim-event'?claimEvent(saved,id):kind==='claim-milestone'?claimMilestone(saved,id):{ok:false,message:'Unknown claim'};
- if(result.ok){save();renderStats();renderSecondary();}
+ if(result.ok){audio.play('reward');save();renderStats();renderSecondary();}
  toast(result.message);
 }
 function changeEnvironment(index){
@@ -126,7 +128,7 @@ async function doAction(action){switch(action){case 'start':setScreen(saved.cons
  case 'notice':toast('Prototype use: local demo only; no commercial product terms are active.');break;case 'privacy':toast('Save state is stored in browser localStorage. This demo has no backend or analytics.');break;
  default:if(action.startsWith('claim-'))claimAction(action);else if(SECONDARY_TITLES[action])showSecondary(action);else toast('Feature not available in this offline preview');
 }}
-document.addEventListener('click',e=>{const env=e.target.closest('[data-environment]');if(env){changeEnvironment(Number(env.dataset.environment));return}const tab=e.target.closest('[data-panel-tab]');if(tab){secondaryTab=tab.dataset.panelTab;renderSecondary();return}const shop=e.target.closest('[data-shop]');if(shop){shopTab=shop.dataset.shop;updateShop();return}const skin=e.target.closest('[data-skin]');if(skin){changeSkin(skin.dataset.skin);return}const buyButton=e.target.closest('[data-purchase]');if(buyButton){buy(buyButton.dataset.purchase);return}const target=e.target.closest('[data-action]');if(target){doAction(target.dataset.action);}});
+document.addEventListener('click',e=>{const env=e.target.closest('[data-environment]');if(env){changeEnvironment(Number(env.dataset.environment));return}const tab=e.target.closest('[data-panel-tab]');if(tab){secondaryTab=tab.dataset.panelTab;renderSecondary();return}const shop=e.target.closest('[data-shop]');if(shop){shopTab=shop.dataset.shop;updateShop();return}const skin=e.target.closest('[data-skin]');if(skin){changeSkin(skin.dataset.skin);return}const buyButton=e.target.closest('[data-purchase]');if(buyButton){buy(buyButton.dataset.purchase);return}const target=e.target.closest('[data-action]');if(target){audio.play('tap');doAction(target.dataset.action);}});
 document.addEventListener('change',e=>{const setting=e.target.closest('[data-setting]');if(setting)changeSetting(setting.dataset.setting,setting.type==='checkbox'?setting.checked:setting.value);});
 const keys=new Set();window.addEventListener('keydown',e=>{if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();keys.add(e.code);if(e.code==='Escape'){if(refOpen)toggleRef();else if(active==='arena')doAction('pause');else if(!$('#pause-layer').classList.contains('hidden'))doAction('resume');else if(active!=='home')doAction('home')}});window.addEventListener('keyup',e=>keys.delete(e.code));
 const joystick=$('#joystick');function moveAim(x,y){let p=arena?.players.find(p=>p.id==='you');if(!p||!p.alive)return;const norm=Math.hypot(x,y)||1;p.aimAngle=Math.atan2(y/norm,x/norm)}
@@ -135,7 +137,7 @@ joystick.addEventListener('pointerdown',e=>{joystickHeld=true;joystick.setPointe
 const boost=$('#boost-btn');boost.addEventListener('pointerdown',()=>currentlyBoost=true);boost.addEventListener('pointerup',()=>currentlyBoost=false);boost.addEventListener('pointercancel',()=>currentlyBoost=false);
 $('#arena').addEventListener('pointermove',e=>{if(joystickHeld||e.target.closest('button')||e.pointerType==='touch')return;const x=e.clientX-innerWidth/2,y=e.clientY-innerHeight/2;moveAim(x,y)});
 function frame(time){let dt=Math.min(.08,(time-lastRender)/1000||.016);lastRender=time;
- if(active==='arena'&&arena&&!paused){const p=arena.players.find(p=>p.id==='you');const dx=(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),dy=(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0);if(dx||dy)p.aimAngle=Math.atan2(dy,dx);p.boost=currentlyBoost||keys.has('Space')||(p.boostExpires||0)>time;acc+=dt;let ticks=0;while(acc>=RULES.fixedDt&&ticks<5){arena.step(RULES.fixedDt);for(const fx of arena.effects){if(fx.killerId==='you'&&!countedDeaths.has(fx.id)){countedDeaths.add(fx.id);kills++;}}acc-=RULES.fixedDt;ticks++;elapsed+=RULES.fixedDt;if(!p.alive){doDeath();break;}}if(ticks||Math.floor(time)%50===0)renderHUD();}
+ if(active==='arena'&&arena&&!paused){const p=arena.players.find(p=>p.id==='you');const dx=(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),dy=(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0);if(dx||dy)p.aimAngle=Math.atan2(dy,dx);p.boost=currentlyBoost||keys.has('Space')||(p.boostExpires||0)>time;acc+=dt;let ticks=0;while(acc>=RULES.fixedDt&&ticks<5){const massBefore=p.mass;arena.step(RULES.fixedDt);if(p.mass>massBefore)audio.play('pickup');for(const fx of arena.effects){if(fx.killerId==='you'&&!countedDeaths.has(fx.id)){countedDeaths.add(fx.id);kills++;}}acc-=RULES.fixedDt;ticks++;elapsed+=RULES.fixedDt;if(!p.alive){doDeath();break;}}if(ticks||Math.floor(time)%50===0)renderHUD();}
  if(active==='revive'){if(time-reviveTick>=1000){reviveLeft=Math.max(0,reviveLeft-1);reviveTick=time;$('#revive-clock').textContent=reviveLeft;if(!reviveLeft)finalize();}}
  if(renderer)try{renderer.render(dt)}catch(e){console.error('Renderer frame failure',e);$('#render-status').textContent='RENDER ERROR: '+e.message;renderer=null;}requestAnimationFrame(frame);
 }
