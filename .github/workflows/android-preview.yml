@@ -45,7 +45,7 @@ jobs:
         run: |
           python3 -m pip install --disable-pip-version-check playwright==1.56.0
           python3 -m playwright install chromium
-      # Fail closed on startup exceptions before packaging the Android APK.
+      # Fail closed on startup exceptions and arena errors before packaging the Android APK.
       - name: Real WebGL2 browser startup and arena smoke
         run: python3 tools/browser_smoke.py
       - name: Package complete offline web runtime
