@@ -119,7 +119,7 @@ export class CrystalRenderer {
  async preload(skin){
   const found=this.manifest?.characters?.find(c=>c.id===skin);if(!found)return;
   const dir=`assets/characters/${found.rarity}/${skin}/3d`;
-  await Promise.all(['head','body','tail','preview_10_parts'].map(k=>this.get(`${dir}/${k}.glb`).catch(()=>null)));
+  await Promise.all(['head','body','tail'].map(k=>this.get(`${dir}/${k}.glb`).catch(()=>null)));
  }
  async get(path){if(!this.cache.has(path))this.cache.set(path,loadGLB(path,this.gl).catch(e=>{this.cache.delete(path);throw e;}));return this.cache.get(path);}
  async useSkin(id){this.skin=id;await this.preload(id);}
@@ -153,17 +153,42 @@ export class CrystalRenderer {
  peek(path){const v=this.cache.get(path);return v&&v._value?v._value:null;}
  // A resolved-promise cache is tracked separately to avoid await in render frame.
  async ready(path){const v=await this.get(path);this.resolved??=new Map();this.resolved.set(path,v);return v;}
- async prime(){
-  const m=this.manifest?.characters?.find(c=>c.id===this.skin);if(!m)return;
-  const base=`assets/characters/${m.rarity}/${m.id}/3d/`;
-  await Promise.all(['head','body','tail','preview_10_parts'].map(k=>this.ready(base+k+'.glb')));
-  for(const food of (this.manifest?.food||[]).map(f=>f.id))await this.ready(`assets/food/3d/${food}.glb`);
-  await this.ready(`assets/death_effects/3d/${m.id}_peak_burst.glb`);
-  await this.ready('assets/scene/lobby_stage.glb');
-  // Two additional 3D dragons on the loading screen; never static wallpaper.
-  for(const id of ['aqua_crystal','solar_wyvern']){
-   const extra=this.manifest?.characters?.find(c=>c.id===id);if(extra){
-     await this.ready(`assets/characters/${extra.rarity}/${id}/3d/preview_10_parts.glb`).catch(()=>{});
+
+ async prime(mode='hero'){
+  const c=this.manifest?.characters?.find(x=>x.id===this.skin);
+  if(!c)throw Error('Selected 3D dragon not found');
+  const prefix='assets/characters/'+c.rarity+'/'+c.id+'/3d/';
+  for(const part of ['head','body','tail'])await this.ready(prefix+part+'.glb');
+  if(mode==='arena'){
+   for(const food of this.manifest?.food||[])try{await this.ready('assets/food/3d/'+food.id+'.glb');}
+    catch(error){console.warn('Optional food GLB unavailable',food.id,error);}
+   try{await this.ready('assets/death_effects/3d/'+c.id+'_peak_burst.glb');}
+    catch(error){console.warn('Optional death effect unavailable',error);}
+  }else{
+   try{await this.ready('assets/scene/lobby_stage.glb');}
+   catch(error){console.warn('Optional stage unavailable',error);}
+  }
+ }
+ async streamRivals(rivals,match){
+  for(const rival of rivals){
+   if(this.arena!==match)return;
+   const c=this.manifest?.characters?.find(x=>x.id===rival.skin);
+   if(!c)continue;
+   for(const part of ['head','body','tail']){
+    if(this.arena!==match)return;
+    try{await this.ready('assets/characters/'+c.rarity+'/'+c.id+'/3d/'+part+'.glb');}
+    catch(error){console.warn('NPC mesh unavailable',c.id,part,error);}
+   }
+   await new Promise(resolve=>setTimeout(resolve,0));
+  }
+ }
+ releaseArenaAssets(){
+  if(!this.resolved)return;
+  const c=this.manifest?.characters?.find(x=>x.id===this.skin);
+  const keep=c?'assets/characters/'+c.rarity+'/'+c.id+'/3d/':'';
+  for(const [path,model] of this.resolved){
+   if(path.startsWith('assets/characters/')&&!path.startsWith(keep)){
+    model.dispose?.();this.resolved.delete(path);this.cache.delete(path);
    }
   }
  }
@@ -219,12 +244,8 @@ export class CrystalRenderer {
    const p0=points[0],tip=points[count-1],prev=points[count-2];
    this.drawModel(head,p0.x,p0.h,p0.z,Math.PI-rotate,.94*zoom,.98,matMultiply(Ry(Math.sin(this.t*.63)*.075),Rx(Math.sin(this.t*.8)*.034)));
    this.drawModel(tail,tip.x,tip.h,tip.z,Math.PI-rotate+Math.sin(this.t*2.5)*.20,.75*zoom,.81);
-   if(splash){
-     for(const [id,rarity,offset,scale] of [['aqua_crystal','uncommon',-6.25,.28],['solar_wyvern','epic',6.10,.30]]){
-       const mesh=this.resolved?.get(`assets/characters/${rarity}/${id}/3d/preview_10_parts.glb`);
-       if(mesh)this.drawModel(mesh,offset,1.3+Math.sin(this.t*1.7+offset)*.35,-2,Math.sin(this.t*.55+offset)*.38,scale,.7);
-     }
-   }
+   // Reuse animated hero instead of loading hundreds of unused loading-screen preview geometries.
+
    return;
   }else if(burst){
    const fx=this.resolved?.get(`assets/death_effects/3d/${this.skin}_peak_burst.glb`);

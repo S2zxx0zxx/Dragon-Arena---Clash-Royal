@@ -33,7 +33,7 @@ function setScreen(name){if(!SCREENS.includes(name))return;active=name;$$('.scre
  if(renderer)renderer.scene=({splash:'splash',home:'home',creatures:'creatures',arena:'arena',revive:'revive'})[name]||'none';
  if(name==='creatures')renderer?.resetShowcase?.();
  renderStats();if(name==='shop')updateShop();if(name==='creatures'){previewSkin=saved.skin;visitLab(saved);save();buildLab();}
- if(name==='home'){const owned=manifest?.characters?.find(c=>c.id===saved.skin);if(owned)$('#hero-name').textContent=owned.name;
+ if(name==='home'){renderer?.releaseArenaAssets?.();const owned=manifest?.characters?.find(c=>c.id===saved.skin);if(owned)$('#hero-name').textContent=owned.name;
   if(renderer&&renderer.skin!==saved.skin)renderer.useSkin(saved.skin).then(()=>renderer.prime()).catch(e=>console.error('Could not restore owned skin',e));}if(name==='secondary')renderSecondary();
  $('#render-status').textContent=renderer?`WEBGL2 · ${renderer.scene.toUpperCase()} · LOCAL DEMO`:'3D ENGINE UNAVAILABLE';
 }
@@ -69,13 +69,11 @@ async function startArena(mode='quick'){
   next.seedFood(155);
   for(let i=0;i<22;i++){const a=next.random()*Math.PI*2,d=2+next.random()*13,food=next.rollFood();
    next.addFood({x:90+Math.cos(a)*d,y:90+Math.sin(a)*d,type:food.id,mass:food.mass,source:'opening'});}
-  renderer.arena=next;await renderer.prime();
-  for(const rival of rivals){const model=manifest.characters.find(ch=>ch.id===rival.skin);
-   if(!model)throw Error('Missing NPC model '+rival.skin);
-   for(const part of ['head','body','tail'])await renderer.ready('assets/characters/'+model.rarity+'/'+model.id+'/3d/'+part+'.glb');}
+  renderer.arena=next;await renderer.prime('arena');
+  // No synchronous load of every NPC GLB: stream meshes after gameplay becomes interactive.
   if(mode!=='practice'&&!spendEnergy(saved,1)){toast('Not enough energy');return;}
   save();arena=next;elapsed=0;kills=0;finishedMatch=false;countedDeaths.clear();
-  paused=false;acc=0;currentlyBoost=false;activeMode=mode;setScreen('arena');renderHUD();
+  paused=false;acc=0;currentlyBoost=false;activeMode=mode;setScreen('arena');renderHUD();renderer.streamRivals(rivals,next).catch(e=>console.warn('NPC mesh stream stopped',e));
  }catch(e){console.error(e);toast('Arena failed to initialize: '+e.message);}finally{startingArena=false;}
 }
 function doDeath(){if(active!=='arena')return;const p=arena.players.find(p=>p.id==='you');deathPosition={x:p.x,y:p.y};reviveLeft=5;reviveTick=performance.now();let ranking=arena.players.filter(x=>x.alive||x.id==='you').sort((a,b)=>b.score-a.score);let rank=1+ranking.findIndex(x=>x.id==='you');if(rank<=0)rank=8;
