@@ -19,7 +19,8 @@ def main():
             target=(ROOT/m.name).resolve()
             if not target.is_relative_to(ROOT.resolve()) or not(m.isfile() or m.isdir()):
                 raise RuntimeError('Unsafe archived entry: '+m.name)
+        entry_count=len(tar.getmembers())
         tar.extractall(ROOT,filter='data')
-    print(f'Assets restored: {len(data):,} bytes, {len(tar.getmembers())} archived entries')
+    print(f'Assets restored: {len(data):,} bytes, {entry_count} archived entries')
 
 if __name__=='__main__': main()
