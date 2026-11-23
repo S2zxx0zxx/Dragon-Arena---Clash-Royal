@@ -212,7 +212,7 @@ export class CrystalRenderer {
    }
   }
  }
- resize(){const dpr=Math.min(devicePixelRatio||1,this.graphicsQuality==='battery'?.85:this.graphicsQuality==='high'?1.65:(this.arena&&this.scene==='arena')?1.25:1.5),w=Math.round(this.canvas.clientWidth*dpr),h=Math.round(this.canvas.clientHeight*dpr);if(w!==this.canvas.width||h!==this.canvas.height){this.canvas.width=w;this.canvas.height=h;}this.gl.viewport(0,0,w,h);return {w,h};}
+ resize(){const dpr=Math.min(devicePixelRatio||1,this.graphicsQuality==='battery'?.78:this.graphicsQuality==='high'?1.45:(this.arena&&this.scene==='arena')?1.0:1.3),w=Math.round(this.canvas.clientWidth*dpr),h=Math.round(this.canvas.clientHeight*dpr);if(w!==this.canvas.width||h!==this.canvas.height){this.canvas.width=w;this.canvas.height=h;}this.gl.viewport(0,0,w,h);return {w,h};}
  render(dt=0.016){if(this.lost)return;const gl=this.gl,{w,h}=this.resize();this.t+=dt;gl.clearColor(0,0,0,0);gl.clearDepth(1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);if(!w||!h)return;
   gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.useProgram(this.program);
   const asp=w/h,arena=this.scene==='arena',home=this.scene==='home'||this.scene==='creatures',splash=this.scene==='splash',burst=this.scene==='revive';
@@ -273,7 +273,11 @@ export class CrystalRenderer {
    for(let i=0;i<3;i++)this.drawModel(fx,Math.cos(this.t*.28+i*2.09)*.15,Math.sin(this.t*.4+i)*.12,0,this.t*(.28+i*.18),1.25-i*.24,.88);return;
   }else return;
   if(!this.arena)return;
-  const visible=this.arena.food.filter(f=>Math.abs(f.x-x)<viewWidth*.58&&Math.abs(f.y-z)<viewHeight*.65).slice(0,100);
+  // Render full 3D GLBs for nearby food; distant food uses cached 2.5D billboards.
+  // Prevents 100+ redundant GLB draw calls per frame on Android WebView.
+  const maxFoodMeshes=this.graphicsQuality==='battery'?8:this.graphicsQuality==='high'?32:18;
+  const visible=this.arena.food.filter(f=>Math.abs(f.x-x)<viewWidth*.58&&Math.abs(f.y-z)<viewHeight*.65)
+   .sort((a,b)=>(a.x-x)**2+(a.y-z)**2-((b.x-x)**2+(b.y-z)**2)).slice(0,maxFoodMeshes);
   for(const f of visible){const mesh=this.resolved?.get(`assets/food/3d/${f.type}.glb`);this.drawModel(mesh,f.x,.52+Math.sin(this.t*2.6+f.id)*.15,f.y,this.t*.65+f.id,.78+(f.mass>=3?.2:0),.93);}
   for(const p of this.arena.players){if(!p.alive||Math.abs(p.x-x)>30||Math.abs(p.y-z)>25)continue;
    const m=this.manifest?.characters?.find(c=>c.id===p.skin);if(!m)continue;const b=`assets/characters/${m.rarity}/${p.skin}/3d/`;

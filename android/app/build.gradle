@@ -10,8 +10,8 @@ android {
         applicationId 'io.dragonarena.preview'
         minSdk 26
         targetSdk 35
-        versionCode 11
-        versionName '0.9.1-preview'
+        versionCode 12
+        versionName '0.9.2-preview'
     }
 
     buildTypes {
