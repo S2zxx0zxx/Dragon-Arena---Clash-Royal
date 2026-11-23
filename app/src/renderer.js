@@ -30,18 +30,26 @@ void main(){
   float cloud=noise2(uv*.016+vec2(uTime*.0013,.1))*.39 + noise2(uv*.035)*.24 + noise2(uv*.088)*.13;
   float deep=pow(max(0.,sin(slow.x*3.4+sin(slow.y*2.4)*1.7)),5.);
   float galaxies=pow(max(0.,1.-distance(uv,vec2(129.,44.))/51.),4.);
-  float nebula=cloud*.66+deep*.1+galaxies*.14;
-  vec3 ink=vec3(.004,.005,.022),neb=vec3(.036,.018,.116),light=vec3(.15,.045,.26);
+  float nebula=cloud*.90+deep*.16+galaxies*.2;
+  vec3 ink=vec3(.014,.022,.092),neb=vec3(.085,.05,.24),light=vec3(.36,.12,.53);
   if(uArenaTheme==1){ink=vec3(.002,.011,.025);neb=vec3(.013,.06,.083);light=vec3(.04,.22,.33);}
   else if(uArenaTheme==2){ink=vec3(.006,.009,.027);neb=vec3(.039,.033,.087);light=vec3(.11,.10,.23);}
   else if(uArenaTheme==3){ink=vec3(.003,.018,.031);neb=vec3(.018,.069,.051);light=vec3(.08,.17,.10);}
   else if(uArenaTheme==4){ink=vec3(.012,.003,.029);neb=vec3(.067,.016,.083);light=vec3(.25,.05,.28);}
   else if(uArenaTheme==5){ink=vec3(.006,.012,.026);neb=vec3(.041,.049,.075);light=vec3(.15,.18,.21);}
-  vec3 col=mix(ink,neb,nebula)+light*galaxies*.27;
-  vec2 starcell=floor(uv*1.15);float star=hash21(starcell);
-  float localStar=length(fract(uv*1.15)-.5);
-  float sparkle=(1.-smoothstep(.015,.085,localStar))*step(.986,star);
-  col+=vec3(.35,.56,.97)*sparkle*(.55+.45*sin(uTime*1.7+star*50.));
+  vec3 col=mix(ink,neb,min(1.,nebula*1.5))+light*galaxies*.38;
+  vec2 swirl=uv-vec2(108.,120.);float radius=length(swirl),theta=atan(swirl.y,swirl.x);
+  float arms=pow(max(0.,sin(theta*3.2-radius*.21+uTime*.004)),5.);
+  float core=exp(-radius*.04);
+  col+=vec3(.19,.085,.45)*core*(.48+arms*.75);
+  float ribbon=pow(max(0.,sin(uv.x*.08+sin(uv.y*.032)*3.1+uTime*.003)),16.);
+  col+=vec3(.105,.038,.24)*ribbon*.7;
+  vec2 starcell=floor(uv*1.9);float star=hash21(starcell);
+  float localStar=length(fract(uv*1.9)-.5);
+  float sparkle=(1.-smoothstep(.012,.105,localStar))*step(.963,star);
+  col+=mix(vec3(.36,.68,1.),vec3(1.,.52,.97),hash21(starcell+vec2(5.,17.)))*sparkle*(.6+.4*sin(uTime*1.1+star*50.));
+  vec2 fleckCell=floor(uv*.56);vec2 fleck=fract(uv*.56)-.5;float shard=step(.984,hash21(fleckCell));
+  col+=vec3(.09,.43,.69)*shard*max(0.,1.-length(fleck)*5.)*.45;
   // A faint cosmic path adds motion without distracting from food and player.
   float curved=abs(sin(length(uv-vec2(85.,104.))*.028 + sin(uv.x*.012+uTime*.018)));
   col+=light*pow(max(0.,1.-curved),34.)*.11;
@@ -92,7 +100,7 @@ export class CrystalRenderer {
   this.cache=new Map();this.scene='home';this.skin='neon_dragonling';this.arena=null;this.t=0;this.cameraAt=[0,0,0];this.arenaTheme=0;this.graphicsQuality='balanced';this.glowEnabled=true;
   const vertices=new Float32Array([-1024,0,-1024,1024,0,-1024,1024,0,1024,-1024,0,1024]);const indices=new Uint32Array([0,1,2,0,2,3]);
   const vao=gl.createVertexArray();gl.bindVertexArray(vao);let vb=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vb);gl.bufferData(gl.ARRAY_BUFFER,vertices,gl.STATIC_DRAW);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,0,0);let ib=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.STATIC_DRAW);gl.bindVertexArray(null);this.ground={parts:[{vao,count:6,color:[.02,.06,.19]}]};
-  this.cameraAt=null;this.arenaElapsed=0;this.currentVP=null;this.lastViewHeight=24.5;this.previewRotation=0;this.previewZoom=1;this.boundary=this.makeArenaFence();
+  this.cameraAt=null;this.arenaElapsed=0;this.currentVP=null;this.lastViewHeight=21.5;this.previewRotation=0;this.previewZoom=1;this.boundary=this.makeArenaFence();
  }
  makeArenaFence(){
   const gl=this.gl,vertices=[],indices=[];
@@ -210,7 +218,7 @@ export class CrystalRenderer {
   const asp=w/h,arena=this.scene==='arena',home=this.scene==='home'||this.scene==='creatures',splash=this.scene==='splash',burst=this.scene==='revive';
   const pp=this.arena?.players?.find(p=>p.id==='you');
   if(arena&&this.arenaElapsed<10)this.arenaElapsed+=dt;
-  const viewHeight=arena?24.5+8*Math.exp(-this.arenaElapsed*1.5):29,viewWidth=viewHeight*asp;this.lastViewHeight=viewHeight;
+  const viewHeight=arena?21.5+10.5*Math.exp(-this.arenaElapsed*1.45):29,viewWidth=viewHeight*asp;this.lastViewHeight=viewHeight;
   const desired=constrainCamera({x:pp?.x??90,y:pp?.y??90},viewWidth,viewHeight);
   if(!this.cameraAt||!arena)this.cameraAt={...desired};
   else{

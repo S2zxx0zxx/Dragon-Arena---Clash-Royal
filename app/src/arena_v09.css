@@ -50,3 +50,9 @@
 #result .cta-row .btn[data-action='home']{background:linear-gradient(#45e8ff,#1166d1);border-color:#a2f4ff}#result .cta-row .btn[data-action='share']{background:linear-gradient(#c254ff,#6c0eba);border-color:#f7a8ff}
 @media(max-height:550px){#result .result-castle{height:94%;top:3%;padding:1% 2%}#result .results-panel{padding:6px 10px}#result .cta-row .btn{padding:5px 4px}#result .trophy{font-size:clamp(50px,15vh,87px)}#arena .hud-leader{font-size:.88em}}
 @media(max-width:700px){#arena .arena-logo{font-size:10px}#arena .arena-hud-stat{font-size:10px}#arena .arena-hud-stat.score{font-size:13px}#arena .arena-topline{gap:4px;padding:2px}#arena .hud-leader{width:26%;padding:4px}#arena .hud-leader li{grid-template-columns:12px minmax(0,1fr) auto}#arena .minimap{width:94px;height:94px}#arena .match-meta{display:none}}
+/* QA pass: brighter and less opaque cosmic result portal. */
+#result{background:linear-gradient(110deg,#06051db8,#17094c8c);backdrop-filter:blur(3px)}
+#result .result-castle{background:radial-gradient(ellipse at 50% 38%,#24117797 0%,#120d5686 55%,#090a344d 82%);border-color:#d065ff;box-shadow:0 0 30px #9d31e1cb,inset 0 0 56px #483eff5b,0 0 0 2px #2a78fb66}
+#result .result-castle:before,#result .result-castle:after{opacity:1;filter:drop-shadow(0 0 12px #e85fff)}
+#result .result-score{position:relative}#result #final-earned{font-size:clamp(9px,.9vw,15px);color:#ffe16b;white-space:nowrap;margin-left:9px}
+#result .result-castle h1{letter-spacing:.085em;text-shadow:0 0 22px #ff8b43,0 0 17px #c243ff}
