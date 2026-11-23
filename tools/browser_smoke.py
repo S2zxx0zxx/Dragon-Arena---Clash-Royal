@@ -18,7 +18,13 @@ try:
   page.on('console',lambda message:issues.append(message.text) if message.type=='error' else None)
   page.on('response',lambda response:issues.append('HTTP '+str(response.status)+' '+response.url) if response.status>=400 else None)
   page.goto('http://127.0.0.1:'+str(server.server_address[1])+'/',wait_until='domcontentloaded',timeout=25000)
-  page.wait_for_function("document.querySelector('#loadpct').textContent.trim()==='100%'",timeout=45000)
+  try:
+   page.wait_for_function("document.querySelector('#loadpct').textContent.trim()==='100%'",timeout=22000)
+  except Exception as error:
+   print('BOOT_DIAGNOSTIC',page.evaluate("""() => ({ready:document.readyState,loading:document.querySelector('#loadpct')?.textContent,status:document.querySelector('#render-status')?.textContent,toast:document.querySelector('#toast')?.textContent,webgl:(()=>{try{return !!document.querySelector('#scene3d').getContext('webgl2')}catch(e){return String(e)}})(),ua:navigator.userAgent})"""),flush=True)
+   print('ERROR_LOGS',issues,flush=True)
+   page.screenshot(path=str(root/'qa'/'browser_boot_failure.png'))
+   raise
   assert page.locator('#start-button').is_enabled()
   page.locator('#start-button').click()
   if page.locator('#notice-check').is_visible():
