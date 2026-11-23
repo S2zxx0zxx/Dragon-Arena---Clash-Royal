@@ -20,7 +20,7 @@ export class CrystalArena {
   addPlayer({id,skin='pebble_wisp',x=90,y=90,angle=0,isBot=false}){
     if(this.players.some(p=>p.id===id))throw new Error('Duplicate player id');
     const p={id,skin,x,y,angle,aimAngle:angle,isBot,alive:true,mass:0,score:0,boost:false,
-      segmentCount:RULES.startSegments,history:[],body:[],lastDeath:null};
+      segmentCount:RULES.startSegments,history:[],body:[],lastDeath:null,shieldUntilTick:0};
     // Path points are correctly spaced behind the forward heading.
     for(let i=0;i<32;i++)p.history.push({x:x-i*RULES.bodySpacing*Math.cos(angle),y:y-i*RULES.bodySpacing*Math.sin(angle)});
     p.body=this.sampleBody(p);
@@ -100,15 +100,15 @@ export class CrystalArena {
       p.body=this.sampleBody(p);
     }
     // simultaneous head-to-head kills handled without loop-order advantage
-    const dead=new Set(), killers=new Map();const alive=this.players.filter(p=>p.alive);
+    const dead=new Set(), killers=new Map();const alive=this.players.filter(p=>p.alive);const shielded=p=>p.shieldUntilTick>this.tick;
     for(let i=0;i<alive.length;i++){
       const a=alive[i];if(a.x<.5||a.x>179.5||a.y<.5||a.y>179.5){dead.add(a);continue;}
       for(let j=i+1;j<alive.length;j++){
-        const b=alive[j];if(distance2(a,b)<(RULES.headRadius*2)**2){dead.add(a);dead.add(b);}
+        const b=alive[j];if(distance2(a,b)<(RULES.headRadius*2)**2){if(!shielded(a))dead.add(a);if(!shielded(b))dead.add(b);}
       }
       for(const b of alive){if(a===b)continue;
         for(let k=1;k<b.body.length;k++){
-          if(distance2(a,b.body[k])<(RULES.headRadius+RULES.bodyRadius)**2){dead.add(a);killers.set(a.id,b.id);break;}
+          if(distance2(a,b.body[k])<(RULES.headRadius+RULES.bodyRadius)**2){if(!shielded(a)){dead.add(a);killers.set(a.id,b.id);}break;}
         }
         if(dead.has(a))break;
       }
