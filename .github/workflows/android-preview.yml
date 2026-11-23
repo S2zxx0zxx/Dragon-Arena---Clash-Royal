@@ -16,7 +16,20 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
+      - name: Verify Android SDK and install required packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          echo "Using SDK: $SDK"
+          test -d "$SDK"
+          echo "sdk.dir=$SDK" > android/local.properties
+          if ! test -f "$SDK/platforms/android-35/android.jar"; then
+            "$SDK/cmdline-tools/16.0/bin/sdkmanager" --sdk_root="$SDK" --install 'platforms;android-35'
+          fi
+          if ! test -x "$SDK/build-tools/35.0.0/aapt2"; then
+            "$SDK/cmdline-tools/16.0/bin/sdkmanager" --sdk_root="$SDK" --install 'build-tools;35.0.0'
+          fi
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
