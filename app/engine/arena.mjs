@@ -22,7 +22,7 @@ export class CrystalArena {
   addPlayer({id,skin='pebble_wisp',x=90,y=90,angle=0,isBot=false,displayName=null,difficulty=.5,personality='harvester',initialMass=0}){
     if(this.players.some(p=>p.id===id))throw new Error('Duplicate player id');
     const p={id,displayName:displayName||id,skin,x,y,angle,aimAngle:angle,isBot,alive:true,mass:Math.max(0,initialMass),score:Math.max(0,initialMass),boost:false,
-      segmentCount:segmentCount(initialMass),history:[],body:[],lastDeath:null,shieldUntilTick:0,speedUntilTick:0,magnetUntilTick:0,
+      segmentCount:segmentCount(initialMass),collected:0,history:[],body:[],lastDeath:null,shieldUntilTick:0,speedUntilTick:0,magnetUntilTick:0,
       personality,difficulty:clamp(difficulty,0,1),aiDecisionTick:0,respawns:0};
     // Path points are correctly spaced behind the forward heading.
     for(let i=0;i<32;i++)p.history.push({x:x-i*RULES.bodySpacing*Math.cos(angle),y:y-i*RULES.bodySpacing*Math.sin(angle)});
@@ -34,7 +34,7 @@ export class CrystalArena {
   }
   rollFood(){let r=this.random()*FOOD_TYPES.reduce((n,f)=>n+f.weight,0);for(const f of FOOD_TYPES){r-=f.weight;if(r<0)return f;}return FOOD_TYPES[0];}
   spawnFood(source='normal'){for(let i=0;i<12;i++){const pos=this.point(3);if(this.players.some(p=>p.alive&&distance2(p,pos)<8))continue;const f=this.rollFood();this.addFood({...pos,type:f.id,mass:f.mass,source});return true;}return false;}
-  seedFood(n=120){for(let i=0;i<Math.min(n,RULES.foodCap-this.food.length);i++)this.spawnFood();}
+  seedFood(n=120){const count=Math.min(n,RULES.foodCap-this.food.length);for(let i=0;i<count;i++)this.spawnFood();}
   sampleBody(player){
     const nodes=[];const hist=player.history;if(!hist.length)return nodes;
     let i=0;let distanceAlong=0;
@@ -55,7 +55,7 @@ export class CrystalArena {
   kill(player,cause='collision',killerId=null){
     if(!player.alive)return false;
     player.alive=false;player.lastDeath={tick:this.tick,cause,killerId,x:player.x,y:player.y,skin:player.skin};
-    this.effects.push({...player.lastDeath,age:0,id:'death-'+player.id+'-'+this.tick});
+    this.effects.push({...player.lastDeath,age:0,id:'death-'+player.id+'-'+this.tick,trail:player.body.map(n=>({x:n.x,y:n.y})).slice(0,80),victimName:player.displayName});
     // Fair drop: produce up to 50 pellets but conserve mass represented by pellets.
     let remaining=Math.floor(player.mass*RULES.deathDropFraction);if(!remaining)remaining=4;
     const num=Math.min(50,Math.max(0,remaining));
@@ -161,7 +161,7 @@ export class CrystalArena {
     for(const p of this.players){if(!p.alive)continue;
       for(const f of this.food){if(consumed.has(f.id))continue;
         if(distance2(p,f)<(RULES.headRadius+.42)**2){
-          consumed.add(f.id);p.mass+=f.mass;p.score+=f.mass;
+          consumed.add(f.id);p.mass+=f.mass;p.score+=f.mass;p.collected++;
         }
       }
       p.segmentCount=segmentCount(p.mass);p.body=this.sampleBody(p);
@@ -172,6 +172,6 @@ export class CrystalArena {
       for(let i=0;i<batch;i++)this.spawnFood('respawn');
     }
     for(const effect of this.effects)effect.age+=dt;
-    this.effects=this.effects.filter(effect=>effect.age<1.3);
+    this.effects=this.effects.filter(effect=>effect.age<2.2);
   }
 }

@@ -39,6 +39,19 @@ try:
   assert result['webgl'] and result['food']>0 and result['alive']>0,result
   assert 'ERROR' not in result['status'].upper(),result
   assert not issues,issues
+  assert page.locator('#arena-alive').count()==1
+  assert int(page.locator('#arena-alive').inner_text())==result['alive']
+  assert page.locator('#arena-defeated').count()==1
+  assert page.locator('#arena-timer').inner_text()!='00:00'
+  assert page.locator('#arena-effects').evaluate('(e)=>e.width>0 && e.height>0')
   page.screenshot(path=str(root/'qa'/'browser_arena_smoke.png'))
+  page.evaluate("() => {const a=window.__crystalDebug.arena;a.kill(a.players.find(p=>p.id==='you'),'boundary')}")
+  page.wait_for_selector('#revive.active',timeout=10000)
+  page.locator('#revive [data-action="result"]').first.click()
+  page.wait_for_selector('#result.active',timeout=10000)
+  page.wait_for_timeout(350)
+  assert page.locator('#final-score').inner_text()!=''
+  assert page.locator('#result .cta-row [data-action="play"]').is_visible()
+  page.screenshot(path=str(root/'qa'/'browser_result_smoke.png'))
   browser.close()
 finally:server.shutdown()

@@ -21,8 +21,8 @@ export function drawMinimap(canvas,arena,now=0){
   const dpr=Math.min(2,typeof devicePixelRatio==='number'?devicePixelRatio:1),w=Math.max(48,Math.round(canvas.clientWidth*dpr)),h=Math.max(48,Math.round(canvas.clientHeight*dpr));
   if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
   const pad=7*dpr,iw=w-2*pad,ih=h-2*pad;ctx.clearRect(0,0,w,h);
-  const background=ctx.createLinearGradient(0,0,w,h);background.addColorStop(0,'#030c25');background.addColorStop(1,'#16224d');ctx.fillStyle=background;ctx.fillRect(0,0,w,h);
-  ctx.strokeStyle='#a04fff';ctx.shadowColor='#ce78ff';ctx.shadowBlur=3*dpr;ctx.lineWidth=1.3*dpr;ctx.strokeRect(pad,pad,iw,ih);ctx.shadowBlur=0;
+  // Transparent map shows actual food and players.
+  ctx.strokeStyle='#b18bff65';ctx.shadowColor='#ce78ff';ctx.shadowBlur=3*dpr;ctx.lineWidth=1.2*dpr;ctx.strokeRect(pad,pad,iw,ih);ctx.shadowBlur=0;
   const state=minimapState(arena);
   for(const food of state.food){const x=pad+food.x*iw,y=pad+food.y*ih;const color=food.type==='galaxy_orb'?'#e17aff':food.type==='star_dust'?'#ffdb56':food.type==='crystal_shard'?'#31e8ff':'#ffae38';
     ctx.beginPath();ctx.fillStyle=color;ctx.arc(x,y,Math.min(3.1,1.15+food.mass*.18)*dpr,0,2*Math.PI);ctx.fill();}

@@ -18,7 +18,7 @@ const FSH=`#version 300 es
 precision highp float;
 in vec3 vWorld;in vec3 vLocal;
 uniform vec3 uColor;uniform vec3 uCam;
-uniform float uGlow,uGround,uTime;
+uniform float uGlow,uGround,uTime,uBarrier;
 uniform int uArenaTheme;
 out vec4 frag;
 float hash21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
@@ -48,6 +48,12 @@ void main(){
   frag=vec4(col,1.);return;
  }
 
+ if(uBarrier>.5){
+  vec2 p=vec2((vWorld.x+vWorld.z)*.17,vWorld.y*2.4);p.x+=mod(floor(p.y),2.)*.5;vec2 f=abs(fract(p)-.5);
+  float edge=smoothstep(.43,.48,max(f.x,f.y));float pulse=.67+.33*sin(uTime*2.6+p.x*.17);
+  vec3 energy=mix(vec3(.12,.01,.14),vec3(1.,.055,.13),.48+edge*.52);energy+=vec3(.9,.26,.02)*edge*2.4*pulse;
+  frag=vec4(energy,.55+.42*edge);return;
+ }
  vec3 dx=dFdx(vWorld),dy=dFdy(vWorld);vec3 n=normalize(cross(dx,dy));
  vec3 eye=normalize(uCam-vWorld);if(dot(n,eye)<0.)n=-n;
  vec3 light=normalize(vec3(-.45,.82,.59));
@@ -82,15 +88,15 @@ export class CrystalRenderer {
  constructor(canvas){
   this.canvas=canvas;canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();this.lost=true;});canvas.addEventListener('webglcontextrestored',()=>{this.lost=false;this.resolved?.clear();});const gl=canvas.getContext('webgl2',{alpha:true,antialias:true,powerPreference:'high-performance',depth:true});if(!gl)throw Error('WebGL2 unavailable');this.gl=gl;
   const prog=gl.createProgram();gl.attachShader(prog,shader(gl,gl.VERTEX_SHADER,VSH));gl.attachShader(prog,shader(gl,gl.FRAGMENT_SHADER,FSH));gl.linkProgram(prog);if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(prog));this.program=prog;
-  this.u={};for(const n of ['uModel','uVP','uColor','uCam','uGlow','uGround','uTime','uArenaTheme','uInstanced','uSegmentScale'])this.u[n]=gl.getUniformLocation(prog,n);
+  this.u={};for(const n of ['uModel','uVP','uColor','uCam','uGlow','uGround','uTime','uBarrier','uArenaTheme','uInstanced','uSegmentScale'])this.u[n]=gl.getUniformLocation(prog,n);
   this.cache=new Map();this.scene='home';this.skin='neon_dragonling';this.arena=null;this.t=0;this.cameraAt=[0,0,0];this.arenaTheme=0;this.graphicsQuality='balanced';this.glowEnabled=true;
   const vertices=new Float32Array([-1024,0,-1024,1024,0,-1024,1024,0,1024,-1024,0,1024]);const indices=new Uint32Array([0,1,2,0,2,3]);
   const vao=gl.createVertexArray();gl.bindVertexArray(vao);let vb=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vb);gl.bufferData(gl.ARRAY_BUFFER,vertices,gl.STATIC_DRAW);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,0,0);let ib=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.STATIC_DRAW);gl.bindVertexArray(null);this.ground={parts:[{vao,count:6,color:[.02,.06,.19]}]};
-  this.cameraAt=null;this.previewRotation=0;this.previewZoom=1;this.boundary=this.makeArenaFence();
+  this.cameraAt=null;this.arenaElapsed=0;this.currentVP=null;this.lastViewHeight=24.5;this.previewRotation=0;this.previewZoom=1;this.boundary=this.makeArenaFence();
  }
  makeArenaFence(){
   const gl=this.gl,vertices=[],indices=[];
-  const append=(a,b,top=.95)=>{
+  const append=(a,b,top=2.6)=>{
    const i=vertices.length/3;
    vertices.push(a[0],.08,a[1],b[0],.08,b[1],b[0],top,b[1],a[0],top,a[1]);
    indices.push(i,i+1,i+2,i,i+2,i+3);
@@ -100,11 +106,11 @@ export class CrystalRenderer {
   for(let k=0;k<4;k++){
    const a=pts[k],b=pts[k+1];
    // Visible translucent energy wall and taller prismatic spikes along the rim.
-   append(a,b,.44);
+   append(a,b,2.6);
    for(let j=1;j<18;j++){
      const t=j/18,x=a[0]+(b[0]-a[0])*t,y=a[1]+(b[1]-a[1])*t;
      let vx=k%2===0?.38:0,vy=k%2===1?.38:0;
-     append([x-vx,y-vy],[x+vx,y+vy],j%3===0?2.1:1.1);
+     append([x-vx,y-vy],[x+vx,y+vy],j%3===0?3.1:2.5);
    }
   }
   const vao=gl.createVertexArray();gl.bindVertexArray(vao);
@@ -112,6 +118,12 @@ export class CrystalRenderer {
   gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,0,0);
   const ib=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint32Array(indices),gl.STATIC_DRAW);
   gl.bindVertexArray(null);return {parts:[{vao,count:indices.length,color:[.28,.16,.85]}]};
+ }
+ projectArena(x,z,y=.5){
+  if(!this.currentVP)return null;const m=this.currentVP;
+  const a=m[0]*x+m[4]*y+m[8]*z+m[12],b=m[1]*x+m[5]*y+m[9]*z+m[13];
+  const w=m[3]*x+m[7]*y+m[11]*z+m[15];if(w<=0)return null;
+  const nx=a/w,ny=b/w;return {x:(nx+1)*.5*this.canvas.clientWidth,y:(1-ny)*.5*this.canvas.clientHeight,visible:nx>-1.05&&nx<1.05&&ny>-1.05&&ny<1.05};
  }
  rotateShowcase(delta){this.previewRotation=(this.previewRotation+delta)%(Math.PI*2);}
  zoomShowcase(delta){this.previewZoom=Math.max(.72,Math.min(1.27,this.previewZoom+delta));}
@@ -124,10 +136,10 @@ export class CrystalRenderer {
  async get(path){if(!this.cache.has(path))this.cache.set(path,loadGLB(path,this.gl).catch(e=>{this.cache.delete(path);throw e;}));return this.cache.get(path);}
  async useSkin(id){this.skin=id;await this.preload(id);}
  setManifest(manifest){this.manifest=manifest;}
- drawModel(mesh,x,y,z,angle=0,scale=1,glow=.4,transforms=null){if(!mesh)return;
+ drawModel(mesh,x,y,z,angle=0,scale=1,glow=.4,transforms=null,barrier=false){if(!mesh)return;
   const gl=this.gl;let model=matMultiply(T(x,y,z),matMultiply(Ry(angle),S(scale,scale,scale)));
   if(transforms)model=matMultiply(model,transforms);
-  gl.uniformMatrix4fv(this.u.uModel,false,model);gl.uniform1f(this.u.uInstanced,0);gl.uniform1f(this.u.uGlow,this.glowEnabled?glow:0.05);gl.uniform1f(this.u.uGround,0);
+  gl.uniformMatrix4fv(this.u.uModel,false,model);gl.uniform1f(this.u.uInstanced,0);gl.uniform1f(this.u.uGlow,this.glowEnabled?glow:0.05);gl.uniform1f(this.u.uGround,0);gl.uniform1f(this.u.uBarrier,barrier?1:0);
   for(const p of mesh.parts){gl.bindVertexArray(p.vao);gl.uniform3fv(this.u.uColor,p.color);gl.drawElements(gl.TRIANGLES,p.count,gl.UNSIGNED_INT,0);}gl.bindVertexArray(null);
  }
  drawSegments(mesh,nodes,scale=.8,glow=.36){
@@ -197,7 +209,8 @@ export class CrystalRenderer {
   gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.useProgram(this.program);
   const asp=w/h,arena=this.scene==='arena',home=this.scene==='home'||this.scene==='creatures',splash=this.scene==='splash',burst=this.scene==='revive';
   const pp=this.arena?.players?.find(p=>p.id==='you');
-  const viewHeight=29,viewWidth=viewHeight*asp;
+  if(arena&&this.arenaElapsed<10)this.arenaElapsed+=dt;
+  const viewHeight=arena?24.5+8*Math.exp(-this.arenaElapsed*1.5):29,viewWidth=viewHeight*asp;this.lastViewHeight=viewHeight;
   const desired=constrainCamera({x:pp?.x??90,y:pp?.y??90},viewWidth,viewHeight);
   if(!this.cameraAt||!arena)this.cameraAt={...desired};
   else{
@@ -211,10 +224,10 @@ export class CrystalRenderer {
   const eye=arena?[x,30,z+5]:isLab?[1.5,4.6,10.2]:splash?[0,5.05,12.3]:[2.6,5.85,11.8];
   const target=arena?[x,0,z]:[0,.6,0];
   const vp=matMultiply(arena?ortho(viewWidth,viewHeight,.1,300):perspective(43*RAD,asp,.1,300),lookAt(eye,target));
-  gl.uniformMatrix4fv(this.u.uVP,false,vp);gl.uniform3fv(this.u.uCam,eye);gl.uniform1f(this.u.uTime,this.t);gl.uniform1i(this.u.uArenaTheme,this.arenaTheme||0);
+  this.currentVP=arena?vp:null;gl.uniformMatrix4fv(this.u.uVP,false,vp);gl.uniform1f(this.u.uBarrier,0);gl.uniform3fv(this.u.uCam,eye);gl.uniform1f(this.u.uTime,this.t);gl.uniform1i(this.u.uArenaTheme,this.arenaTheme||0);
   if(arena){gl.uniformMatrix4fv(this.u.uModel,false,identity());gl.uniform1f(this.u.uGround,1);for(const p of this.ground.parts){gl.bindVertexArray(p.vao);gl.drawElements(gl.TRIANGLES,p.count,gl.UNSIGNED_INT,0)}gl.bindVertexArray(null);
    // World-space perimeter on all four edges: shader never paints a broken panel outside it.
-   this.drawModel(this.boundary,0,0,0,0,1,1.4);
+   gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);this.drawModel(this.boundary,0,0,0,0,1,1.4,null,true);gl.disable(gl.BLEND);
   }
   else if(home||splash){
    const m=this.manifest?.characters?.find(c=>c.id===this.skin);if(!m)return;let base=`assets/characters/${m.rarity}/${m.id}/3d/`;
@@ -252,8 +265,8 @@ export class CrystalRenderer {
    for(let i=0;i<3;i++)this.drawModel(fx,Math.cos(this.t*.28+i*2.09)*.15,Math.sin(this.t*.4+i)*.12,0,this.t*(.28+i*.18),1.25-i*.24,.88);return;
   }else return;
   if(!this.arena)return;
-  const visible=this.arena.food.filter(f=>Math.abs(f.x-x)<27&&Math.abs(f.y-z)<21).slice(0,95);
-  for(const f of visible){const mesh=this.resolved?.get(`assets/food/3d/${f.type}.glb`);this.drawModel(mesh,f.x,.52+Math.sin(this.t*2.6+f.id)*.15,f.y,this.t*.65+f.id,1.22+(f.mass>=3?.16:0),.93);}
+  const visible=this.arena.food.filter(f=>Math.abs(f.x-x)<viewWidth*.58&&Math.abs(f.y-z)<viewHeight*.65).slice(0,100);
+  for(const f of visible){const mesh=this.resolved?.get(`assets/food/3d/${f.type}.glb`);this.drawModel(mesh,f.x,.52+Math.sin(this.t*2.6+f.id)*.15,f.y,this.t*.65+f.id,.78+(f.mass>=3?.2:0),.93);}
   for(const p of this.arena.players){if(!p.alive||Math.abs(p.x-x)>30||Math.abs(p.y-z)>25)continue;
    const m=this.manifest?.characters?.find(c=>c.id===p.skin);if(!m)continue;const b=`assets/characters/${m.rarity}/${p.skin}/3d/`;
    const head=this.resolved?.get(b+'head.glb'),body=this.resolved?.get(b+'body.glb'),tail=this.resolved?.get(b+'tail.glb');

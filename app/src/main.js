@@ -2,6 +2,7 @@ import {CrystalArena, RULES} from '../engine/arena.mjs';
 import {chooseNpcRoster} from './npc.mjs';
 import {syncEnergy,spendEnergy,grantEnergy} from './energy.mjs';
 import {CrystalRenderer} from './renderer.js';
+import {ArenaPresentation} from './arena_presentation.mjs';
 import {initProgress,recordMatch,visitLab,claimMission,claimEvent,claimMilestone,claimLogin} from './progression.mjs';
 import {renderSecondaryPanel,SECONDARY_TITLES,ENVIRONMENTS} from './secondary.js';
 import {makeAudio} from './sound.mjs';
@@ -9,6 +10,8 @@ import {drawMinimap,PRESENTATION} from './polish.mjs';
 import {mountCosmicBackdrop} from './cosmic.mjs';
 mountCosmicBackdrop(document.querySelector('#cosmic-backdrop'));
 const $=selector=>document.querySelector(selector), $$=selector=>[...document.querySelectorAll(selector)];
+const arenaPresentation=new ArenaPresentation($('#arena-effects'));
+let defeatPopupUntil=0;
 const fmt=n=>Math.round(n).toLocaleString('en-US');
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const STORAGE_KEY='dragon-arena-v4-demo';
@@ -30,7 +33,7 @@ const refs={splash:'00_splash',consent:'01_consent',home:'02_home',arena:'03_are
 function toast(message){const t=$('#toast');t.textContent=message;t.classList.remove('hidden');clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.add('hidden'),3500);}
 function renderStats(){syncEnergy(saved);$$('[data-coins]').forEach(el=>el.textContent=fmt(saved.coins));$$('[data-gems]').forEach(el=>el.textContent=fmt(saved.gems));$$('[data-energy]').forEach(el=>el.textContent=fmt(saved.energy));$$('[data-level]').forEach(el=>el.textContent=saved.level);$$('[data-xpbar]').forEach(el=>el.style.width=`${Math.min(100,saved.xp/(saved.level*1000)*100)}%`);$('#player-handle').textContent=saved.name; }
 function setScreen(name){if(!SCREENS.includes(name))return;active=name;$$('.screen').forEach(s=>s.classList.toggle('active',s.id===name));
- if(renderer)renderer.scene=({splash:'splash',home:'home',creatures:'creatures',arena:'arena',revive:'revive'})[name]||'none';
+ if(renderer)renderer.scene=({splash:'splash',home:'home',creatures:'creatures',arena:'arena',revive:'revive',result:'arena'})[name]||'none';
  if(name==='creatures')renderer?.resetShowcase?.();
  renderStats();if(name==='shop')updateShop();if(name==='creatures'){previewSkin=saved.skin;visitLab(saved);save();buildLab();}
  if(name==='home'){renderer?.releaseArenaAssets?.();const owned=manifest?.characters?.find(c=>c.id===saved.skin);if(owned)$('#hero-name').textContent=owned.name;
@@ -73,18 +76,28 @@ async function startArena(mode='quick'){
   // No synchronous load of every NPC GLB: stream meshes after gameplay becomes interactive.
   if(mode!=='practice'&&!spendEnergy(saved,1)){toast('Not enough energy');return;}
   save();arena=next;elapsed=0;kills=0;finishedMatch=false;countedDeaths.clear();
-  paused=false;acc=0;currentlyBoost=false;activeMode=mode;setScreen('arena');renderHUD();renderer.streamRivals(rivals,next).catch(e=>console.warn('NPC mesh stream stopped',e));
+  paused=false;acc=0;currentlyBoost=false;activeMode=mode;renderer.arenaElapsed=0;arenaPresentation.picks=[];defeatPopupUntil=0;$('#arena-defeat-pop').classList.remove('visible');setScreen('arena');renderHUD();renderer.streamRivals(rivals,next).catch(e=>console.warn('NPC mesh stream stopped',e));
  }catch(e){console.error(e);toast('Arena failed to initialize: '+e.message);}finally{startingArena=false;}
 }
 function doDeath(){if(active!=='arena')return;const p=arena.players.find(p=>p.id==='you');deathPosition={x:p.x,y:p.y};reviveLeft=5;reviveTick=performance.now();let ranking=arena.players.filter(x=>x.alive||x.id==='you').sort((a,b)=>b.score-a.score);let rank=1+ranking.findIndex(x=>x.id==='you');if(rank<=0)rank=8;
  $('#death-rank').textContent='#'+rank;$('#death-mass').textContent=fmt(p.score);$('#revive-clock').textContent='5';audio.play('death');setScreen('revive');}
 function finalize(){if(finishedMatch)return;if(!arena){setScreen('home');return}finishedMatch=true;const p=arena.players.find(p=>p.id==='you');let rank=1+arena.players.filter(x=>x.score>p.score).length;
  let xp=Math.min(2000,Math.round(p.score*2+elapsed*1.6+kills*35));let earned=Math.min(1500,Math.floor(p.score/3)+kills*15);saved.coins+=earned;saved.xp+=xp;saved.played++;recordMatch(saved,{mass:p.score,kills,seconds:elapsed,rank,skin:saved.skin,players:arena.players.map(pl=>({name:pl.id==='you'?saved.name:pl.displayName,score:pl.score,isYou:pl.id==='you'}))});while(saved.xp>=saved.level*1000){saved.xp-=saved.level*1000;saved.level++}save();
- $('#final-rank').textContent='#'+rank;$('#final-collected').textContent=fmt(p.score);$('#final-kills').textContent=fmt(kills);$('#final-time').textContent=`${Math.floor(elapsed/60)}m ${Math.floor(elapsed%60)}s`;$('#final-xp').textContent='+'+fmt(xp);setScreen('result');audio.play('reward');toast(`Earned ${fmt(earned)} demo coins`);
+ $('#final-rank').textContent=rank;$('#final-score').textContent=fmt(p.score);$('#final-collected').textContent=fmt(p.collected||0);$('#final-kills').textContent=fmt(kills);$('#final-time').textContent=`${Math.floor(elapsed/60)}m ${Math.floor(elapsed%60)}s`;$('#final-xp').textContent='+'+fmt(xp);setScreen('result');audio.play('reward');toast(`Earned ${fmt(earned)} demo coins`);
 }
 function revive(){if(active!=='revive'||saved.coins<250){toast('Not enough demo coins');return}saved.coins-=250;save();let p=arena.players.find(p=>p.id==='you');const loc=arena.point(20);p.alive=true;p.x=loc.x;p.y=loc.y;p.angle=0;p.aimAngle=0;p.history=[];for(let i=0;i<250;i++)p.history.push({x:p.x-i*.62,y:p.y});p.body=arena.sampleBody(p);arena.effects=[];paused=false;setScreen('arena');toast('Rejoined locally — score and mass retained')}
-function renderHUD(){if(!arena)return;const p=arena.players.find(p=>p.id==='you');$('#live-score').textContent=fmt(p.score);$('#live-length').textContent=p.segmentCount;$('#quest-progress').style.width=Math.min(100,p.mass/2200*100)+'%';$('#quest-text').textContent=fmt(p.mass)+' / 2,200';
- const rank=[...arena.players].sort((a,b)=>b.score-a.score);$('#arena-leaders').replaceChildren(...rank.slice(0,6).map(pl=>{const li=document.createElement('li');li.className=pl.id==='you'?'you':'';li.textContent=`${pl.id==='you'?saved.name:pl.displayName} — ${fmt(pl.score)}`;return li}));
+function renderHUD(){if(!arena)return;const p=arena.players.find(p=>p.id==='you');if(!p)return;
+ $('#live-score').textContent=fmt(p.score);$('#live-length').textContent=p.segmentCount;
+ $('#arena-alive').textContent=arena.players.filter(q=>q.alive).length;
+ $('#arena-defeated').textContent=kills;const seconds=Math.floor(elapsed);$('#arena-timer').textContent=`${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`;
+ $('#quest-progress').style.width=Math.min(100,p.mass/2200*100)+'%';$('#quest-text').textContent=fmt(p.mass)+' / 2,200';
+ const rank=[...arena.players].sort((a,b)=>b.score-a.score);const leaders=rank.slice(0,5);if(!leaders.includes(p))leaders.push(p);
+ $('#arena-leaders').replaceChildren(...leaders.map(pl=>{const li=document.createElement('li');li.className=pl.id==='you'?'you':'';
+ const num=document.createElement('span');num.className='rank-icon';const position=rank.indexOf(pl)+1;num.textContent=position<=3?['👑','♛','♜'][position-1]:String(position);
+ const name=document.createElement('b');name.textContent=pl.id==='you'?saved.name:pl.displayName;
+ const score=document.createElement('small');score.textContent=fmt(pl.score);li.append(num,name,score);return li;}));
+ const distance=Math.min(p.x,p.y,RULES.worldSize-p.x,RULES.worldSize-p.y);
+ $('#boundary-warning').classList.toggle('visible',p.alive&&distance<11);
  if(performance.now()-lastMinimapAt>90){drawMinimap($('#minimap-canvas'),arena);lastMinimapAt=performance.now();}
  for(let k of ['magnet','speed','shield'])$('#'+k+'-count').textContent=saved.inventory[k]||0;
  const status=$('#active-power-status');if(status){const buffs=[];for(const kind of ['speed','magnet','shield']){const until=p[kind==='shield'?'shieldUntilTick':kind+'UntilTick']||0;if(until>arena.tick)buffs.push(kind.toUpperCase()+' '+Math.ceil((until-arena.tick)*RULES.fixedDt)+'s');}status.textContent=buffs.join(' · ');}
@@ -190,9 +203,9 @@ window.addEventListener('blur',()=>{releaseBoost();keys.clear();joystickHeld=fal
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&active==='arena'&&!paused){paused=true;releaseBoost();$('#pause-layer').classList.remove('hidden');}});
 $('#arena').addEventListener('pointermove',e=>{if(joystickHeld||e.target.closest('button')||e.pointerType==='touch')return;const x=e.clientX-innerWidth/2,y=e.clientY-innerHeight/2;moveAim(x,y)});
 function frame(time){let dt=Math.min(.08,(time-lastRender)/1000||.016);lastRender=time;
- if(active==='arena'&&arena&&!paused){const p=arena.players.find(p=>p.id==='you');const dx=(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),dy=(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0);if(dx||dy)p.aimAngle=Math.atan2(dy,dx);p.boost=currentlyBoost||keys.has('Space');acc+=dt;let ticks=0;while(acc>=RULES.fixedDt&&ticks<5){const massBefore=p.mass;arena.step(RULES.fixedDt);if(p.mass>massBefore)audio.play('pickup');for(const fx of arena.effects){if(fx.killerId==='you'&&!countedDeaths.has(fx.id)){countedDeaths.add(fx.id);kills++;}}acc-=RULES.fixedDt;ticks++;elapsed+=RULES.fixedDt;if(!p.alive){doDeath();break;}}if(ticks||Math.floor(time)%50===0)renderHUD();}
+ if(active==='arena'&&arena&&!paused){const p=arena.players.find(p=>p.id==='you');const dx=(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),dy=(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0);if(dx||dy)p.aimAngle=Math.atan2(dy,dx);p.boost=currentlyBoost||keys.has('Space');acc+=dt;let ticks=0;while(acc>=RULES.fixedDt&&ticks<5){const massBefore=p.mass;arena.step(RULES.fixedDt);if(p.mass>massBefore){audio.play('pickup');arenaPresentation.pickup(p.mass-massBefore,p.x,p.y);}for(const fx of arena.effects){if(fx.killerId==='you'&&!countedDeaths.has(fx.id)){countedDeaths.add(fx.id);kills++;defeatPopupUntil=performance.now()+2100;const pop=$('#arena-defeat-pop');pop.textContent='✧ +1 You defeated '+(fx.victimName||'the dragon')+'!';pop.classList.add('visible');}}acc-=RULES.fixedDt;ticks++;elapsed+=RULES.fixedDt;if(!p.alive){doDeath();break;}}if(ticks||Math.floor(time)%50===0)renderHUD();}
  if(active==='revive'){if(time-reviveTick>=1000){reviveLeft=Math.max(0,reviveLeft-1);reviveTick=time;$('#revive-clock').textContent=reviveLeft;if(!reviveLeft)finalize();}}
- if(renderer)try{renderer.render(dt)}catch(e){console.error('Renderer frame failure',e);$('#render-status').textContent='RENDER ERROR: '+e.message;renderer=null;}requestAnimationFrame(frame);
+ if(renderer)try{renderer.render(dt);if(active==='arena'&&arena){arenaPresentation.quality=saved.settings.graphics;arenaPresentation.draw(arena,renderer,time);if(defeatPopupUntil&&performance.now()>defeatPopupUntil){$('#arena-defeat-pop').classList.remove('visible');defeatPopupUntil=0;}}}catch(e){console.error('Renderer frame failure',e);$('#render-status').textContent='RENDER ERROR: '+e.message;renderer=null;}requestAnimationFrame(frame);
 }
 async function boot(){const messages=['Reading locked UI reference','Loading 24 3D character definitions','Compiling WebGL2 shaders','Preparing live 3D hero','Ready'];let pct=0;
  function step(index){pct=(index/(messages.length-1))*100;$('#loadpct').textContent=Math.floor(pct)+'%';$('#loadbar').style.width=pct+'%';$('.load-desc').firstChild.textContent=messages[index]+' '}
