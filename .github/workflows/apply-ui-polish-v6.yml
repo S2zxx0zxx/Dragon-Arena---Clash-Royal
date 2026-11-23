@@ -30,7 +30,10 @@ jobs:
           node --check app/src/renderer.js
           node --check app/src/polish.mjs
       - name: Run full offline game regression suite
-        run: node --test app/tests/*.test.mjs
+        shell: bash
+        run: |
+          python3 tools/unpack_assets.py
+          node --test app/tests/*.test.mjs
       - name: Commit fully expanded implementation to the feature branch
         shell: bash
         run: |
