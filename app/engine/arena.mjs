@@ -86,7 +86,12 @@ export class CrystalArena {
       const delta=clamp(normalizeAngle(p.aimAngle-p.angle),-RULES.turnRate*dt,RULES.turnRate*dt);
       p.angle=normalizeAngle(p.angle+delta);
       const velocity=p.boost?RULES.boostSpeed:RULES.speed;
-      p.x+=Math.cos(p.angle)*velocity*dt;p.y+=Math.sin(p.angle)*velocity*dt;
+      const nx=p.x+Math.cos(p.angle)*velocity*dt,ny=p.y+Math.sin(p.angle)*velocity*dt;
+      if(nx<RULES.headRadius||nx>RULES.worldSize-RULES.headRadius||ny<RULES.headRadius||ny>RULES.worldSize-RULES.headRadius){
+        // Lethal perimeter: player never visually walks outside the visible world.
+        this.kill(p,'boundary');continue;
+      }
+      p.x=nx;p.y=ny;
       p.history.unshift({x:p.x,y:p.y});
       p.segmentCount=segmentCount(p.mass);
       // trail length is bounded even at maximum body size

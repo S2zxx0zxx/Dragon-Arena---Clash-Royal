@@ -1,4 +1,5 @@
 import {loadGLB} from './glb.js';
+import {constrainCamera} from './polish.mjs';
 const RAD=Math.PI/180;
 const RULES_RENDER_MAX=120; // dynamic body LOD cap; gameplay still tracks all 220 segments
 const VSH=`#version 300 es
@@ -24,27 +25,29 @@ float hash21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fra
 float noise2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash21(i),hash21(i+vec2(1,0)),f.x),mix(hash21(i+vec2(0,1)),hash21(i+vec2(1,1)),f.x),f.y);}
 void main(){
  if(uGround>.5){
-  vec2 uv=vWorld.xz;
-  float cloud=noise2(uv*.11+vec2(uTime*.018,-uTime*.006))*.54+noise2(uv*.24)*.26+noise2(uv*.039)*.20;
-  float flecks=pow(noise2(uv*1.21),8.)*.36;
-  float beams=sin(uv.x*.12+sin(uv.y*.063+uTime*.09)*2.8)*.5+.5;
-  float streams=pow(max(0.,sin(length(uv-vec2(90.))*0.072 + sin(uv.x*.12+uTime*.08)*1.35)),15.);
-  vec3 ink=vec3(.012,.017,.075),neb=vec3(.07,.055,.25),light=vec3(.32,.16,.57);
-  if(uArenaTheme==1){ink=vec3(.009,.026,.073);neb=vec3(.014,.19,.29);light=vec3(.08,.61,.84);}
-  else if(uArenaTheme==2){ink=vec3(.022,.019,.077);neb=vec3(.10,.08,.21);light=vec3(.32,.23,.72);}
-  else if(uArenaTheme==3){ink=vec3(.006,.023,.077);neb=vec3(.024,.16,.23);light=vec3(.14,.58,.35);}
-  else if(uArenaTheme==4){ink=vec3(.024,.008,.065);neb=vec3(.23,.04,.25);light=vec3(.54,.12,.64);}
-  else if(uArenaTheme==5){ink=vec3(.02,.031,.081);neb=vec3(.08,.16,.23);light=vec3(.30,.43,.45);}
-  float rings=pow(max(0.,sin(length(uv-vec2(90.))*0.18)),30.);
-  vec3 col=mix(ink,neb,cloud*.97)+light*(flecks*.15+streams*.065);
-  if(uArenaTheme==0)col+=light*pow(beams,5.)*.055;
-  if(uArenaTheme==1)col+=vec3(.05,.26,.35)*rings*.22;
-  if(uArenaTheme==2)col+=light*abs(sin(uv.x*.05)*sin(uv.y*.048))*.026;
-  if(uArenaTheme==3)col+=light*pow(beams,6.)*.10;
-  if(uArenaTheme==4)col+=light*streams*.23;
-  if(uArenaTheme==5)col+=vec3(.07,.23,.18)*pow(cloud,3.)*.19;
+  // Huge seamless arena plane: no tiled rectangular patches or synthetic hex grid.
+  vec2 uv=vWorld.xz, slow=uv*.0042;
+  float cloud=noise2(uv*.016+vec2(uTime*.0013,.1))*.39 + noise2(uv*.035)*.24 + noise2(uv*.088)*.13;
+  float deep=pow(max(0.,sin(slow.x*3.4+sin(slow.y*2.4)*1.7)),5.);
+  float galaxies=pow(max(0.,1.-distance(uv,vec2(129.,44.))/51.),4.);
+  float nebula=cloud*.66+deep*.1+galaxies*.14;
+  vec3 ink=vec3(.004,.005,.022),neb=vec3(.036,.018,.116),light=vec3(.15,.045,.26);
+  if(uArenaTheme==1){ink=vec3(.002,.011,.025);neb=vec3(.013,.06,.083);light=vec3(.04,.22,.33);}
+  else if(uArenaTheme==2){ink=vec3(.006,.009,.027);neb=vec3(.039,.033,.087);light=vec3(.11,.10,.23);}
+  else if(uArenaTheme==3){ink=vec3(.003,.018,.031);neb=vec3(.018,.069,.051);light=vec3(.08,.17,.10);}
+  else if(uArenaTheme==4){ink=vec3(.012,.003,.029);neb=vec3(.067,.016,.083);light=vec3(.25,.05,.28);}
+  else if(uArenaTheme==5){ink=vec3(.006,.012,.026);neb=vec3(.041,.049,.075);light=vec3(.15,.18,.21);}
+  vec3 col=mix(ink,neb,nebula)+light*galaxies*.27;
+  vec2 starcell=floor(uv*1.15);float star=hash21(starcell);
+  float localStar=length(fract(uv*1.15)-.5);
+  float sparkle=(1.-smoothstep(.015,.085,localStar))*step(.986,star);
+  col+=vec3(.35,.56,.97)*sparkle*(.55+.45*sin(uTime*1.7+star*50.));
+  // A faint cosmic path adds motion without distracting from food and player.
+  float curved=abs(sin(length(uv-vec2(85.,104.))*.028 + sin(uv.x*.012+uTime*.018)));
+  col+=light*pow(max(0.,1.-curved),34.)*.11;
   frag=vec4(col,1.);return;
  }
+
  vec3 dx=dFdx(vWorld),dy=dFdy(vWorld);vec3 n=normalize(cross(dx,dy));
  vec3 eye=normalize(uCam-vWorld);if(dot(n,eye)<0.)n=-n;
  vec3 light=normalize(vec3(-.45,.82,.59));
@@ -81,9 +84,38 @@ export class CrystalRenderer {
   const prog=gl.createProgram();gl.attachShader(prog,shader(gl,gl.VERTEX_SHADER,VSH));gl.attachShader(prog,shader(gl,gl.FRAGMENT_SHADER,FSH));gl.linkProgram(prog);if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(prog));this.program=prog;
   this.u={};for(const n of ['uModel','uVP','uColor','uCam','uGlow','uGround','uTime','uArenaTheme','uInstanced','uSegmentScale'])this.u[n]=gl.getUniformLocation(prog,n);
   this.cache=new Map();this.scene='home';this.skin='neon_dragonling';this.arena=null;this.t=0;this.cameraAt=[0,0,0];this.arenaTheme=0;this.graphicsQuality='balanced';this.glowEnabled=true;
-  const vertices=new Float32Array([-150,0,-150,150,0,-150,150,0,150,-150,0,150]);const indices=new Uint32Array([0,1,2,0,2,3]);
+  const vertices=new Float32Array([-1024,0,-1024,1024,0,-1024,1024,0,1024,-1024,0,1024]);const indices=new Uint32Array([0,1,2,0,2,3]);
   const vao=gl.createVertexArray();gl.bindVertexArray(vao);let vb=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vb);gl.bufferData(gl.ARRAY_BUFFER,vertices,gl.STATIC_DRAW);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,0,0);let ib=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.STATIC_DRAW);gl.bindVertexArray(null);this.ground={parts:[{vao,count:6,color:[.02,.06,.19]}]};
+  this.cameraAt=null;this.previewRotation=0;this.previewZoom=1;this.boundary=this.makeArenaFence();
  }
+ makeArenaFence(){
+  const gl=this.gl,vertices=[],indices=[];
+  const append=(a,b,top=.95)=>{
+   const i=vertices.length/3;
+   vertices.push(a[0],.08,a[1],b[0],.08,b[1],b[0],top,b[1],a[0],top,a[1]);
+   indices.push(i,i+1,i+2,i,i+2,i+3);
+  };
+  const edge=.58, far=179.42;
+  const pts=[[edge,edge],[far,edge],[far,far],[edge,far],[edge,edge]];
+  for(let k=0;k<4;k++){
+   const a=pts[k],b=pts[k+1];
+   // Visible translucent energy wall and taller prismatic spikes along the rim.
+   append(a,b,.44);
+   for(let j=1;j<18;j++){
+     const t=j/18,x=a[0]+(b[0]-a[0])*t,y=a[1]+(b[1]-a[1])*t;
+     let vx=k%2===0?.38:0,vy=k%2===1?.38:0;
+     append([x-vx,y-vy],[x+vx,y+vy],j%3===0?2.1:1.1);
+   }
+  }
+  const vao=gl.createVertexArray();gl.bindVertexArray(vao);
+  const vb=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vb);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,0,0);
+  const ib=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint32Array(indices),gl.STATIC_DRAW);
+  gl.bindVertexArray(null);return {parts:[{vao,count:indices.length,color:[.28,.16,.85]}]};
+ }
+ rotateShowcase(delta){this.previewRotation=(this.previewRotation+delta)%(Math.PI*2);}
+ zoomShowcase(delta){this.previewZoom=Math.max(.72,Math.min(1.27,this.previewZoom+delta));}
+ resetShowcase(){this.previewRotation=0;this.previewZoom=1;}
  async preload(skin){
   const found=this.manifest?.characters?.find(c=>c.id===skin);if(!found)return;
   const dir=`assets/characters/${found.rarity}/${skin}/3d`;
@@ -128,35 +160,71 @@ export class CrystalRenderer {
   for(const food of ['energy_orb','crystal_shard','star_dust','galaxy_orb','heart_core'])await this.ready(`assets/food/3d/${food}.glb`);
   await this.ready(`assets/death_effects/3d/${m.id}_peak_burst.glb`);
   await this.ready('assets/scene/lobby_stage.glb');
+  // Two additional 3D dragons on the loading screen; never static wallpaper.
+  for(const id of ['aqua_crystal','solar_wyvern']){
+   const extra=this.manifest?.characters?.find(c=>c.id===id);if(extra){
+     await this.ready(`assets/characters/${extra.rarity}/${id}/3d/preview_10_parts.glb`).catch(()=>{});
+   }
+  }
  }
  resize(){const dpr=Math.min(devicePixelRatio||1,this.graphicsQuality==='battery'?.85:this.graphicsQuality==='high'?1.65:(this.arena&&this.scene==='arena')?1.25:1.5),w=Math.round(this.canvas.clientWidth*dpr),h=Math.round(this.canvas.clientHeight*dpr);if(w!==this.canvas.width||h!==this.canvas.height){this.canvas.width=w;this.canvas.height=h;}this.gl.viewport(0,0,w,h);return {w,h};}
  render(dt=0.016){if(this.lost)return;const gl=this.gl,{w,h}=this.resize();this.t+=dt;gl.clearColor(0,0,0,0);gl.clearDepth(1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);if(!w||!h)return;
   gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.useProgram(this.program);
-  const asp=w/h,arena=this.scene==='arena',home=this.scene==='home'||this.scene==='creatures',burst=this.scene==='revive';
-  const pp=this.arena?.players?.find(p=>p.id==='you'),x=arena?(pp?.x||90):0,z=arena?(pp?.y||90):0;
-  const eye=arena?[x,24,z+6]:[4.0,7.0,12.5],target=arena?[x,0,z]:[0,0,0];
-  const vp=matMultiply(arena?ortho(33*asp,33,.1,200):perspective(42*RAD,asp,.1,200),lookAt(eye,target));
+  const asp=w/h,arena=this.scene==='arena',home=this.scene==='home'||this.scene==='creatures',splash=this.scene==='splash',burst=this.scene==='revive';
+  const pp=this.arena?.players?.find(p=>p.id==='you');
+  const viewHeight=29,viewWidth=viewHeight*asp;
+  const desired=constrainCamera({x:pp?.x??90,y:pp?.y??90},viewWidth,viewHeight);
+  if(!this.cameraAt||!arena)this.cameraAt={...desired};
+  else{
+    // Smooth, bounded follow: never show untextured world or jerk at a boundary.
+    const factor=Math.min(1,dt*5.8);
+    this.cameraAt.x+=(desired.x-this.cameraAt.x)*factor;
+    this.cameraAt.y+=(desired.y-this.cameraAt.y)*factor;
+  }
+  const x=arena?this.cameraAt.x:0,z=arena?this.cameraAt.y:0;
+  const isLab=this.scene==='creatures';
+  const eye=arena?[x,30,z+5]:isLab?[2.2,5.25,12.2]:splash?[.0,5.5,13.5]:[3.0,6.1,12.2];
+  const target=arena?[x,0,z]:[0,.6,0];
+  const vp=matMultiply(arena?ortho(viewWidth,viewHeight,.1,300):perspective(43*RAD,asp,.1,300),lookAt(eye,target));
   gl.uniformMatrix4fv(this.u.uVP,false,vp);gl.uniform3fv(this.u.uCam,eye);gl.uniform1f(this.u.uTime,this.t);gl.uniform1i(this.u.uArenaTheme,this.arenaTheme||0);
-  if(arena){gl.uniformMatrix4fv(this.u.uModel,false,identity());gl.uniform1f(this.u.uGround,1);for(const p of this.ground.parts){gl.bindVertexArray(p.vao);gl.drawElements(gl.TRIANGLES,p.count,gl.UNSIGNED_INT,0)}gl.bindVertexArray(null);}
-  else if(home){
+  if(arena){gl.uniformMatrix4fv(this.u.uModel,false,identity());gl.uniform1f(this.u.uGround,1);for(const p of this.ground.parts){gl.bindVertexArray(p.vao);gl.drawElements(gl.TRIANGLES,p.count,gl.UNSIGNED_INT,0)}gl.bindVertexArray(null);
+   // World-space perimeter on all four edges: shader never paints a broken panel outside it.
+   this.drawModel(this.boundary,0,0,0,0,1,1.4);
+  }
+  else if(home||splash){
    const m=this.manifest?.characters?.find(c=>c.id===this.skin);if(!m)return;let base=`assets/characters/${m.rarity}/${m.id}/3d/`;
    const stage=this.resolved?.get('assets/scene/lobby_stage.glb');
    const head=this.resolved?.get(base+'head.glb'),body=this.resolved?.get(base+'body.glb'),tail=this.resolved?.get(base+'tail.glb');
    // Live procedural spine: each GLB is a real mesh and the complete 3D creature
    // curves, breathes and trails without flipping a pre-rendered image sheet.
-   this.drawModel(stage,.38,-.32,-.10,this.t*.09,1.05,.83);
-   const count=14,points=[];
+   // Stage and floating dragon have distinct world-space height; this is NOT a flat portrait.
+   const rotate=isLab?this.previewRotation:Math.sin(this.t*.30)*.12;
+   const zoom=isLab?this.previewZoom:1;
+   const rise=1.5+Math.sin(this.t*1.45)*.14;
+   const count=18,points=[];
    for(let i=0;i<count;i++){
-    const f=i/(count-1),wave=Math.sin(f*5.1-this.t*.96),breath=Math.sin(this.t*1.4)*.10;
-    points.push({x:-3.72+i*.52,h:.06+breath+Math.sin(f*3.7-this.t*.5)*.20,z:wave*.58});
+    const f=i/(count-1);
+    const lateral=Math.sin(f*6.0-this.t*1.05)*.54*f;
+    const ix=3.85-i*.46,zVal=lateral+.2*Math.cos(f*3.7+this.t*.3);
+    const s=Math.sin(rotate),c=Math.cos(rotate);
+    points.push({x:(ix*c-zVal*s)*zoom,h:(rise+.34*Math.sin(f*3.5-this.t*.6))*zoom,
+      z:(ix*s+zVal*c)*zoom});
    }
-   const scale=.83;
-   const spine=points.slice(1,-1);
-   this.drawSegments(body,spine,scale,.84);
-   const p0=points[0],p1=points[1],tip=points[count-1],prev=points[count-2];
-   const direction=Math.atan2(p1.z-p0.z,p1.x-p0.x);
-   this.drawModel(head,p0.x,p0.h+.06,p0.z,0,.99,.92,matMultiply(Ry(-direction*.36),Rx(Math.sin(this.t*.8)*.022)));
-   this.drawModel(tail,tip.x,tip.h,tip.z,Math.atan2(tip.z-prev.z,tip.x-prev.x)*.35,.80,.75);
+   const rarity=this.manifest?.characters?.find(c=>c.id===this.skin)?.rarity||'common';
+   const stageTint={common:.88,uncommon:.96,rare:1.05,epic:1.13,legendary:1.25,mythic:1.32}[rarity]||1;
+   this.drawModel(stage,0,-1.65,-.25,-this.t*.13,stageTint,1.12);
+   // Gold and mythic creatures earn extra orbital stage lighting, not gameplay power.
+   if(isLab&&['legendary','mythic'].includes(rarity))this.drawModel(stage,0,-1.72,-.25,this.t*.12,1.01,.72);
+   this.drawSegments(body,points.slice(1,-1),.83*zoom,.88);
+   const p0=points[0],tip=points[count-1],prev=points[count-2];
+   this.drawModel(head,p0.x,p0.h,p0.z,Math.PI-rotate,.94*zoom,.98,matMultiply(Ry(Math.sin(this.t*.63)*.075),Rx(Math.sin(this.t*.8)*.034)));
+   this.drawModel(tail,tip.x,tip.h,tip.z,Math.PI-rotate+Math.sin(this.t*2.5)*.20,.75*zoom,.81);
+   if(splash){
+     for(const [id,rarity,offset,scale] of [['aqua_crystal','uncommon',-6.25,.28],['solar_wyvern','epic',6.10,.30]]){
+       const mesh=this.resolved?.get(`assets/characters/${rarity}/${id}/3d/preview_10_parts.glb`);
+       if(mesh)this.drawModel(mesh,offset,1.3+Math.sin(this.t*1.7+offset)*.35,-2,Math.sin(this.t*.55+offset)*.38,scale,.7);
+     }
+   }
    return;
   }else if(burst){
    const fx=this.resolved?.get(`assets/death_effects/3d/${this.skin}_peak_burst.glb`);
@@ -164,7 +232,7 @@ export class CrystalRenderer {
   }else return;
   if(!this.arena)return;
   const visible=this.arena.food.filter(f=>Math.abs(f.x-x)<27&&Math.abs(f.y-z)<21).slice(0,95);
-  for(const f of visible){const mesh=this.resolved?.get(`assets/food/3d/${f.type}.glb`);this.drawModel(mesh,f.x,.45+Math.sin(this.t*3+f.id)*.12,f.y,this.t*.7+f.id,.42,.78);}
+  for(const f of visible){const mesh=this.resolved?.get(`assets/food/3d/${f.type}.glb`);this.drawModel(mesh,f.x,.45+Math.sin(this.t*3+f.id)*.12,f.y,this.t*.7+f.id,.92,.95);}
   for(const p of this.arena.players){if(!p.alive||Math.abs(p.x-x)>30||Math.abs(p.y-z)>25)continue;
    const m=this.manifest?.characters?.find(c=>c.id===p.skin);if(!m)continue;const b=`assets/characters/${m.rarity}/${p.skin}/3d/`;
    const head=this.resolved?.get(b+'head.glb'),body=this.resolved?.get(b+'body.glb'),tail=this.resolved?.get(b+'tail.glb');

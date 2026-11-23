@@ -1,3 +1,9 @@
+## UI polish v0.6.0 (reference sheets 92600/92601)
+
+This is an **offline Android preview, not a production release**. The supplied two sheets are the visual design contract. New work: dynamic 3D home/lab showcase, rarity-specific platform treatments, compact card unlock pricing, drag rotation, live actual-food minimap, larger GLB pickups, seamless deep-space ground, lethal 3D barrier and camera clamp, mobile Result layout, and centered 3D splash with supporting dragons. No backend-enabled payments, global rankings, or multiplayer are claimed.
+
+Run `node --test app/tests/*.test.mjs`. Android debug APK: GitHub Actions `.github/workflows/android-preview.yml` on `feat/reference-locked-premium-3d-ui`. Physical Android GPU/UX QA remains required before merging to main.
+
 # Dragon Arena — Clash Royale (working title)
 
 **Status: prototype / draft. NOT production-ready and NOT merged.** Crystal Creatures is the internal family name of the original dragon/food/death-effect assets.
