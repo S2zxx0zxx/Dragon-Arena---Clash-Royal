@@ -75,9 +75,17 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          gh release create android-preview-v0.5.1 \
-            android/app/build/outputs/apk/debug/app-debug.apk#Dragon-Arena-Android-Preview-v0.5.1.apk \
-            android/app/build/outputs/apk/debug/app-debug.apk.sha256#Dragon-Arena-Android-Preview-v0.5.1.apk.sha256 \
-            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title 'Dragon Arena — Android Preview v0.5.1' \
+          if gh release view android-preview-v0.6.0 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload android-preview-v0.6.0 \
+              android/app/build/outputs/apk/debug/app-debug.apk#Dragon-Arena-Android-Preview-v0.6.0.apk \
+              android/app/build/outputs/apk/debug/app-debug.apk.sha256#Dragon-Arena-Android-Preview-v0.6.0.apk.sha256 \
+              --repo "$GITHUB_REPOSITORY" --clobber
+            gh release edit android-preview-v0.6.0 --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA"
+          else
+          gh release create android-preview-v0.6.0 \
+            android/app/build/outputs/apk/debug/app-debug.apk#Dragon-Arena-Android-Preview-v0.6.0.apk \
+            android/app/build/outputs/apk/debug/app-debug.apk.sha256#Dragon-Arena-Android-Preview-v0.6.0.apk.sha256 \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title 'Dragon Arena — Android Preview v0.6.0' \
             --notes 'TEST BUILD ONLY. Signed Android debug APK, Android 8+, offline assets, local arena with bots. Not public multiplayer or final-quality QA. Debug signing may change in later CI runs, requiring uninstall to upgrade.' \
             --prerelease
+          fi
