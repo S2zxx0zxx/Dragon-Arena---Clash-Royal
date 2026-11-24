@@ -16,4 +16,7 @@ python3 serve.py
 Open `http://localhost:8000/` in Chrome.
 
 ## Android preview release
-Version 3.0.0-preview, code 13, same application ID as 0.9.2. CI builds a debug-signed APK after tests and browser smoke; publishes a new prerelease only from main. Debug signing may require reinstall. No production billing, live multiplayer, secure server-side rankings, or verified TWA association. The old save key is not migrated by this build; preserve the prior APK and data before upgrading.
+Version 3.0.1-preview, code 14, same application ID as 0.9.2. CI builds a debug-signed APK after tests and browser smoke; publishes a new prerelease only from main. Debug signing may require reinstall. No production billing, live multiplayer, secure server-side rankings, or verified TWA association. The old save key is not migrated by this build; preserve the prior APK and data before upgrading.
+
+### v3.0.1 startup hotfix
+Inactive result and revive screens no longer override the active screen. Browser regression checks assert real computed visibility, pause/resume, short-landscape result controls and rematch/lobby navigation. Physical Android confirmation remains required.

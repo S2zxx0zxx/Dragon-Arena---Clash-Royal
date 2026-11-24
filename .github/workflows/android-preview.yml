@@ -61,13 +61,13 @@ jobs:
       - name: Verify and stage APK
         run: |
           mkdir -p dist
-          cp android/app/build/outputs/apk/debug/app-debug.apk dist/Dragon-Arena-Android-Preview-v3.0.0.apk
-          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose dist/Dragon-Arena-Android-Preview-v3.0.0.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk dist/Dragon-Arena-Android-Preview-v3.0.1.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose dist/Dragon-Arena-Android-Preview-v3.0.1.apk
           cd dist
-          sha256sum Dragon-Arena-Android-Preview-v3.0.0.apk > Dragon-Arena-Android-Preview-v3.0.0.apk.sha256
+          sha256sum Dragon-Arena-Android-Preview-v3.0.1.apk > Dragon-Arena-Android-Preview-v3.0.1.apk.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: Dragon-Arena-Android-Preview-v3.0.0
+          name: Dragon-Arena-Android-Preview-v3.0.1
           path: dist/*
           if-no-files-found: error
   publish:
@@ -79,16 +79,16 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: Dragon-Arena-Android-Preview-v3.0.0
+          name: Dragon-Arena-Android-Preview-v3.0.1
           path: dist
       - name: Publish immutable versioned prerelease
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           cd dist
-          sha256sum -c Dragon-Arena-Android-Preview-v3.0.0.apk.sha256
-          if gh release view android-preview-v3.0.0 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+          sha256sum -c Dragon-Arena-Android-Preview-v3.0.1.apk.sha256
+          if gh release view android-preview-v3.0.1 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo 'Version already exists; do not overwrite existing release. Bump version for future builds.'
             exit 1
           fi
-          gh release create android-preview-v3.0.0 ./*.apk ./*.sha256 --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title 'Dragon Arena — Android Preview v3.0.0' --notes 'Debug-signed offline test build. Device QA pending; signing key may differ from older previews. Old save migration not verified. No live PvP or payments.' --prerelease
+          gh release create android-preview-v3.0.1 ./*.apk ./*.sha256 --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title 'Dragon Arena — Android Preview v3.0.1' --notes 'Debug-signed offline test build. Device QA pending; signing key may differ from older previews. Old save migration not verified. No live PvP or payments.' --prerelease
