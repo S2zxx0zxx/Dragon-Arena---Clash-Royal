@@ -1,0 +1,19 @@
+name: Validate Unity private importer
+on:
+  pull_request:
+    paths: ['unity-integration/**', '.github/workflows/unity-import-validation.yml']
+  push:
+    branches: ['feat/dragon-arena-v4-unity-rebuild']
+    paths: ['unity-integration/**', '.github/workflows/unity-import-validation.yml']
+permissions:
+  contents: read
+jobs:
+  importer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m unittest discover -s unity-integration -p 'test_*.py' -v
