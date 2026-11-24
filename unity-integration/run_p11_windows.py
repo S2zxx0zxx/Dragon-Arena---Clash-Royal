@@ -138,7 +138,7 @@ def execute(args):
     subprocess.run([
         sys.executable, str(runner), "--checkpoint", str(checkpoint), "--source", str(source),
         "--output", str(output), "--unity", info["editor"], "--editor-version", chosen,
-    ], check=True)
+    ], check=True, env=dict(os.environ, PYTHONUTF8="1"))
     tools = Path(info["build_tools"])
     apk = output / "DragonArena-P11-QA.apk"
     verification = verify_apk(

@@ -101,3 +101,15 @@ The resumed source run reproduced 2,812 static assertions and prepared all 1,091
 Run `python -m unittest discover -s unity-integration/android -v` for verifier unit cases. Run `python unity-integration/android/verify_android_artifact.py --help` for the private builder command. Pass `--apk-output` with a fresh path to retain the verified release APK. Supply signing inputs only through the private builder. Record device acceptance and source provenance separately.
 
 Use the [Google Play target API requirements](https://developer.android.com/google/play/requirements/target-sdk), [Android page-size guidance](https://developer.android.com/guide/practices/page-sizes), and [Unity Android dependencies](https://docs.unity3d.com/6000.0/Documentation/Manual/android-supported-dependency-versions.html) to confirm the production toolchain before building.
+
+## Local Windows execution, 25 November 2026
+
+Authorized short workspace: `C:/DA4`; PR worktree: `C:/DA4/repo`, starting head `b1984830121e0617f7546625cfbc1385ab2c64bc`. Live GitHub inspection confirms PR #4 open/draft with that head and base `b6d1307`. Existing main worktree left intact.
+
+Both downloaded archives passed full CRC checks. Handoff SHA-256 `ef6b31387d92745fcfe0eb40971944ffe4b28fc93fbf540c40daf076d7e5780e`; GitHub checkpoint ZIP SHA-256 `25a90067f45736ef7ad04f07bedce06f9a83a929ab21b9a24ead4a876e91d328`. All three nested INPUT_SHA256 entries match size and digest and pass CRC. Private checkpoint, original package and master planning recovered outside Git. Initial free space: C 59.1 GB, G 56.2 GB.
+
+Python 3.14 and Git 2.51 present. Unity Personal active and signed in. Unity 6000.6.10f1 Android preflight passes SDK API36, Build-Tools36, NDK27.2.12479018 and OpenJDK17.0.21. Exact 2021.3.8f1 absent; official Unity CLI1.0.1 installed with its installer checksum check, baseline installation started separately.
+
+First runner attempt (`build-001`) failed before Unity because the checkpoint verifier uses default text decoding on Windows. Runner now explicitly enables PYTHONUTF8 for descendants. Git autocrlf also changed hash-locked manifest bytes; LF checkout plus `.gitattributes` resolves this without changing expected hashes. All 11 importer/public integration tests and 11 Android verifier tests pass after correction.
+
+Second attempt `C:/DA4/build-002` reproduced 2,812 assertions and all 1,091 candidate files, manifest SHA-256 `3a73cdf694b01111ef1bc07a7370a04c7f55d2591fe79a68ab8ced5d0ccd6bf6`. Unity6 entitlement succeeded and native import/compilation is running in the fresh copy. Original checkpoint remains immutable. No APK yet; no gameplay or release gate claimed. ADB initially had no device; existing Chess_Test_API36 emulator started for later smoke tests. Physical QA and existing-user migration remain open.
