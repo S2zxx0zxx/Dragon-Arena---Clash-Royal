@@ -1,0 +1,42 @@
+{
+  "Assets/SnakeWarzIO/Classes/BoostersController.cs": {
+    "before": "fae4f9113550eb06651b4b9be4407bdbc9901c4db7ecf7a23ff466f8900dbb61",
+    "after": "62a2edf8021bd6c01269a0e65cb4d0e55ef2760d10f70164ad48c7a1d8680d7e"
+  },
+  "Assets/SnakeWarzIO/Classes/BoosterButtonController.cs": {
+    "before": "5d98bd11bc0794ee1d12e656ad1c7f532e864808368f8806c97ba8ef5a26bf4e",
+    "after": "6f5120810df6cb7a6fd782e2e8197d35a3338abf0aef6660e5516da75fd2ae29"
+  },
+  "Assets/SnakeWarzIO/Classes/IngameBoosterController.cs": {
+    "before": "ecac2bbef6ea71025461843a5d1bb8e2a08ac7466e778a21854e3aeb21a9abf9",
+    "after": "36d936a1d5db3d35cfbb496284accec5b846b2c25e3c9b8a7789117a1f044337"
+  },
+  "Assets/SnakeWarzIO/Classes/PlayerController.cs": {
+    "before": "2b472b5ff0fd57031ec1316bdd5274813870c4dc00cd4395dc28a9e948d66402",
+    "after": "11ef804da418cb1c24bea497ba1a42e16908d95aa8083554e894488651b3752f"
+  },
+  "Assets/SnakeWarzIO/Classes/CameraController.cs": {
+    "before": "d48c561d32d0fdaa949b1e7d7c8982f87b073a4531d49ed3d05dae1c0f1350a3",
+    "after": "a0ebc8cfe04eace8b648e83011160d0ee1f0d5b4608f04cebcca0a039ff9bcde"
+  },
+  "Assets/SnakeWarzIO/Classes/GameController.cs": {
+    "before": "bde622c88021d2e08b51a1fda42fee6e841c8c42a2c39f2ed36ed48cc36aa83a",
+    "after": "fb634171de9092dc4a3a51a14ce40c494c78ebb1447ad163a33a7b1ace5e57a5"
+  },
+  "Assets/SnakeWarzIO/Classes/GameoverPanel.cs": {
+    "before": "b43baa69b8bf8918daff19c56110e0b24b1834587fbf94f6e851ec8e3ccc63f2",
+    "after": "b44d789f9d65960bb4aed7f666a5dd7e0b574e32dfa9e70f4e7e6cb49b84c20e"
+  },
+  "Assets/SnakeWarzIO/Classes/XpManager.cs": {
+    "before": "75f725161005eda97937025f3b57e1b8bf496f48ad782c0737332b2ef7467cfc",
+    "after": "bcbf6167e78b5bd92fa063054c52e4db18e5cea2c88a92d477ad7f2eb89cb8e5"
+  },
+  "Assets/SnakeWarzIO/Classes/WofController.cs": {
+    "before": "5dcbc036f1c8bc8821b3fa4398fcd751638f3fbfb159a643de081056f447374f",
+    "after": "6e2b3f4a80c374bea480d05a3488cd93cfdb53f2fba0d27061c5753b06e1bd30"
+  },
+  "Assets/SnakeWarzIO/Classes/MenuManager.cs": {
+    "before": "b0fd79c79e3f4986d3cef4a0966ad3a76872fd749fdaff0936d45d155f4a83ee",
+    "after": "29c01840d227a22f926d2f42adda1614198e9dd7ae77968f1a30723cb16804dc"
+  }
+}
