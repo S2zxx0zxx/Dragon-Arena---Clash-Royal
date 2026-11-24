@@ -65,6 +65,8 @@ namespace DragonArena.EditorTools
         public static void Validate()
         {
             Errors.Clear();
+            if (Application.unityVersion != "2021.3.8f1")
+                throw new Exception("P01 requires the original Unity 2021.3.8f1 editor, got " + Application.unityVersion);
             InspectSerializedGuids();
             var expected = Scenes.Select(x => Root + x + ".unity").ToArray();
             if (!EditorBuildSettings.scenes.Where(x => x.enabled).Select(x => x.path).SequenceEqual(expected))
