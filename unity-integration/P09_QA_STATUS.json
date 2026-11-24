@@ -1,0 +1,33 @@
+{
+  "phase": "P09",
+  "static_assertions": 2812,
+  "source_package_members": 2019,
+  "original_payload_meta": 1068,
+  "reconstructed_project_files": 1091,
+  "unique_metadata_guids": 564,
+  "external_guid_candidates": 22,
+  "external_reference_occurrences": 689,
+  "non_ui_missing_guids": [
+    "12c8895a4e193334c93064441b077296",
+    "3622f5ddd78508c4f9fd52e7488ebbef",
+    "80b9845f9959e9a4887ea35c0cb4dff7",
+    "f47ed205fcb433b409cf46dff4625ce5"
+  ],
+  "helper_tests": {
+    "importer": 5,
+    "android": 8,
+    "migration": 7
+  },
+  "acceptance_matrix": {
+    "total": 57,
+    "pass": 7,
+    "blocked": 7,
+    "not_run": 43
+  },
+  "native_status": "BLOCKED_UNITY_EXECUTABLE_NOT_FOUND",
+  "apk": "NOT_BUILT",
+  "device_qa": "NOT_RUN",
+  "p10": "NOT_STARTED",
+  "release_gate": "BLOCKED",
+  "private_archive_sha256": "5b67e6ad7149e4ef8d22c38972f194398d426630f718342fea180f41668afa8e"
+}
