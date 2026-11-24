@@ -1,0 +1,90 @@
+{
+  "Assets/DragonArena/Runtime/SaveRecoveryNotice.cs.meta": {
+    "before": null,
+    "after": "2e1bd31a5adbf9e97817e5d04adf8b75ccccff8f65f29c3c9ac8e4dbb3e7d9dc"
+  },
+  "Assets/DragonArena/Runtime/DurablePrefs.cs": {
+    "before": null,
+    "after": "a61c71baba2f70686f0e56d6a2cc57da5d183430d03b5098125e599f992cd575"
+  },
+  "Assets/DragonArena/Runtime/SaveRecoveryNotice.cs": {
+    "before": null,
+    "after": "4c484d6bc25e3cd97b828680dbfdf2f70066f64c982b8a9f5f00f8af3f90c10a"
+  },
+  "Assets/DragonArena/Runtime/DurablePrefs.cs.meta": {
+    "before": null,
+    "after": "f88dc1c42085e73b840047c32ab4bb0ac8a924636546619e3df46647a5d66c66"
+  },
+  "Assets/DragonArena/Editor/P07SaveFixture.cs": {
+    "before": null,
+    "after": "6dd3dc7574d346dd594ea07963ab6812b014bb3bfc3b806225f6bdccbd752bff"
+  },
+  "Assets/DragonArena/Editor/P07SaveFixture.cs.meta": {
+    "before": null,
+    "after": "f10f397c292678161c032f3ac93cbcde46056a79c006771b33f7d6581c29b032"
+  },
+  "Assets/SnakeWarzIO/Classes/GameoverPanel.cs": {
+    "before": "aca3ab58aca5ee9a1d2b2a6fb6e839f408de419d3cddd7536b0d1b1303abf9d1",
+    "after": "ad7156f1c455ec9b48a264e7c02655c1654396f23c17ee5f838fcf463c729565"
+  },
+  "Assets/SnakeWarzIO/Classes/MenuManager.cs": {
+    "before": "29c01840d227a22f926d2f42adda1614198e9dd7ae77968f1a30723cb16804dc",
+    "after": "b317b5290c5a566ca7c441c94c5fa1e68e4e96cf7e4748a98f57d6d7abdfe037"
+  },
+  "Assets/SnakeWarzIO/Classes/Snake.cs": {
+    "before": "6536aecfc7f37dddc318fef6588158036bd641870747c1f197c66397ee78ecca",
+    "after": "7e47f12f361bd12a7dcfd3bdb9c9ce105dd700c0c702239a447e9df1a2071060"
+  },
+  "Assets/SnakeWarzIO/Classes/ShopController.cs": {
+    "before": "a4f3aa8ac4cf79a06668499559da5c4ff780db0ff0013d577ed109b7eb3185fe",
+    "after": "504a40c323739f8121863f267ff470c65c11021539bf70ea8a778770308c9f83"
+  },
+  "Assets/SnakeWarzIO/Classes/BotController.cs": {
+    "before": "c27331f0d21df17f0cb527612ddcde1f5409c842589275bead4a0a240a741988",
+    "after": "b4f28cb017bf7f32e913e5055373c6e3261845246d08d1f126550a1d8c1901f1"
+  },
+  "Assets/SnakeWarzIO/Classes/PlayerController.cs": {
+    "before": "11ef804da418cb1c24bea497ba1a42e16908d95aa8083554e894488651b3752f",
+    "after": "86f6b744926da2b83794fd945f493ed81b64b05bfbf7235e230a2433d2d33c11"
+  },
+  "Assets/SnakeWarzIO/Classes/SkinButtonController.cs": {
+    "before": "2f7a74156bc48b9cd42c4b38d3c3c5a4889fbd5a71f2a568c999d89e361883f0",
+    "after": "be9609c80afe315abb7c9729963fb6e6e7ca9faf9c13b37894646267a1b0cf94"
+  },
+  "Assets/SnakeWarzIO/Classes/SkinManager.cs": {
+    "before": "a6466314323bbce201aa6fc2e7031aa23d1af84300b67ebfb6411be6d2347862",
+    "after": "e95f87830610b05f942b2a508fed1ac1bf69c90d342189ca7f6adacd6ef116bb"
+  },
+  "Assets/SnakeWarzIO/Classes/BoostersController.cs": {
+    "before": "e559c65dbb9db4c0a2705820d4846cd1744194acf9ec9b6036e8c6552e8a7caf",
+    "after": "fd8bdb139235e8f0dc4fff74cc47c027491d0362da356dbbb264b7095acb72ba"
+  },
+  "Assets/SnakeWarzIO/Classes/HelpPanel.cs": {
+    "before": "a2bc8c112e0e4497b4c11a8506f07ccda7a3c5b2bfd8cbe5dfd89ce48e770afa",
+    "after": "c624e5b9a9b028d54829b11a00cb6c63949c112a8cce3a970f6b6a3b538aa63c"
+  },
+  "Assets/SnakeWarzIO/Classes/GameController.cs": {
+    "before": "899fb3520df974f8f68e193600f9bddd3fd7fdb2bdcdb83c5ea7220a147f4855",
+    "after": "6cdc3b08c164f21859902ebf0a88a272f1a02d0dd99574dbdf72893568d323fb"
+  },
+  "Assets/SnakeWarzIO/Classes/ButtonStateController.cs": {
+    "before": "f3390eb0f1b686b7150c066abce49f2253154e6234b200541e4c18de93dc9101",
+    "after": "8670100ad16e57098393839a21724bdf3dc284629f860d79ec9be8f0d800accf"
+  },
+  "Assets/SnakeWarzIO/Classes/MusicPlayer.cs": {
+    "before": "42697d5de5bdc152369cbbff651ee6ef43c0088013472fc43b3fb493d33ff395",
+    "after": "787dd505d79efea76d5cb0028873de3be2ef2687a420ef613f00e7b0cf0a5445"
+  },
+  "Assets/SnakeWarzIO/Classes/BoosterButtonController.cs": {
+    "before": "6f5120810df6cb7a6fd782e2e8197d35a3338abf0aef6660e5516da75fd2ae29",
+    "after": "ee08c21dbc3c185544a7eccd390b29de5ead7bfe062530ca2f8011f50267ea9d"
+  },
+  "Assets/SnakeWarzIO/Classes/WofController.cs": {
+    "before": "6e2b3f4a80c374bea480d05a3488cd93cfdb53f2fba0d27061c5753b06e1bd30",
+    "after": "4d49e7f61e85a7491ec4073527a03e8fd8e48b727c47811f40eb025b6d1084cb"
+  },
+  "Assets/SnakeWarzIO/Classes/InitManager.cs": {
+    "before": "5b0a11316471367d7e587d115ab14874534008a3f9023b5653e4dcbcedc1833f",
+    "after": "da698543190bfb4fecc188a23df2e925a7674df6d83f72381295181c28b20af1"
+  }
+}
