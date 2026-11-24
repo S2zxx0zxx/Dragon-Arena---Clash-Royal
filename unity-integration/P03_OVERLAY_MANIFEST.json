@@ -1,0 +1,42 @@
+{
+  "Assets/SnakeWarzIO/Classes/GameController.cs": {
+    "before": "a11d17e996c53d03e8e6662164fe08a14798b1df36a09b3bb69265ffd2d14cfc",
+    "after": "bde622c88021d2e08b51a1fda42fee6e841c8c42a2c39f2ed36ed48cc36aa83a"
+  },
+  "Assets/SnakeWarzIO/Classes/BotSpawner.cs": {
+    "before": "3228999d4841dadece234a5a88cd3dd18a50f795af24560ca9fdab213087c2df",
+    "after": "b166215d97d5d1c56e68ebb6b508f0cffc777810fb2835d9abf50743fb8faba1"
+  },
+  "Assets/SnakeWarzIO/Classes/IntroLoadingController.cs": {
+    "before": "96896d3620e1df625c7eb5e4d996fe3c8bdb4d12ec390a551822d8310d124ffd",
+    "after": "66cc1af7333d240fdeac76e8cd566e0870c578e02a2afa3e20a6ab7078f26420"
+  },
+  "Assets/SnakeWarzIO/Classes/Snake.cs": {
+    "before": "dfc2b16965cbc5b1c89692ded3196b1b75c068508c85e507beb99e5c1f2eef02",
+    "after": "6536aecfc7f37dddc318fef6588158036bd641870747c1f197c66397ee78ecca"
+  },
+  "Assets/SnakeWarzIO/Classes/FoodController.cs": {
+    "before": "512578da744d021119ffad30060611d9ca0bf6a779f8d1e773c0f42cc800a02f",
+    "after": "18fba3038a07cd8bdfc650860484ac386104a74b56ec6e29edffcec5077465fb"
+  },
+  "Assets/SnakeWarzIO/Classes/PlayerController.cs": {
+    "before": "1a6a255b20abba08bccc6130a574cbaf41423eb1b79caaae0da99afc298829b8",
+    "after": "14993ddbbc01926a8b1907839c3231fca2da913241e26ef8c9657c2e0382c0c2"
+  },
+  "Assets/SnakeWarzIO/Classes/BotController.cs": {
+    "before": "0ceecd15a4b2db0ac58fbeab231da7ca800627044bf0c42e7a8309277d9efbb6",
+    "after": "c27331f0d21df17f0cb527612ddcde1f5409c842589275bead4a0a240a741988"
+  },
+  "Assets/SnakeWarzIO/Classes/BodypartController.cs": {
+    "before": "9821d4306fab567d3896b97074837c8071046ffd607b2d0a9ef7f6b97e21a729",
+    "after": "7b63163119381ca4c1a0cc8d68ce517e4941a0281666eadae1a99333293c0390"
+  },
+  "Assets/SnakeWarzIO/Classes/CameraController.cs": {
+    "before": "83218f79fc8912e882ac1eeabafd51a3ebe1fe842828efa9f6c69f04c379f404",
+    "after": "d48c561d32d0fdaa949b1e7d7c8982f87b073a4531d49ed3d05dae1c0f1350a3"
+  },
+  "Assets/SnakeWarzIO/Classes/IngameLeaderboardManager.cs": {
+    "before": "758b7af3dab27c94b75746f1579ef47b52a93904fe20ae12439bcb3f3111dfe2",
+    "after": "5039a3d71fde6b358cc6642ae94478e2a38da9c43530237bb4608a5d8544f27e"
+  }
+}
