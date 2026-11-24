@@ -61,6 +61,15 @@ def android_build_change(data):
             raise ValueError("Unexpected Android build source anchor")
         data = data.replace(anchor, newline.join(after), 1)
 
+    reference = b"                            it.objectReferenceValue == null && it.objectReferenceInstanceIDValue != 0)"
+    replace((reference,), (
+        b"#if UNITY_6000_3_OR_NEWER",
+        b"                            it.objectReferenceValue == null && it.objectReferenceEntityIdValue != EntityId.None)",
+        b"#else",
+        reference,
+        b"#endif",
+    ))
+
     backend = b"            PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);"
     replace((backend,), (
         b"#if UNITY_6000_0_OR_NEWER",
