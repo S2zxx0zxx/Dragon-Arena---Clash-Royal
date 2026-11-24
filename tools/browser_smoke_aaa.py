@@ -17,7 +17,7 @@ try:
             if fallback:
                 page.add_init_script("""const get=HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext=function(kind,...args){return kind==='webgl2'?null:get.call(this,kind,...args)};""")
             page.goto(url)
-            page.wait_for_function("!document.querySelector('#splash-enter-btn').disabled",timeout=45000)
+            page.wait_for_function("() => !document.querySelector('#splash-enter-btn').disabled",timeout=45000)
             assert page.evaluate('window.__dragonArena.engine.isFallback') == fallback
             if fallback: assert page.evaluate('!!window.__dragonArena.engine.ctx')
             page.locator('#splash-enter-btn').click()
@@ -26,7 +26,7 @@ try:
             assert page.locator('#screen-lab').evaluate("e=>e.classList.contains('active')")
             page.locator('#screen-lab [data-action="go-home"]').click()
             page.locator('[data-action="play-selected"]').click()
-            page.wait_for_function('window.__dragonArena.arena?.players.length >= 2')
+            page.wait_for_function('() => window.__dragonArena.arena?.players.length >= 2')
             page.wait_for_timeout(1000)
             assert page.locator('#screen-arena').evaluate("e=>e.classList.contains('active')")
             assert not errors, errors

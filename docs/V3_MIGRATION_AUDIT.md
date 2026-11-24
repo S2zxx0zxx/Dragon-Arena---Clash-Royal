@@ -34,3 +34,4 @@ Old `CrystalArena` and `CrystalRenderer` use GLB assets restored from packed fil
 - Both PR workflows explicitly check out the PR head SHA. Existing v3 release is a publication failure, never a silently successful replacement.
 - Legacy parity gaps remain: 14 legacy test files and custom GLB fidelity are not equivalent to the five procedural test groups. Legacy save migration, online multiplayer, real billing, production security, TWA verification and physical Android QA are unverified. Release is a debug test preview.
 - Local browser and Android build results and remote gates must be checked separately; no physical-device pass is claimed.
+- Browser smoke exposed a CSP incompatibility in Playwright string-expression polling. Changed both predicates to function expressions, preserving all assertions and the strict application CSP. Local pinned Chromium 1.56.0 smoke passes WebGL2 and forced Canvas2D boot/home/lab/local arena.
