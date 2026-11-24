@@ -37,7 +37,14 @@ python unity-integration/prepare_p11_dependencies.py "$p10_project" "$overlay"
 python unity-integration/apply_verified_overlay.py "$qa_project" "$overlay" "$overlay/P11_OVERLAY_MANIFEST.json"
 ```
 
-Run the private editor scene/prefab validation, save fixture, legacy art fixture and Android QA build in that order against the repaired copy. Keep the shipped source untouched until the candidate's in-engine comparisons pass. The 57-row acceptance matrix retains 7 passed, 7 blocked and 43 pending execution.
+The native runner reconstructs the private baseline, applies the overlay, verifies the complete candidate file manifest, and executes the editor scene/prefab validation, save fixture, legacy art fixture and Android QA build in order. Run it against a fresh output directory. Omit `--unity` to reproduce the candidate without running the editor. That mode verified all 1,091 files and wrote a canonical manifest with SHA-256 `d7bb16e0bb8e4285192468b93c00e6569acbc673f09388d3515c18d87443329d`. The output status keeps device QA and release blocked even when Unity produces a QA APK.
+
+```sh
+python unity-integration/run_p11_native.py --checkpoint "$private_p10" --source "$original_zip" \
+  --output "$fresh_evidence_dir" --unity "$unity_2021_executable"
+```
+
+Keep the shipped source untouched until the candidate's in-engine comparisons pass. The 57-row acceptance matrix retains 7 passed, 7 blocked and 43 pending execution.
 
 ### Unity activation checkpoint
 
