@@ -35,6 +35,12 @@ def inspect_zip(path,release=False):
   aligned={n:check_elf(z.read(n)) for n in libs if release and n.split('/')[-2] in ('arm64-v8a','x86_64')}
  return {'abis':abis,'libraries':len(libs),'aligned_64bit_load_segments':aligned}
 
+def verify_migration_launcher(badging):
+    launchers = re.findall(r"^launchable-activity: name='([^']+)'", badging, re.MULTILINE)
+    if launchers != ['io.dragonarena.platform.MigrationActivity']:
+        raise ValueError('MigrationActivity must be the sole launcher')
+
+
 def verify_apk(path,args,release=False):
  result=inspect_zip(path,release)
  badging=run(args.aapt,'dump','badging',path)
@@ -42,7 +48,7 @@ def verify_apk(path,args,release=False):
  if not pkg or pkg.group(1)!=args.package or int(pkg.group(2))!=args.code or pkg.group(3)!=args.version:raise ValueError('Package/version mismatch')
  minv=re.search(r"sdkVersion:'(\d+)'",badging); target=re.search(r"targetSdkVersion:'(\d+)'",badging)
  if not minv or int(minv.group(1))!=26 or not target or int(target.group(1))!=(36 if release else 30):raise ValueError('SDK mismatch')
- if "launchable-activity: name='io.dragonarena.platform.MigrationActivity'" not in badging:raise ValueError('Migration launcher missing')
+ verify_migration_launcher(badging)
  if release and 'application-debuggable' in badging:raise ValueError('Debuggable release')
  if re.search(r"uses-permission(?:-sdk-\d+)?: name='android.permission.(?:READ_EXTERNAL_STORAGE|WRITE_EXTERNAL_STORAGE|MANAGE_EXTERNAL_STORAGE|REQUEST_INSTALL_PACKAGES)'",badging):raise ValueError('Unexpected broad permission')
  signer=run(args.apksigner,'verify','--verbose','--print-certs',path)

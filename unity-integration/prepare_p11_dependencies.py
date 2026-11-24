@@ -1,4 +1,4 @@
-"""Prepare the reviewed P11 reference overlay from the private P10 project."""
+"""Prepare the reviewed P11 dependency and Android build overlay."""
 
 import argparse
 import hashlib
@@ -8,6 +8,7 @@ from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parent
 ROOT = Path("Assets/SnakeWarzIO")
+ANDROID_BUILD = Path("Assets/DragonArena/Editor/PreviewBuild.cs")
 BACKGROUND = b"12c8895a4e193334c93064441b077296"
 SOLID = b"80b9845f9959e9a4887ea35c0cb4dff7"
 PARTICLE_LIGHT = b"3622f5ddd78508c4f9fd52e7488ebbef"
@@ -51,6 +52,17 @@ def lighting_change(data):
 
 
 def repair(data, relative):
+    if relative == ANDROID_BUILD:
+        anchor = b"            PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);"
+        if data.count(anchor) != 1:
+            raise ValueError("Expected one Android scripting backend setting")
+        newline = b"\r\n" if b"\r\n" in data else b"\n"
+        selection = newline.join((
+            b"#if UNITY_6000_0_OR_NEWER",
+            b"            PlayerSettings.Android.applicationEntry = AndroidApplicationEntry.Activity;",
+            b"#endif",
+        ))
+        return data.replace(anchor, selection + newline + anchor, 1)
     name = relative.name
     if name in {"Background-02.mat", "GameoverPanel.mat"}:
         texture = b"{fileID: 2800000, guid: " + SUPPLIED_BACKGROUND + b", type: 3}"
@@ -67,7 +79,9 @@ def repair(data, relative):
 
 
 def read_private(project, relative):
-    if relative.is_absolute() or ".." in relative.parts or not relative.is_relative_to(ROOT):
+    if relative.is_absolute() or ".." in relative.parts or not (
+        relative.is_relative_to(ROOT) or relative == ANDROID_BUILD
+    ):
         raise ValueError(f"Unexpected Unity asset path: {relative}")
     path = (project / relative).resolve(strict=True)
     if not path.is_relative_to(project):

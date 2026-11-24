@@ -35,6 +35,10 @@
     "Assets/SnakeWarzIO/_Scenes/Game.unity": {
       "before": "f933a868e529f1184949328dd7295680e5d0dfb538483ba4b4ff7f874552ac3e",
       "after": "b9e18de34c8fae76e9cdaeda959d4d30464610fa2e564a057a2d4fe1b384e986"
+    },
+    "Assets/DragonArena/Editor/PreviewBuild.cs": {
+      "before": "74c22b65a7edae1371cf60f0ce5ba8d2b86d584a553d68960c223574f2796e92",
+      "after": "a61d6e6d52dddf0ffd3c4d18592660cad16347f35e389083f9a06defa32d0dff"
     }
   }
 }

@@ -4,7 +4,7 @@ import os
 import sys
 from pathlib import Path
 from unittest.mock import patch
-from verify_android_artifact import check_elf, inspect_zip, main, sha
+from verify_android_artifact import check_elf, inspect_zip, main, sha, verify_migration_launcher
 
 def elf(align=16384,offset=0,vaddr=0):
  b=bytearray(256);b[:6]=b'\x7fELF\x02\x01';struct.pack_into('<Q',b,32,64);struct.pack_into('<HH',b,54,56,1);struct.pack_into('<IIQQQQQQ',b,64,1,5,offset,vaddr,0,100,100,align);return bytes(b)
@@ -28,6 +28,16 @@ class Check(unittest.TestCase):
    p=Path(d)/'test.apk'
    with zipfile.ZipFile(p,'w') as z:z.writestr('lib/arm64-v8a/libunity.so',elf())
    with self.assertRaises(ValueError):inspect_zip(p)
+
+class LauncherTests(unittest.TestCase):
+    def test_requires_only_migration_launcher(self):
+        migration = "launchable-activity: name='io.dragonarena.platform.MigrationActivity'\n"
+        unity = "launchable-activity: name='com.unity3d.player.UnityPlayerActivity'\n"
+        verify_migration_launcher(migration)
+        for badging in ('', unity, migration + unity):
+            with self.subTest(badging=badging), self.assertRaisesRegex(ValueError, 'sole launcher'):
+                verify_migration_launcher(badging)
+
 
 class ReleaseOutputTests(unittest.TestCase):
     def setUp(self):
