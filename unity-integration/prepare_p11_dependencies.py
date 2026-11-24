@@ -80,6 +80,11 @@ def android_build_change(data):
     validate = b"        public static void Validate() { ValidateCommon(false); }"
     replace((validate,), (
         validate,
+        b"        public static void GenerateLegacyFixture()",
+        b"        {",
+        b"            EditorSceneManager.OpenScene(Root + Scenes[0] + \".unity\", OpenSceneMode.Single);",
+        b"            P06AssetFixture.Generate();",
+        b"        }",
         b"        public static void ValidateQA()",
         b"        {",
         b"#if UNITY_6000_0_OR_NEWER",

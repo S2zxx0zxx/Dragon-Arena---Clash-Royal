@@ -18,7 +18,7 @@ MODERN_QA_VERSION = "6000.6.10f1"
 EDITOR_STEPS = (
     ("validate", "PreviewBuild.ValidateQA", "Static scene/prefab inspection passed"),
     ("save_fixture", "P07SaveFixture.Run", "P07 isolated storage self-test PASS"),
-    ("legacy_fixture", "P06AssetFixture.Generate", "P06 legacy fixture created"),
+    ("legacy_fixture", "PreviewBuild.GenerateLegacyFixture", "P06 legacy fixture created"),
     ("build", "PreviewBuild.BuildAndroidQA", "QA APK compiled;"),
 )
 EDITOR_ERRORS = re.compile(
