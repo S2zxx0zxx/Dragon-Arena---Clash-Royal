@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEditor.SceneManagement;
@@ -32,9 +33,39 @@ namespace DragonArena.EditorTools
                 }
             }
         }
+        private static void InspectSerializedGuids()
+        {
+            var roots = new[] { "Assets/SnakeWarzIO", "ProjectSettings" };
+            var extensions = new HashSet<string> { ".unity", ".prefab", ".mat", ".anim", ".controller", ".asset", ".meta", ".renderTexture" };
+            var pattern = new Regex(@"fileID:\s*(-?\d+),\s*guid:\s*([0-9a-f]{32})", RegexOptions.IgnoreCase);
+            var unresolved = new HashSet<string>();
+            foreach (var root in roots)
+                foreach (var path in Directory.GetFiles(root, "*", SearchOption.AllDirectories))
+                {
+                    if (!extensions.Contains(Path.GetExtension(path))) continue;
+                    var contents = File.ReadAllText(path);
+                    foreach (Match match in pattern.Matches(contents))
+                    {
+                        var guid = match.Groups[2].Value;
+                        if (match.Groups[1].Value == "0" || guid == "00000000000000000000000000000000" ||
+                            guid == "0000000000000000e000000000000000" || guid == "0000000000000000f000000000000000") continue;
+                        if (string.IsNullOrEmpty(AssetDatabase.GUIDToAssetPath(guid)))
+                            unresolved.Add(guid + " in " + path);
+                    }
+                }
+            foreach (var entry in unresolved.OrderBy(x => x)) Errors.Add("Unresolved serialized GUID: " + entry);
+            foreach (var guid in AssetDatabase.FindAssets("t:Material", new[] { "Assets/SnakeWarzIO" }))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+                if (!material || !material.shader || material.shader.name == "Hidden/InternalErrorShader")
+                    Errors.Add("Missing/error material shader: " + path);
+            }
+        }
         public static void Validate()
         {
             Errors.Clear();
+            InspectSerializedGuids();
             var expected = Scenes.Select(x => Root + x + ".unity").ToArray();
             if (!EditorBuildSettings.scenes.Where(x => x.enabled).Select(x => x.path).SequenceEqual(expected))
                 Errors.Add("Unexpected scene order; restore the four source scenes.");
