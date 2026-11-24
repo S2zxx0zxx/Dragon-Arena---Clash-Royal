@@ -336,11 +336,12 @@ html, body {
 .theme-status { margin-top: 8px; font-size: 11px; font-weight: 800; color: var(--gold-1); }
 
 /* MODALS, REVIVE & RESULTS */
-.modal-screen, .overlay-scrim {
+.screen.modal-screen.active, .overlay-scrim {
   position: absolute; inset: 0; z-index: 30; background: rgba(4, 7, 15, 0.78);
   backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 16px;
 }
-.overlay-scrim.hidden { display: none; }
+.screen.modal-screen:not(.active), .overlay-scrim.hidden { display: none; }
+.screen.modal-screen.active { pointer-events: auto; }
 .dialog-card {
   width: min(440px, 94vw); max-height: 88vh; overflow-y: auto;
   background: var(--panel-solid); border: 1px solid var(--border-gold); border-radius: 20px;
@@ -481,3 +482,17 @@ html, body {
 .pass-cell.prem { background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); }
 .pass-cell small { font-size: 9px; color: var(--text-muted); font-weight: 800; }
 .security-note { margin: 12px 0 0; font-size: 11px; color: #34d399; font-weight: 700; text-align: center; }
+
+/* Keep result/revive actions reachable on short landscape displays. */
+@media (orientation: landscape) and (max-height: 460px) {
+  .screen.modal-screen.active { padding: 8px; }
+  .modal-screen .dialog-card { max-height: calc(100% - 4px); padding: 12px 16px; }
+  .modal-screen .dialog-card h2 { margin: 4px 0; font-size: 20px; }
+  .result-rank-badge { font-size: 34px; margin: 2px 0; }
+  .result-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 8px 0; }
+  .mini-stats { margin: 8px 0; }
+  .result-grid div, .mini-stats div { padding: 6px; }
+  .modal-screen .dialog-actions { margin-top: 8px; }
+  .modal-screen .dialog-actions .gbtn { padding: 8px 10px; }
+  .countdown-orb { width: 52px; height: 52px; font-size: 24px; margin-bottom: 4px; }
+}

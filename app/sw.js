@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dragon-arena-aaa-v3.0.0-preview';
+const CACHE_NAME = 'dragon-arena-aaa-v3.0.1-preview';
 const CORE_ASSETS = [
   './',
   './index.html',
