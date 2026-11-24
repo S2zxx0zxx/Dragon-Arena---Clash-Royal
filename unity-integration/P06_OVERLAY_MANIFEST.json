@@ -1,0 +1,58 @@
+{
+  "Assets/SnakeWarzIO/Classes/MusicPlayer.cs": {
+    "before": "41e780eb54fdfe7106c379c76cae8d07cab48a30ca53df06d2723a95cec5f71b",
+    "after": "42697d5de5bdc152369cbbff651ee6ef43c0088013472fc43b3fb493d33ff395"
+  },
+  "Assets/SnakeWarzIO/Classes/SfxPlayer.cs": {
+    "before": "4bce3b9349025d402ef4bf88b05ad0634a574af6d8f8f1b40f3551b21ead161c",
+    "after": "13f61e9f4911daee5ac20e29d3d277c339c2a27ff21dc954ceb9171fd594a119"
+  },
+  "Assets/SnakeWarzIO/Classes/FBParticleManager.cs": {
+    "before": "12e162f3b1d116846851609b0673b128a963456748e9167ec2203ab552d6c6f1",
+    "after": "38dd4145127c3a4250150289bc8e2654afbcbf5ef48e788242d8708d0f62c520"
+  },
+  "Assets/SnakeWarzIO/Classes/CameraShaker.cs": {
+    "before": "53bbaebdd82c9e40c885c143f075761ac4c00c0963c30833a2b8ca5554042567",
+    "after": "37eb9f6a409019576d23e8ca0d015d8364f29fc698ab1b819316fe45c188a337"
+  },
+  "Assets/SnakeWarzIO/_Scenes/Init.unity": {
+    "before": "179fb6274c4f77209504665675e673611891fb862dce78e63e443850ed85ad3f",
+    "after": "c3ead7b66455ef9aa88ec646019d83667ec10718c20d7af358c70b9628f902d4"
+  },
+  "Assets/SnakeWarzIO/Prefabs/Misc/SfxPlayer.prefab": {
+    "before": "067b30276a446019e0462a1cc31af64387404156afbfe506229b462b16c5ec8e",
+    "after": "fe0f5dc94651ecdac1052fb8ea230106075fa27585e5d81ccae3d57b100d910f"
+  },
+  "Assets/SnakeWarzIO/Classes/GameController.cs": {
+    "before": "fb634171de9092dc4a3a51a14ce40c494c78ebb1447ad163a33a7b1ace5e57a5",
+    "after": "899fb3520df974f8f68e193600f9bddd3fd7fdb2bdcdb83c5ea7220a147f4855"
+  },
+  "Assets/SnakeWarzIO/_Scenes/Game.unity": {
+    "before": "5004b6ccedda7807b591ff102f480e2d499bad137219e4aa2d66075f6a571f70",
+    "after": "f933a868e529f1184949328dd7295680e5d0dfb538483ba4b4ff7f874552ac3e"
+  },
+  "Assets/SnakeWarzIO/Classes/BoostersController.cs": {
+    "before": "62a2edf8021bd6c01269a0e65cb4d0e55ef2760d10f70164ad48c7a1d8680d7e",
+    "after": "e559c65dbb9db4c0a2705820d4846cd1744194acf9ec9b6036e8c6552e8a7caf"
+  },
+  "Assets/SnakeWarzIO/Classes/FoodController.cs": {
+    "before": "771354eb190eb97eb06885c5e599e6f5bef91ee1ccc559cb10d6b799a112d3df",
+    "after": "1cd7d8002f8eb81e4e86065f719feba424cd2650495f749fab0183d221f78415"
+  },
+  "Assets/SnakeWarzIO/Classes/GameoverPanel.cs": {
+    "before": "b44d789f9d65960bb4aed7f666a5dd7e0b574e32dfa9e70f4e7e6cb49b84c20e",
+    "after": "aca3ab58aca5ee9a1d2b2a6fb6e839f408de419d3cddd7536b0d1b1303abf9d1"
+  },
+  "Assets/SnakeWarzIO/Classes/TextureScroller.cs": {
+    "before": "b056265b8be59424d090a6ed4a36564c78164da341c779f9251e8358a4a64151",
+    "after": "c0027ad1aa93d298c58ddd2605ca89167ccadfefb6524f0fc59fba78e6765174"
+  },
+  "Assets/DragonArena/Editor/P06AssetFixture.cs": {
+    "before": null,
+    "after": "cfd84241f855eb23dece9a5d224bd5e8bda095f953a5b2f662026ac2cf9849ab"
+  },
+  "Assets/DragonArena/Editor/P06AssetFixture.cs.meta": {
+    "before": null,
+    "after": "617fe8bbeb3e6bec97f35328a94e7a0da1f46a8626cfb4c509eb153d3f565efc"
+  }
+}
