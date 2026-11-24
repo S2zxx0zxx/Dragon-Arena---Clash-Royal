@@ -1,0 +1,34 @@
+{
+  "Assets/SnakeWarzIO/Classes/SkinManager.cs": {
+    "before": "feb4c7647b2b727b497c1178d8c7f52eb5b82c382ef4ba7334864154d50e017d",
+    "after": "a6466314323bbce201aa6fc2e7031aa23d1af84300b67ebfb6411be6d2347862"
+  },
+  "Assets/SnakeWarzIO/Classes/ShopController.cs": {
+    "before": "b8ec7ddfb17f4c09c4be7e27dd88374ca110208c934fb3f20b6b15bcf6e592e2",
+    "after": "a4f3aa8ac4cf79a06668499559da5c4ff780db0ff0013d577ed109b7eb3185fe"
+  },
+  "Assets/SnakeWarzIO/Classes/ShopItemController.cs": {
+    "before": "511b369e715128030a79bc5f794c71e9a5121dd5c96d42265c57560d78dd6c92",
+    "after": "cfed9870922b5c8966c09302e572b405ce66f24c1cdcdc206d41b448e073e352"
+  },
+  "Assets/SnakeWarzIO/Classes/SkinButtonController.cs": {
+    "before": "616e971225c536075ad586fa94a68923b24e70247dc686027853443762166457",
+    "after": "2f7a74156bc48b9cd42c4b38d3c3c5a4889fbd5a71f2a568c999d89e361883f0"
+  },
+  "Assets/SnakeWarzIO/Classes/DemoSnake.cs": {
+    "before": "bffa5ef0c7f77b2d95716990386a8203ddae93f1fb45991b9e3c8fd46558f376",
+    "after": "d5e8a62c0d96197c44c0b896952c6364ebb13ed8624048535cdad0f42d499deb"
+  },
+  "Assets/SnakeWarzIO/Classes/PlayerController.cs": {
+    "before": "14993ddbbc01926a8b1907839c3231fca2da913241e26ef8c9657c2e0382c0c2",
+    "after": "2b472b5ff0fd57031ec1316bdd5274813870c4dc00cd4395dc28a9e948d66402"
+  },
+  "Assets/SnakeWarzIO/Classes/FoodController.cs": {
+    "before": "18fba3038a07cd8bdfc650860484ac386104a74b56ec6e29edffcec5077465fb",
+    "after": "771354eb190eb97eb06885c5e599e6f5bef91ee1ccc559cb10d6b799a112d3df"
+  },
+  "Assets/SnakeWarzIO/Prefabs/Foods/Food-01.prefab": {
+    "before": "e5b7540da7c5c8ebc8785e9549f26390e4bb4fdb61bd058bd9b183440276b520",
+    "after": "15e4c516ba36fac963255e19461c1781baa9899669a5dee4160f63c04e84cc19"
+  }
+}
