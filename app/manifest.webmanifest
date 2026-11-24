@@ -1,0 +1,29 @@
+{
+  "id": "/",
+  "name": "Dragon Arena \u2014 Clash Royale (Prototype)",
+  "short_name": "Dragon Arena",
+  "description": "Local 3D crystal dragon arena demo",
+  "start_url": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#060620",
+  "theme_color": "#090623",
+  "categories": [
+    "games",
+    "entertainment"
+  ],
+  "icons": [
+    {
+      "src": "icons/dragon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/dragon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

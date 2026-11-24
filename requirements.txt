@@ -1,0 +1,2 @@
+# No Python packages required to serve/validate the game bundle; use Python 3.10+ standard library.
+# Node 20+ only for automated unit tests; no npm dependencies.

@@ -1,0 +1,52 @@
+{
+  "build": "v4-reference-locked-premium-procedural-3d-ui",
+  "date": "2026-11-23",
+  "sourceAuthority": "92541.png v2 primary; 92540.png v1 secondary",
+  "delivered": [
+    "10 cropped original-reference screen panels",
+    "original 2 source sheets",
+    "24 GLB character sets and preview GLBs",
+    "10 GLB food types",
+    "24 GLB peak death bursts",
+    "6 trail sample GLBs",
+    "local runnable HTML/WebGL2 arcade UI and actual mesh renderer",
+    "local 60Hz deterministic arena: growth, food, bots, collisions and kills",
+    "state navigation: splash consent home arena revive result shop 4 tabs",
+    "24-creature 3D preview selector; demo inventory and resource shop",
+    "detailed plan/contracts/audit and unit tests",
+    "24 premium-detail procedural mesh updates",
+    "GPU-instanced segment renderer",
+    "3D lobby portal asset",
+    "offline-first PWA shell and icon",
+    "reference UI QA contract tests",
+    "customizable 24-variant Dragon Lab cosmetic unlock economy",
+    "animated segmented 3D hero spine",
+    "once-per-day local free reward caps"
+  ],
+  "tests": {
+    "javascriptSyntax": "pass",
+    "physics": "7 arena tests pass",
+    "assetLoader": "24x3 upgraded premium procedural 3D parts + 24 peak death FX pass",
+    "browserVisual": "BLOCKED_BY_ADMINISTRATOR",
+    "deviceAndroid": "NOT_TESTED",
+    "uiContract": "5 UI/PWA/DOM contract tests pass"
+  },
+  "notDelivered": [
+    "original poster-grade high-poly 3D sculpt & 24 final skins",
+    "fully animated 3D death FX and all avatar clips",
+    "final pixel-accepted art/screens",
+    "real online multiplayer",
+    "real Play Billing / rewarded ads",
+    "Play Store AAB / signed release",
+    "production-verified gameplay/UX/performance",
+    "Premium screenshot parity rendered side-by-side verification pending; no production release signoff"
+  ],
+  "hardStopForRelease": [
+    "FID-3D-01 hero visual parity",
+    "S00–S09 individually accepted screen renders",
+    "mobile WebGL2 performance & input",
+    "safe respawn, fair collision, shield",
+    "legal/purchases/ads if enabled",
+    "online security and networking if enabled"
+  ]
+}
