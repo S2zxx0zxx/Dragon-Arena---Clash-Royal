@@ -1,15 +1,17 @@
 {
-  "id": "/",
-  "name": "Dragon Arena \u2014 Clash Royale (Prototype)",
+  "id": "./",
+  "name": "Dragon Arena \u2014 3D Colosseum",
   "short_name": "Dragon Arena",
-  "description": "Local 3D crystal dragon arena demo",
+  "description": "AAA 3D Dragon Colosseum Arena \u2014 Evolve 24 unique dragons, unleash elemental Fury, and dominate the leaderboard.",
   "start_url": "./",
+  "scope": "./",
   "display": "fullscreen",
   "orientation": "landscape",
-  "background_color": "#060620",
-  "theme_color": "#090623",
+  "background_color": "#070b16",
+  "theme_color": "#0b1020",
   "categories": [
     "games",
+    "action",
     "entertainment"
   ],
   "icons": [

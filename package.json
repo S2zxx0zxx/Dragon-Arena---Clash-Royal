@@ -1,0 +1,11 @@
+{
+  "name": "dragon-arena-3d-pwa",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dragon Arena \u2014 AAA 3D Sovereign Colosseum PWA & Play Store TWA",
+  "scripts": {
+    "test": "node --test app/tests/aaa_engine.test.mjs",
+    "serve": "python3 serve.py"
+  }
+}

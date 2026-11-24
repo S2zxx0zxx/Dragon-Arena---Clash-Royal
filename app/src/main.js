@@ -1,217 +1,669 @@
-import {CrystalArena, RULES} from '../engine/arena.mjs';
-import {chooseNpcRoster} from './npc.mjs';
-import {syncEnergy,spendEnergy,grantEnergy} from './energy.mjs';
-import {CrystalRenderer} from './renderer.js';
-import {ArenaPresentation} from './arena_presentation.mjs';
-import {initProgress,recordMatch,visitLab,claimMission,claimEvent,claimMilestone,claimLogin} from './progression.mjs';
-import {renderSecondaryPanel,SECONDARY_TITLES,ENVIRONMENTS} from './secondary.js';
-import {makeAudio} from './sound.mjs';
-import {drawMinimap,PRESENTATION} from './polish.mjs';
-import {mountCosmicBackdrop} from './cosmic.mjs';
-mountCosmicBackdrop(document.querySelector('#cosmic-backdrop'));
-const $=selector=>document.querySelector(selector), $$=selector=>[...document.querySelectorAll(selector)];
-const arenaPresentation=new ArenaPresentation($('#arena-effects'));
-let defeatPopupUntil=0;
-const fmt=n=>Math.round(n).toLocaleString('en-US');
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const STORAGE_KEY='dragon-arena-v4-demo';
-const defaultSave={name:'DragonPilot',level:1,xp:0,coins:9750,gems:125,energy:20,skin:'neon_dragonling',ownedSkins:['pebble_wisp','leafling','bubbletail','rockcoil','neon_dragonling'],inventory:{magnet:3,speed:3,shield:2},played:0};
-let saved;try{saved={...defaultSave,...JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}')}}catch{saved={...defaultSave}};
-initProgress(saved);syncEnergy(saved);
-const audio=makeAudio(()=>saved.settings.sound);
-const save=()=>{try{localStorage.setItem(STORAGE_KEY,JSON.stringify(saved))}catch{}};
-let finishedMatch=false,secondaryTab='local',startingArena=false,lastMinimapAt=0,activeMode='quick';
-function applyPreferences(){if(!renderer)return;renderer.graphicsQuality=saved.settings.graphics;renderer.glowEnabled=saved.settings.glow;renderer.arenaTheme=saved.arenaTheme;$('#app').classList.toggle('reduce-motion',!saved.settings.motion);}
-let countedDeaths=new Set();
-if('serviceWorker' in navigator && location.protocol!=='file:'){navigator.serviceWorker.register('./sw.js').catch(e=>console.warn('Offline cache unavailable',e));}
-let renderer=null,manifest=null,active='splash',shopTab='offers',arena=null,paused=false,acc=0,elapsed=0,kills=0,lastRender=performance.now(),reviveLeft=5,reviveTick=0,skinLoading=false,refOpen=false,currentlyBoost=false,joystickHeld=false,deathPosition=null;
-const SKIN_NAMES={};
-const SKIN_PRICES={common:0,uncommon:400,rare:1600,epic:3900,legendary:10500,mythic:28000};
-let previewSkin=saved.skin;
-const SCREENS=['splash','consent','home','arena','revive','result','shop','creatures','secondary'];
-const refs={splash:'00_splash',consent:'01_consent',home:'02_home',arena:'03_arena',revive:'04_revive',result:'05_results',shop:()=>({offers:'06_shop_offers',energy:'07_shop_energy',coins:'08_shop_coins',powerups:'09_shop_powerups'}[shopTab]),creatures:'02_home',secondary:'02_home'};
-function toast(message){const t=$('#toast');t.textContent=message;t.classList.remove('hidden');clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.add('hidden'),3500);}
-function renderStats(){syncEnergy(saved);$$('[data-coins]').forEach(el=>el.textContent=fmt(saved.coins));$$('[data-gems]').forEach(el=>el.textContent=fmt(saved.gems));$$('[data-energy]').forEach(el=>el.textContent=fmt(saved.energy));$$('[data-level]').forEach(el=>el.textContent=saved.level);$$('[data-xpbar]').forEach(el=>el.style.width=`${Math.min(100,saved.xp/(saved.level*1000)*100)}%`);$('#player-handle').textContent=saved.name; }
-function setScreen(name){if(!SCREENS.includes(name))return;active=name;$$('.screen').forEach(s=>s.classList.toggle('active',s.id===name));
- if(renderer)renderer.scene=({splash:'splash',home:'home',creatures:'creatures',arena:'arena',revive:'revive',result:'arena'})[name]||'none';
- if(name==='creatures')renderer?.resetShowcase?.();
- renderStats();if(name==='shop')updateShop();if(name==='creatures'){previewSkin=saved.skin;visitLab(saved);save();buildLab();}
- if(name==='home'){renderer?.releaseArenaAssets?.();const owned=manifest?.characters?.find(c=>c.id===saved.skin);if(owned)$('#hero-name').textContent=owned.name;
-  if(renderer&&renderer.skin!==saved.skin)renderer.useSkin(saved.skin).then(()=>renderer.prime()).catch(e=>console.error('Could not restore owned skin',e));}if(name==='secondary')renderSecondary();
- $('#render-status').textContent=renderer?`WEBGL2 · ${renderer.scene.toUpperCase()} · LOCAL DEMO`:'3D ENGINE UNAVAILABLE';
+/**
+ * Dragon Arena v3.0 — Peak AAA Game Controller & Self-Healing Runtime
+ * Integrates: WebGL2 + HDR Bloom + GPU Instancing + Canvas2D Fallback,
+ * 3D Crate Opening Ceremony, 30-Tier Dragon Pass, Emote Wheel, Signed IndexedDB Save & Crash Telemetry.
+ */
+
+import { DRAGONS, RARITY_CONFIG, getDragonById } from './config/dragons.js';
+import { ARENA_THEMES, GAME_MODES } from './config/arenas.js';
+import { DragonArenaEngine, PHYSICS } from './engine/physics.js';
+import { DragonWebGLEngine } from './render/webgl_engine.js';
+import { Canvas2DFallbackEngine } from './render/canvas2d_fallback.js';
+import { SoundEngine } from './audio/sound_engine.js';
+import {
+  loadSave, hydrateIndexedDBSave, persistSave, createDefaultSave, syncEnergy,
+  recordMatchResult, upgradeDragon, openDragonCrate, grantReward,
+  unlockPremiumPass, claimDragonPassTier,
+  DAILY_MISSIONS, WEEKLY_EVENTS, MILESTONES, LOGIN_REWARDS, utcDay,
+} from './systems/progression.js';
+import { logCrashTelemetry } from './systems/storage_security.js';
+import { ArenaHUD } from './ui/hud.js';
+import { renderModeSelector, renderDragonLab, renderShopContent, renderModalContent } from './ui/screens.js';
+
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => [...document.querySelectorAll(sel)];
+const fmt = (n) => Math.round(Number(n) || 0).toLocaleString('en-US');
+
+let save = loadSave();
+const sound = new SoundEngine(() => save.settings);
+const hud = new ArenaHUD();
+let engine = null;
+let arena = null;
+
+let activeScreen = 'splash';
+let previewDragonId = save.skin;
+let shopTab = 'crates';
+let modalKind = null;
+let paused = false;
+let reviveLeft = 5;
+let reviveTimer = 0;
+let matchFinalized = false;
+
+const keys = new Set();
+let boostHeld = false;
+let joystickActive = false;
+let joystickPointerId = null;
+let joystickOrigin = { x: 0, y: 0 };
+
+let lastTime = performance.now();
+let accumulator = 0;
+let fpsSmooth = 60;
+let slowFrames = 0;
+
+if ('serviceWorker' in navigator && location.protocol !== 'file:' && !navigator.userAgent.includes('DragonArenaAndroidPreview')) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
-function currentSkin(){return manifest?.characters?.find(c=>c.id===(active==='creatures'?previewSkin:saved.skin))};
-async function changeSkin(skin){if(skinLoading||!manifest.characters.some(c=>c.id===skin))return;skinLoading=true;previewSkin=skin;
- try{await renderer.useSkin(skin);await renderer.prime();renderer?.resetShowcase?.();
-  const next=manifest.characters.find(c=>c.id===skin);document.querySelector('#creatures').dataset.rarity=next?.rarity||'common';
-  // Selecting a preview never silently changes the equipped skin.
-  $('#hero-name').textContent=currentSkin().name;$('#selected-skin-label').textContent=currentSkin().name.toUpperCase();
- }catch(e){console.error(e);toast('3D model load failed: '+e.message)}
- finally{skinLoading=false;buildLab();}
+
+window.addEventListener('error', (e) => logCrashTelemetry('window.error', e.message));
+window.addEventListener('unhandledrejection', (e) => logCrashTelemetry('promise', String(e.reason)));
+
+function showToast(msg, tone = 'info') {
+  const t = $('#toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.className = `toast visible tone-${tone}`;
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => t.classList.remove('visible'), 3000);
 }
-function unlockSkin(){
- const c=manifest?.characters?.find(x=>x.id===previewSkin);if(!c)return;
- const owned=new Set(saved.ownedSkins||[]);if(owned.has(c.id)){saved.skin=c.id;save();buildLab();toast('DRAGON EQUIPPED');return}
- const price=SKIN_PRICES[c.rarity]||0;
- if(saved.coins<price){toast(`Need ${fmt(price)} demo coins to unlock ${c.name}`);return}
- saved.coins-=price;owned.add(c.id);saved.ownedSkins=[...owned];saved.skin=c.id;save();renderStats();buildLab();toast(`${c.name} unlocked — cosmetic only!`);
+
+function syncHeaderCurrencies() {
+  syncEnergy(save);
+  $$('[data-coins]').forEach(el => el.textContent = fmt(save.coins));
+  $$('[data-gems]').forEach(el => el.textContent = fmt(save.gems));
+  $$('[data-energy]').forEach(el => el.textContent = `${save.energy}/20`);
+  $$('[data-level]').forEach(el => el.textContent = save.level);
+  $$('[data-player-name]').forEach(el => el.textContent = save.name);
+  const xpBar = $('#home-xp-fill');
+  if (xpBar) xpBar.style.width = `${Math.min(100, Math.round((save.xp / (save.level * 1000)) * 100))}%`;
+
+  const eq = getDragonById(save.skin);
+  const lv = save.dragonLevels[save.skin] || 1;
+  const heroTag = $('#home-dragon-badge');
+  if (heroTag) heroTag.textContent = `${eq.name.toUpperCase()} · LV.${lv}`;
+
+  const modeMeta = GAME_MODES.find(m => m.id === save.selectedMode) || GAME_MODES[0];
+  const modeLabel = $('#home-mode-label');
+  if (modeLabel) modeLabel.textContent = modeMeta.name;
 }
-async function startArena(mode='quick'){
- if(startingArena)return;
- if(!renderer||!manifest){toast('3D assets have not loaded');return;}
- syncEnergy(saved);
- if(mode!=='practice'&&saved.energy<1){toast('No energy available — Practice is free. Visit Shop for daily charge.');renderStats();return;}
- startingArena=true;
- try{
-  const seed=((Date.now()>>>0)^((saved.played+1)*2654435761))>>>0;
-  const next=new CrystalArena(seed);
-  next.addPlayer({id:'you',skin:saved.skin,displayName:saved.name,x:90,y:90,angle:0});
-  const rivals=chooseNpcRoster(manifest,saved.settings.graphics==='battery'?7:9,saved.played);
-  rivals.forEach((bot,i)=>{const a=i*Math.PI*2/rivals.length,d=21+(i%3)*5;
-   next.addPlayer({...bot,x:90+Math.cos(a)*d,y:90+Math.sin(a)*d,angle:a+Math.PI,isBot:true});});
-  next.seedFood(155);
-  for(let i=0;i<22;i++){const a=next.random()*Math.PI*2,d=2+next.random()*13,food=next.rollFood();
-   next.addFood({x:90+Math.cos(a)*d,y:90+Math.sin(a)*d,type:food.id,mass:food.mass,source:'opening'});}
-  renderer.arena=next;await renderer.prime('arena');
-  // No synchronous load of every NPC GLB: stream meshes after gameplay becomes interactive.
-  if(mode!=='practice'&&!spendEnergy(saved,1)){toast('Not enough energy');return;}
-  save();arena=next;elapsed=0;kills=0;finishedMatch=false;countedDeaths.clear();
-  paused=false;acc=0;currentlyBoost=false;activeMode=mode;renderer.arenaElapsed=0;arenaPresentation.picks=[];defeatPopupUntil=0;$('#arena-defeat-pop').classList.remove('visible');setScreen('arena');renderHUD();renderer.streamRivals(rivals,next).catch(e=>console.warn('NPC mesh stream stopped',e));
- }catch(e){console.error(e);toast('Arena failed to initialize: '+e.message);}finally{startingArena=false;}
+
+function applyEngineSettings() {
+  if (!engine) return;
+  engine.quality = save.settings.graphics || 'high';
+  engine.cameraStyle = save.settings.cameraStyle || 'dynamic3d';
+  engine.arenaThemeIndex = save.arenaTheme || 0;
+  sound.syncVolumes();
 }
-function doDeath(){if(active!=='arena')return;const p=arena.players.find(p=>p.id==='you');deathPosition={x:p.x,y:p.y};reviveLeft=5;reviveTick=performance.now();let ranking=arena.players.filter(x=>x.alive||x.id==='you').sort((a,b)=>b.score-a.score);let rank=1+ranking.findIndex(x=>x.id==='you');if(rank<=0)rank=8;
- $('#death-rank').textContent='#'+rank;$('#death-mass').textContent=fmt(p.score);$('#revive-clock').textContent='5';audio.play('death');setScreen('revive');}
-function finalize(){if(finishedMatch)return;if(!arena){setScreen('home');return}finishedMatch=true;const p=arena.players.find(p=>p.id==='you');let rank=1+arena.players.filter(x=>x.score>p.score).length;
- let xp=Math.min(2000,Math.round(p.score*2+elapsed*1.6+kills*35));let earned=Math.min(1500,Math.floor(p.score/3)+kills*15);saved.coins+=earned;saved.xp+=xp;saved.played++;recordMatch(saved,{mass:p.score,kills,seconds:elapsed,rank,skin:saved.skin,players:arena.players.map(pl=>({name:pl.id==='you'?saved.name:pl.displayName,score:pl.score,isYou:pl.id==='you'}))});while(saved.xp>=saved.level*1000){saved.xp-=saved.level*1000;saved.level++}save();
- $('#final-rank').textContent=rank;$('#final-score').textContent=fmt(p.score);$('#final-earned').textContent='+'+fmt(earned)+' 🪙';$('#final-collected').textContent=fmt(p.collected||0);$('#final-kills').textContent=fmt(kills);$('#final-time').textContent=`${Math.floor(elapsed/60)}m ${Math.floor(elapsed%60)}s`;$('#final-xp').textContent='+'+fmt(xp);setScreen('result');audio.play('reward');
+
+function setScreen(name) {
+  activeScreen = name;
+  $$('.screen').forEach(s => s.classList.toggle('active', s.id === `screen-${name}`));
+  $('#pause-modal')?.classList.add('hidden');
+  $('#panel-modal')?.classList.add('hidden');
+  modalKind = null;
+
+  if (engine) {
+    engine.scene = name === 'arena' ? 'arena' : name === 'lab' ? 'lab' : name === 'crate' ? 'crate' : name === 'splash' ? 'splash' : 'home';
+    engine.heroSkin = name === 'lab' ? previewDragonId : save.skin;
+    engine.heroLevel = save.dragonLevels[engine.heroSkin] || 1;
+    if (name === 'lab') engine.resetShowcase();
+  }
+
+  if (name === 'arena') sound.setTrack('arena');
+  else if (name === 'lab' || name === 'shop' || name === 'crate') sound.setTrack('lab');
+  else if (name === 'home' || name === 'result' || name === 'revive') sound.setTrack('home');
+
+  syncHeaderCurrencies();
+  if (name === 'home') {
+    const modeGrid = $('#home-mode-grid');
+    if (modeGrid) modeGrid.innerHTML = renderModeSelector(save);
+  } else if (name === 'lab') {
+    save.daily.values.lab = 1;
+    persistSave(save);
+    refreshLab();
+  } else if (name === 'shop') {
+    refreshShop();
+  }
 }
-function revive(){if(active!=='revive'||saved.coins<250){toast('Not enough demo coins');return}saved.coins-=250;save();let p=arena.players.find(p=>p.id==='you');const loc=arena.point(20);p.alive=true;p.x=loc.x;p.y=loc.y;p.angle=0;p.aimAngle=0;p.history=[];for(let i=0;i<250;i++)p.history.push({x:p.x-i*.62,y:p.y});p.body=arena.sampleBody(p);arena.effects=[];paused=false;setScreen('arena');toast('Rejoined locally — score and mass retained')}
-function renderHUD(){if(!arena)return;const p=arena.players.find(p=>p.id==='you');if(!p)return;
- $('#live-score').textContent=fmt(p.score);$('#live-length').textContent=p.segmentCount;
- $('#arena-alive').textContent=arena.players.filter(q=>q.alive).length;
- $('#arena-defeated').textContent=kills;const seconds=Math.floor(elapsed);$('#arena-timer').textContent=`${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`;
- $('#quest-progress').style.width=Math.min(100,p.mass/2200*100)+'%';$('#quest-text').textContent=fmt(p.mass)+' / 2,200';
- const rank=[...arena.players].sort((a,b)=>b.score-a.score);const leaders=rank.slice(0,5);if(!leaders.includes(p))leaders.push(p);
- $('#arena-leaders').replaceChildren(...leaders.map(pl=>{const li=document.createElement('li');li.className=pl.id==='you'?'you':'';
- const num=document.createElement('span');num.className='rank-icon';const position=rank.indexOf(pl)+1;num.textContent=position<=3?['👑','♛','♜'][position-1]:String(position);
- const name=document.createElement('b');name.textContent=pl.id==='you'?saved.name:pl.displayName;
- const score=document.createElement('small');score.textContent=fmt(pl.score);li.append(num,name,score);return li;}));
- const distance=Math.min(p.x,p.y,RULES.worldSize-p.x,RULES.worldSize-p.y);
- $('#boundary-warning').classList.toggle('visible',p.alive&&distance<11);
- if(performance.now()-lastMinimapAt>90){drawMinimap($('#minimap-canvas'),arena);lastMinimapAt=performance.now();}
- for(let k of ['magnet','speed','shield'])$('#'+k+'-count').textContent=saved.inventory[k]||0;
- const status=$('#active-power-status');if(status){const buffs=[];for(const kind of ['speed','magnet','shield']){const until=p[kind==='shield'?'shieldUntilTick':kind+'UntilTick']||0;if(until>arena.tick)buffs.push(kind.toUpperCase()+' '+Math.ceil((until-arena.tick)*RULES.fixedDt)+'s');}status.textContent=buffs.join(' · ');}
+
+function refreshLab() {
+  const { infoHtml, carouselHtml } = renderDragonLab(save, previewDragonId);
+  if ($('#lab-info-card')) $('#lab-info-card').innerHTML = infoHtml;
+  if ($('#lab-carousel')) $('#lab-carousel').innerHTML = carouselHtml;
+  if (engine) {
+    engine.heroSkin = previewDragonId;
+    engine.heroLevel = save.dragonLevels[previewDragonId] || 1;
+  }
 }
-function usePower(kind){
- if(active!=='arena'||!arena||paused)return;
- const p=arena.players.find(x=>x.id==='you');if(!p?.alive)return;
- if(!['speed','magnet','shield'].includes(kind))return;
- const timer=kind==='shield'?'shieldUntilTick':kind+'UntilTick';
- if(p[timer]>arena.tick){toast(kind.toUpperCase()+' is already active');return;}
- const count=saved.inventory[kind]||0;if(!count){toast(kind.toUpperCase()+' out of stock — visit Shop');return;}
- saved.inventory[kind]=count-1;
- const duration=kind==='speed'?4:kind==='magnet'?7:10;
- p[timer]=arena.tick+Math.round(duration/RULES.fixedDt);
- save();audio.play('power');toast(kind.toUpperCase()+' active for '+duration+'s');renderHUD();
+
+function refreshShop() {
+  $$('[data-shop-tab]').forEach(btn => btn.classList.toggle('active', btn.dataset.shopTab === shopTab));
+  if ($('#shop-body')) $('#shop-body').innerHTML = renderShopContent(save, shopTab);
 }
-const shopData={
- offers:[['FREE CHEST','Once per UTC day','🎁','FREE','daily'],['DRAGON STARTER','Featured preview','💠','PREVIEW','preview'],['NO ADS','Billing not integrated','🚫','COMING SOON','unavailable'],['DRAGON TREASURY','Premium art preview','🐉','PREVIEW','preview'],['WELCOME BONUS','Demo coins × 150','🪙','CLAIM','welcome'],['EVENT CRYSTAL','Coming soon','💎','LOCKED','unavailable']],
- energy:[['DAILY CHARGE','Restore 5 energy','⚡','FREE','energy'],['ENERGY ×20','Demo economy only','⚡','COMING SOON','unavailable'],['ENERGY ×100','Demo economy only','⚡','COMING SOON','unavailable'],['INFINITE ENERGY','Not enabled','♾','COMING SOON','unavailable'],['ARENA PASS','Never pay-to-win','🎟','INFO','info'],['BONUS ENERGY','Event system pending','✨','LOCKED','unavailable']],
- coins:[['COINS ×300','Earn by playing','🪙','PLAY TO EARN','play'],['COINS ×1,250','Real store not connected','🪙','COMING SOON','unavailable'],['COINS ×7,000','Real store not connected','🪙','COMING SOON','unavailable'],['COINS ×16,000','Real store not connected','💰','COMING SOON','unavailable'],['COINS ×50,000','Real store not connected','💰','COMING SOON','unavailable'],['COINS ×125,000','Real store not connected','💰','COMING SOON','unavailable']],
- powerups:[['MAGNET','Pull nearby food','🧲','300 COINS','magnet'],['SPEED BOOST','4s faster movement','⚡','300 COINS','speed'],['SHIELD','Blocks body/head collisions for 10s','🛡','300 COINS','shield'],['MAGNET ×3','Bundle','🧲','850 COINS','magnet3'],['SPEED ×3','Bundle','⚡','850 COINS','speed3'],['TRAIL EFFECT','Visual cosmetics pending','🌌','PREVIEW','preview']]
-};
-function updateShop(){ $$('.shop-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.shop===shopTab));$('#shop-title').textContent=({offers:'SPECIAL OFFERS',energy:'ENERGY RESOURCES',coins:'COIN COLLECTION',powerups:'ARENA POWER-UPS'})[shopTab];
- const grid=$('#shop-items');grid.replaceChildren(...shopData[shopTab].map(([name,desc,emoji,label,action],i)=>{const card=document.createElement('article');card.className='shop-card';
- let graphic=i%3===0?'crystal_shard':i%3===1?'coin_core':'element_gem';let file=`assets/food/2d/${graphic}.png`;
- const title=document.createElement('strong');title.textContent=name;const pic=document.createElement('img');pic.src=file;pic.alt='';const sub=document.createElement('small');sub.textContent=desc;const b=document.createElement('button');b.className='btn '+(action==='unavailable'?'navy':'green');b.dataset.purchase=action;b.textContent=label;
- if((action==='daily'&&saved.dailyChestDay===new Date().toISOString().slice(0,10))||(action==='energy'&&saved.dailyEnergyDay===new Date().toISOString().slice(0,10))||(action==='welcome'&&saved.welcome)){b.textContent='CLAIMED';b.disabled=true;}
- card.append(title,pic,sub,b);return card}));
+
+function openModal(kind) {
+  const titles = {
+    pass: '👑 SEASON DRAGON PASS (30 TIERS)',
+    missions: 'DAILY MISSIONS',
+    events: 'WEEKLY EVENTS',
+    rewards: 'REWARDS & STREAK',
+    leaderboard: 'WEEKLY LEAGUES & RANKINGS',
+    profile: 'DRAGON LORD PROFILE',
+    settings: 'GAME SETTINGS & SECURITY',
+  };
+  modalKind = kind;
+  $('#modal-title').textContent = titles[kind] || 'DRAGON ARENA';
+  $('#modal-body').innerHTML = renderModalContent(kind, save);
+  $('#panel-modal').classList.remove('hidden');
 }
-function buy(action){if(action==='play'){startArena('quick');return}if(action==='daily'){const day=new Date().toISOString().slice(0,10);if(saved.dailyChestDay===day){toast('Daily chest already claimed today');return}saved.dailyChestDay=day;saved.coins+=50;toast('Demo chest: +50 coins');}else if(action==='welcome'){if(saved.welcome){toast('Welcome reward already claimed');return}saved.welcome=true;saved.coins+=150;toast('+150 demo coins');}
- else if(action==='energy'){const day=new Date().toISOString().slice(0,10);if(saved.dailyEnergyDay===day){toast('Free energy claimed today');return}const added=grantEnergy(saved,5);if(!added){toast('Energy already full');return}saved.dailyEnergyDay=day;toast('+'+added+' energy restored');}else if(['magnet','speed','shield','magnet3','speed3'].includes(action)){const count=action.endsWith('3')?3:1;const kind=action.replace('3','');let cost=count===3?850:300;if(saved.coins<cost){toast('Not enough coins');return}saved.coins-=cost;saved.inventory[kind]=(saved.inventory[kind]||0)+count;toast(`Bought ${count} ${kind} for ${cost} demo coins`)}else if(action==='preview'){toast('Concept preview only; paid storefront not integrated');return}else if(action==='info'){toast('Energy never grants competitive advantage in this local prototype');return}else{toast('Not available: no payments or rewarded ads are connected');return}save();renderStats();updateShop();}
-function buildLab(){
- if(!manifest)return;
- const owned=new Set(saved.ownedSkins||[]),parent=$('#skin-picker');
- // Every card owns its label, price and hit area; no unlock button covers the carousel.
- parent.replaceChildren(...manifest.characters.map(c=>{
-  const card=document.createElement('article');card.className='skin-card';card.dataset.rarity=c.rarity;
-  const isOwned=owned.has(c.id),selected=c.id===previewSkin;
-  card.classList.toggle('locked',!isOwned);card.classList.toggle('active',selected);
-  const preview=document.createElement('button');preview.type='button';preview.className='skin-preview';preview.dataset.skin=c.id;preview.setAttribute('aria-label',`Preview ${c.name}`);preview.setAttribute('aria-pressed',String(selected));
-  const picture=document.createElement('img');picture.src=`assets/characters/${c.rarity}/${c.id}/2d/preview_transparent.png`;picture.alt='';preview.append(picture);
-  const label=document.createElement('b');label.textContent=c.name;const rarity=document.createElement('small');rarity.textContent=c.rarity.toUpperCase();preview.append(label,rarity);card.append(preview);
-  const price=document.createElement('button');price.type='button';price.className='skin-price';price.dataset.unlockSkin=c.id;
-  price.textContent=isOwned?(saved.skin===c.id?'✓ EQUIPPED':'✓ EQUIP'):`🔒 ${fmt(SKIN_PRICES[c.rarity]||0)} 🪙`;
-  price.disabled=isOwned&&saved.skin===c.id;price.setAttribute('aria-label',isOwned?`Equip ${c.name}`:`Unlock ${c.name} for ${SKIN_PRICES[c.rarity]} coins`);
-  card.append(price);return card;
- }));
- const c=currentSkin();$('#selected-skin-label').textContent=c?.name?.toUpperCase()||'DRAGON LAB';
- const unlock=$('#skin-unlock-button');unlock.hidden=true;
- document.querySelector('#creatures').dataset.rarity=c?.rarity||'common';
+
+function closeModal() {
+  modalKind = null;
+  $('#panel-modal').classList.add('hidden');
 }
-let secondaryKey='settings';
-function renderSecondary(){
- $('#secondary-title').textContent=SECONDARY_TITLES[secondaryKey]||'DRAGON ARENA';
- $('#secondary-content').innerHTML=renderSecondaryPanel(secondaryKey,saved,secondaryTab,new Date(),manifest);
+
+function startMatch(forcedModeId = null) {
+  const modeId = forcedModeId || save.selectedMode || 'classic';
+  const mode = GAME_MODES.find(m => m.id === modeId) || GAME_MODES[0];
+  syncEnergy(save);
+  if (mode.energyCost > 0 && save.energy < mode.energyCost) {
+    sound.play('error');
+    showToast('Not enough Energy! Play Titan Hunt (Free) or claim Daily Energy.', 'warn');
+    return;
+  }
+  if (mode.energyCost > 0) { save.energy -= mode.energyCost; persistSave(save); }
+
+  arena = new DragonArenaEngine({
+    modeId: mode.id,
+    seed: Date.now() ^ ((save.career.matches + 1) * 2654435761),
+    playerSkin: save.skin,
+    playerLevel: save.dragonLevels[save.skin] || 1,
+    playerName: save.name,
+    dragons: DRAGONS,
+    ghostRun: save.bestGhostRun,
+  });
+
+  if (engine) {
+    engine.arena = arena;
+    engine.camTarget = [0, 0, 0];
+    engine.camHeight = 25;
+  }
+  paused = false; matchFinalized = false; boostHeld = false; accumulator = 0;
+  sound.play('confirm');
+  setScreen('arena');
 }
-function showSecondary(key){secondaryKey=key;secondaryTab=key==='leaderboard'?'local':'all';setScreen('secondary');}
-function claimAction(action){
- const [kind,id]=action.split(':');
- const result=kind==='claim-login'?claimLogin(saved):kind==='claim-mission'?claimMission(saved,id):kind==='claim-event'?claimEvent(saved,id):kind==='claim-milestone'?claimMilestone(saved,id):{ok:false,message:'Unknown claim'};
- if(result.ok){audio.play('reward');save();renderStats();renderSecondary();}
- toast(result.message);
+
+function showReviveScreen() {
+  const you = arena?.players.find(p => p.id === 'you');
+  if (!you) return finalizeMatch();
+  const rank = 1 + arena.players.filter(p => p.score > you.score).length;
+  reviveLeft = 5; reviveTimer = performance.now();
+  $('#revive-countdown').textContent = '5';
+  $('#revive-rank').textContent = `#${rank}`;
+  $('#revive-score').textContent = fmt(you.score);
+  sound.play('death');
+  sound.setFever(false);
+  setScreen('revive');
 }
-function changeEnvironment(index){
- if(!Number.isInteger(index)||index<0||index>=ENVIRONMENTS.length)return;
- saved.arenaTheme=index;save();applyPreferences();renderSecondary();toast(ENVIRONMENTS[index].name+' equipped for next arena');
+
+function executeRevive() {
+  if (activeScreen !== 'revive' || !arena) return;
+  if (save.coins < 250) { sound.play('error'); showToast('Need 250 Coins to revive!', 'warn'); return; }
+  save.coins -= 250; persistSave(save);
+  const you = arena.players.find(p => p.id === 'you');
+  const safePt = arena.randomPointInArena(16);
+  you.alive = true; you.x = safePt.x; you.y = safePt.y;
+  you.angle = Math.atan2(-safePt.y, -safePt.x); you.aimAngle = you.angle;
+  you.spawnShieldTicks = 180; you.stamina = you.maxStamina;
+  you.history = [];
+  for (let i = 0; i < Math.max(40, you.segmentCount + 6); i++) {
+    you.history.push({ x: you.x - i * PHYSICS.segmentSpacing * Math.cos(you.angle), y: you.y - i * PHYSICS.segmentSpacing * Math.sin(you.angle) });
+  }
+  you.body = arena.sampleBody(you);
+  paused = false;
+  sound.play('power');
+  setScreen('arena');
+  showToast('REVIVED! 3s Aegis Protection Active!', 'gold');
 }
-function changeSetting(kind,value){
- if(!['sound','glow','motion','graphics'].includes(kind))return;
- if(kind==='graphics'){if(!['battery','balanced','high'].includes(value))return;saved.settings.graphics=value;}
- else saved.settings[kind]=Boolean(value);
- save();applyPreferences();renderSecondary();
+
+function finalizeMatch() {
+  if (matchFinalized || !arena) { setScreen('home'); return; }
+  matchFinalized = true;
+  const you = arena.players.find(p => p.id === 'you');
+  const sorted = [...arena.players].sort((a, b) => b.score - a.score);
+  const rank = Math.max(1, sorted.findIndex(p => p.id === 'you') + 1);
+  const rewards = recordMatchResult(save, {
+    score: you?.score || 0, kills: you?.kills || 0, seconds: arena.elapsed, rank,
+    modeId: arena.mode.id, players: sorted.map(p => ({ name: p.displayName, score: p.score, isYou: p.id === 'you' })),
+    ghostTrace: arena.ghostTrace,
+  });
+
+  $('#res-banner').textContent = arena.victory || rank === 1 ? '👑 SOVEREIGN VICTORY!' : 'MATCH COMPLETE';
+  $('#res-rank').textContent = `#${rank}`;
+  $('#res-score').textContent = fmt(you?.score || 0);
+  $('#res-kills').textContent = fmt(you?.kills || 0);
+  $('#res-time').textContent = `${Math.floor(arena.elapsed / 60)}m ${Math.floor(arena.elapsed % 60)}s`;
+  $('#res-coins').textContent = `+${fmt(rewards.earnedCoins)} 🪙`;
+  $('#res-gems').textContent = `+${rewards.earnedGems} 💎`;
+  $('#res-xp').textContent = `+${fmt(rewards.earnedXp)} XP · +${rewards.earnedPassXp} PASS`;
+
+  sound.setFever(false);
+  sound.play('reward');
+  setScreen('result');
 }
-function editProfile(){const n=prompt('Choose a local pilot name (2–24 characters)',saved.name);if(n===null)return;const candidate=n.trim().replace(/[<>]/g,'');if(candidate.length<2||candidate.length>24){toast('Name must contain 2–24 characters');return;}saved.name=candidate;save();renderStats();renderSecondary();}
-function toggleRef(){refOpen=!refOpen;$('#reference-view').classList.toggle('hidden',!refOpen);if(refOpen){const a=typeof refs[active]==='function'?refs[active]():refs[active];$('#reference-image').src='references/'+a+'.png';$('#reference-caption').textContent=`Approved source: ${a} • Reference-only image — the live game is behind this viewer.`;}}
-async function doAction(action){switch(action){case 'start':setScreen(saved.consent?'home':'consent');break;case 'agree':if(!$('#notice-check').checked){toast('Please review and accept the preview notice');break}saved.consent=true;save();setScreen('home');break;
- case 'play':await startArena('quick');break;case 'practice':await startArena('practice');break;case 'friends':toast('Online friend matches require a verified multiplayer server; unavailable offline. Practice or Quick Play works locally.');break;case 'home':paused=false;setScreen('home');$('#pause-layer').classList.add('hidden');break;case 'pause':paused=true;$('#pause-layer').classList.remove('hidden');break;case 'resume':paused=false;$('#pause-layer').classList.add('hidden');break;
- case 'boost':/* Hold-to-boost is handled on pointerdown/up to avoid sticky tap boost. */break;case 'magnet':case 'speed':case 'shield':usePower(action);break;
- case 'result':finalize();break;case 'revive-coins':revive();break;case 'share':try{await navigator.clipboard.writeText(`Dragon Arena demo: rank ${$('#final-rank').textContent}, collected ${$('#final-collected').textContent} mass!`);toast('Match summary copied')}catch{toast('Share needs clipboard permissions')}break;
- case 'shop':shopTab='offers';setScreen('shop');break;case 'shop-energy':shopTab='energy';setScreen('shop');break;case 'shop-coins':shopTab='coins';setScreen('shop');break;case 'shop-offers':shopTab='offers';setScreen('shop');break;
- case 'creatures':setScreen('creatures');break;case 'unlock-skin':unlockSkin();break;case 'lab-prev':case 'lab-next':{const arr=manifest?.characters||[];const pos=arr.findIndex(c=>c.id===previewSkin);if(arr.length)await changeSkin(arr[(pos+(action==='lab-next'?1:-1)+arr.length)%arr.length].id);break;}case 'rotate-dragon':renderer?.rotateShowcase(Math.PI/4);break;case 'reset-dragon':renderer?.resetShowcase();break;case 'reference':toggleRef();break;case 'close-ref':if(refOpen)toggleRef();break;
- case 'edit-profile':editProfile();break;case 'claim-login':claimAction(action);break;
- case 'notice':toast('Prototype use: local demo only; no commercial product terms are active.');break;case 'privacy':toast('Save state is stored in browser localStorage. This demo has no backend or analytics.');break;
- default:if(action.startsWith('claim-'))claimAction(action);else if(SECONDARY_TITLES[action])showSecondary(action);else toast('Feature not available in this offline preview');
-}}
-document.addEventListener('click',e=>{const env=e.target.closest('[data-environment]');if(env){changeEnvironment(Number(env.dataset.environment));return}const tab=e.target.closest('[data-panel-tab]');if(tab){secondaryTab=tab.dataset.panelTab;renderSecondary();return}const shop=e.target.closest('[data-shop]');if(shop){shopTab=shop.dataset.shop;updateShop();return}const unlockCard=e.target.closest('[data-unlock-skin]');if(unlockCard){if(previewSkin!==unlockCard.dataset.unlockSkin){changeSkin(unlockCard.dataset.unlockSkin).then(unlockSkin);return}unlockSkin();return}const skin=e.target.closest('[data-skin]');if(skin){changeSkin(skin.dataset.skin);return}const buyButton=e.target.closest('[data-purchase]');if(buyButton){buy(buyButton.dataset.purchase);return}const target=e.target.closest('[data-action]');if(target){audio.play('tap');doAction(target.dataset.action);}});
-document.addEventListener('change',e=>{const setting=e.target.closest('[data-setting]');if(setting)changeSetting(setting.dataset.setting,setting.type==='checkbox'?setting.checked:setting.value);});
-const keys=new Set();window.addEventListener('keydown',e=>{if(active==='arena'&&!e.target.closest?.('input,textarea,select')&&['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();keys.add(e.code);if(e.code==='Escape'){if(refOpen)toggleRef();else if(active==='arena')doAction('pause');else if(!$('#pause-layer').classList.contains('hidden'))doAction('resume');else if(active!=='home')doAction('home')}});window.addEventListener('keyup',e=>keys.delete(e.code));
-const joystick=$('#joystick');function moveAim(x,y){let p=arena?.players.find(p=>p.id==='you');if(!p||!p.alive)return;const norm=Math.hypot(x,y)||1;p.aimAngle=Math.atan2(y/norm,x/norm)}
-function joystickMove(e){const rect=joystick.getBoundingClientRect(),dx=e.clientX-rect.left-rect.width/2,dy=e.clientY-rect.top-rect.height/2;moveAim(dx,dy);const len=Math.hypot(dx,dy),scale=Math.min(.25,len/rect.width),x=dx/(len||1)*scale*100,y=dy/(len||1)*scale*100;$('#stick').style.transform=`translate(${x}%,${y}%)`;}
-joystick.addEventListener('pointerdown',e=>{joystickHeld=true;joystick.setPointerCapture(e.pointerId);joystickMove(e)});joystick.addEventListener('pointermove',e=>{if(joystickHeld)joystickMove(e)});const joyStop=()=>{joystickHeld=false;$('#stick').style.transform='none'};joystick.addEventListener('pointerup',joyStop);joystick.addEventListener('pointercancel',joyStop);
-const labGesture=$('#lab-gesture');const labPointers=new Map();let lastPinch=null;
-labGesture?.addEventListener('pointerdown',e=>{labPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});lastPinch=null;labGesture.setPointerCapture(e.pointerId)});
-labGesture?.addEventListener('pointermove',e=>{if(!labPointers.has(e.pointerId))return;const last=labPointers.get(e.pointerId);labPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(labPointers.size===1){renderer?.rotateShowcase((e.clientX-last.x)*.014);return;}const [a,b]=[...labPointers.values()];const distance=Math.hypot(a.x-b.x,a.y-b.y);if(lastPinch!==null)renderer?.zoomShowcase(Math.max(-.05,Math.min(.05,(distance-lastPinch)*.004)));lastPinch=distance;});
-for(const ev of ['pointerup','pointercancel','lostpointercapture'])labGesture?.addEventListener(ev,e=>{labPointers.delete(e.pointerId);lastPinch=null});
-labGesture?.addEventListener('wheel',e=>{if(active!=='creatures')return;e.preventDefault();renderer?.zoomShowcase(e.deltaY>0?-.12:.12)},{passive:false});
-labGesture?.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){renderer?.rotateShowcase(e.key==='ArrowLeft'?-0.2:0.2);e.preventDefault()}});
-const boost=$('#boost-btn');
-boost.addEventListener('pointerdown',e=>{if(active!=='arena'||paused)return;currentlyBoost=true;boost.setPointerCapture?.(e.pointerId);boost.classList.add('is-held');e.preventDefault()});
-const releaseBoost=()=>{currentlyBoost=false;boost.classList.remove('is-held')};
-for(const event of ['pointerup','pointercancel','lostpointercapture','pointerleave'])boost.addEventListener(event,releaseBoost);
-window.addEventListener('blur',()=>{releaseBoost();keys.clear();joystickHeld=false;$('#stick').style.transform='none';});
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&active==='arena'&&!paused){paused=true;releaseBoost();$('#pause-layer').classList.remove('hidden');}});
-$('#arena').addEventListener('pointermove',e=>{if(joystickHeld||e.target.closest('button')||e.pointerType==='touch')return;const x=e.clientX-innerWidth/2,y=e.clientY-innerHeight/2;moveAim(x,y)});
-function frame(time){let dt=Math.min(.18,(time-lastRender)/1000||.016);lastRender=time;
- if(active==='arena'&&arena&&!paused){const p=arena.players.find(p=>p.id==='you');const dx=(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0),dy=(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0);if(dx||dy)p.aimAngle=Math.atan2(dy,dx);p.boost=currentlyBoost||keys.has('Space');acc+=dt;let ticks=0;while(acc>=RULES.fixedDt&&ticks<10){const massBefore=p.mass;arena.step(RULES.fixedDt);if(p.mass>massBefore){audio.play('pickup');arenaPresentation.pickup(p.mass-massBefore,p.x,p.y);}for(const fx of arena.effects){if(fx.killerId==='you'&&!countedDeaths.has(fx.id)){countedDeaths.add(fx.id);kills++;defeatPopupUntil=performance.now()+2100;const pop=$('#arena-defeat-pop');pop.textContent='✧ +1 You defeated '+(fx.victimName||'the dragon')+'!';pop.classList.add('visible');}}acc-=RULES.fixedDt;ticks++;elapsed+=RULES.fixedDt;if(!p.alive){doDeath();break;}}if(ticks||Math.floor(time)%50===0)renderHUD();}
- if(active==='revive'){if(time-reviveTick>=1000){reviveLeft=Math.max(0,reviveLeft-1);reviveTick=time;$('#revive-clock').textContent=reviveLeft;if(!reviveLeft)finalize();}}
- if(renderer)try{renderer.render(dt);if(active==='arena'&&arena){arenaPresentation.quality=saved.settings.graphics;arenaPresentation.draw(arena,renderer,time);if(defeatPopupUntil&&performance.now()>defeatPopupUntil){$('#arena-defeat-pop').classList.remove('visible');defeatPopupUntil=0;}}}catch(e){console.error('Renderer frame failure',e);$('#render-status').textContent='RENDER ERROR: '+e.message;renderer=null;}requestAnimationFrame(frame);
+
+function useInventoryPower(kind) {
+  if (activeScreen !== 'arena' || !arena || paused) return;
+  const you = arena.players.find(p => p.id === 'you');
+  if (!you?.alive) return;
+  if ((save.inventory[kind] || 0) <= 0) { sound.play('error'); showToast(`No ${kind.toUpperCase()} left!`, 'warn'); return; }
+  save.inventory[kind]--; persistSave(save);
+  if (kind === 'magnet') you.magnetTicks = Math.max(you.magnetTicks, 540);
+  else if (kind === 'speed') you.speedTicks = Math.max(you.speedTicks, 360);
+  else if (kind === 'shield') you.shieldTicks = Math.max(you.shieldTicks, 600);
+  sound.play('power');
+  showToast(`${kind.toUpperCase()} ACTIVATED!`, 'gold');
 }
-async function boot(){const messages=['Reading locked UI reference','Loading 24 3D character definitions','Compiling WebGL2 shaders','Preparing live 3D hero','Ready'];let pct=0;
- function step(index){pct=(index/(messages.length-1))*100;$('#loadpct').textContent=Math.floor(pct)+'%';$('#loadbar').style.width=pct+'%';$('.load-desc').firstChild.textContent=messages[index]+' '}
- try{step(0);manifest=await (await fetch('manifest/game_assets.json')).json();manifest.characters.forEach(c=>SKIN_NAMES[c.id]=c.name);step(1);
- renderer=new CrystalRenderer($('#scene3d'));renderer.setManifest(manifest);renderer.scene='splash';applyPreferences();step(2);await renderer.useSkin(saved.skin);await renderer.prime();step(3);$('#hero-name').textContent=currentSkin().name;step(4);$('#start-button').disabled=false;$('#start-button').textContent='▶ ENTER GAME';renderStats();}
- catch(e){console.error('Boot failed',e);$('#loadpct').textContent='ERROR';$('#start-button').textContent='3D ENGINE ERROR';$('#render-status').textContent=e.message;toast('3D initialization failed: '+e.message)}
- requestAnimationFrame(frame);
+
+function launchCrateCeremony(res) {
+  const rarity = RARITY_CONFIG[res.dragon.rarity] || RARITY_CONFIG.rare;
+  previewDragonId = res.dragon.id;
+  $('#crate-rarity').textContent = `${rarity.label} · ${res.dragon.element.toUpperCase()}`;
+  $('#crate-rarity').style.color = rarity.color;
+  $('#crate-title').textContent = res.dragon.name.toUpperCase();
+  $('#crate-sub').textContent = res.duplicate ? `Duplicate converted to +${fmt(res.bonusCoins)} Coins!` : `NEW DRAGON ADDED TO YOUR LAB!`;
+  setScreen('crate');
+  engine?.startCrateCeremony(res.dragon.id, rarity.glow);
+  sound.play('crate');
+  setTimeout(() => { if (activeScreen === 'crate') sound.play('roar'); }, 1350);
 }
-boot();window.__crystalDebug={get scene(){return active},get arena(){return arena},get selected(){return saved.skin},get renderer(){return renderer},open:setScreen,play:startArena};
+
+function handleShopBuy(id) {
+  const today = utcDay();
+  if (id === 'crate-royal' || id === 'crate-mythic') {
+    const res = openDragonCrate(save, id === 'crate-mythic' ? 'mythic' : 'royal');
+    if (!res.ok) { sound.play('error'); showToast(res.msg, 'warn'); return; }
+    syncHeaderCurrencies();
+    launchCrateCeremony(res);
+    return;
+  }
+  if (id === 'daily-chest') {
+    if (save.dailyChestDay === today) return;
+    save.dailyChestDay = today; save.coins += 250; save.gems += 5; persistSave(save);
+    sound.play('reward'); showToast('Daily Royal Chest: +250 🪙 & +5 💎!', 'gold');
+  } else if (id === 'daily-energy') {
+    if (save.dailyEnergyDay === today) return;
+    save.dailyEnergyDay = today; save.energy = Math.min(20, save.energy + 10); persistSave(save);
+    sound.play('power'); showToast('+10 Energy Restored!', 'gold');
+  } else if (id === 'refill-energy') {
+    if (save.gems < 10) { sound.play('error'); showToast('Need 10 Gems', 'warn'); return; }
+    save.gems -= 10; save.energy = 20; persistSave(save);
+    sound.play('power'); showToast('Energy Full (20/20)!', 'gold');
+  } else if (id === 'exchange-coins-sm' || id === 'exchange-coins-lg') {
+    const gemCost = id === 'exchange-coins-lg' ? 100 : 25, gain = id === 'exchange-coins-lg' ? 12000 : 2500;
+    if (save.gems < gemCost) { sound.play('error'); showToast(`Need ${gemCost} Gems`, 'warn'); return; }
+    save.gems -= gemCost; save.coins += gain; persistSave(save);
+    sound.play('reward'); showToast(`+${fmt(gain)} Coins added!`, 'gold');
+  } else if (id.startsWith('pwr-')) {
+    if (id === 'pwr-bundle') {
+      if (save.coins < 1800) { sound.play('error'); showToast('Need 1,800 Coins', 'warn'); return; }
+      save.coins -= 1800; save.inventory.magnet += 3; save.inventory.speed += 3; save.inventory.shield += 3; persistSave(save);
+      sound.play('reward'); showToast('Warrior Pack ×3 added!', 'gold');
+    } else {
+      const kind = id.replace('pwr-', ''), cost = kind === 'shield' ? 300 : 250;
+      if (save.coins < cost) { sound.play('error'); showToast(`Need ${cost} Coins`, 'warn'); return; }
+      save.coins -= cost; save.inventory[kind] = (save.inventory[kind] || 0) + 1; persistSave(save);
+      sound.play('confirm'); showToast(`Purchased +1 ${kind.toUpperCase()}!`, 'gold');
+    }
+  }
+  syncHeaderCurrencies();
+  refreshShop();
+}
+
+function handleClaim(spec) {
+  const [kind, id] = spec.split(':');
+  const today = utcDay();
+  if (kind === 'login') {
+    if (save.login.lastDay === today) return;
+    const streak = (save.login.streak || 0) + 1;
+    save.login = { lastDay: today, streak };
+    grantReward(save, LOGIN_REWARDS[(streak - 1) % LOGIN_REWARDS.length]);
+    persistSave(save); sound.play('reward'); showToast(`Day ${streak} Login Reward Claimed!`, 'gold');
+  } else if (kind === 'mission') {
+    const m = DAILY_MISSIONS.find(x => x.id === id);
+    if (!m || save.daily.claimed.includes(id) || (save.daily.values[id] || 0) < m.target) return;
+    save.daily.claimed.push(id); grantReward(save, m.reward); persistSave(save);
+    sound.play('reward'); showToast(`${m.title} Claimed!`, 'gold');
+  } else if (kind === 'event') {
+    const ev = WEEKLY_EVENTS.find(x => x.id === id);
+    if (!ev || save.weekly.claimed.includes(id) || (save.weekly.values[ev.kind] || 0) < ev.target) return;
+    save.weekly.claimed.push(id); grantReward(save, ev.reward); persistSave(save);
+    sound.play('reward'); showToast(`${ev.title} Claimed!`, 'gold');
+  } else if (kind === 'milestone') {
+    const ms = MILESTONES.find(x => x.id === id);
+    if (!ms || save.milestonesClaimed.includes(id) || (save.career[ms.kind] || 0) < ms.target) return;
+    save.milestonesClaimed.push(id); grantReward(save, ms.reward); persistSave(save);
+    sound.play('reward'); showToast(`${ms.label} Claimed!`, 'gold');
+  }
+  syncHeaderCurrencies();
+  if (modalKind) $('#modal-body').innerHTML = renderModalContent(modalKind, save);
+}
+
+document.addEventListener('click', (e) => {
+  sound.ensureContext();
+
+  const emoteBtn = e.target.closest('[data-emote]');
+  if (emoteBtn && activeScreen === 'arena' && arena && !paused) {
+    const you = arena.players.find(p => p.id === 'you');
+    arena.triggerEmote(you, emoteBtn.dataset.emote);
+    sound.play('roar');
+    return;
+  }
+
+  const passClaim = e.target.closest('[data-claim-pass]');
+  if (passClaim) {
+    const [track, tierStr] = passClaim.dataset.claimPass.split(':');
+    const res = claimDragonPassTier(save, Number(tierStr), track);
+    sound.play(res.ok ? 'reward' : 'error');
+    showToast(res.msg, res.ok ? 'gold' : 'warn');
+    syncHeaderCurrencies();
+    if (modalKind) $('#modal-body').innerHTML = renderModalContent(modalKind, save);
+    return;
+  }
+
+  const modeBtn = e.target.closest('[data-select-mode]');
+  if (modeBtn) {
+    save.selectedMode = modeBtn.dataset.selectMode; persistSave(save); sound.play('tap'); syncHeaderCurrencies();
+    if ($('#home-mode-grid')) $('#home-mode-grid').innerHTML = renderModeSelector(save);
+    return;
+  }
+
+  const prevDragon = e.target.closest('[data-preview-dragon]');
+  if (prevDragon) { previewDragonId = prevDragon.dataset.previewDragon; sound.play('tap'); refreshLab(); return; }
+
+  const shopTabBtn = e.target.closest('[data-shop-tab]');
+  if (shopTabBtn) { shopTab = shopTabBtn.dataset.shopTab; sound.play('tap'); refreshShop(); return; }
+
+  const buyBtn = e.target.closest('[data-buy]');
+  if (buyBtn) { handleShopBuy(buyBtn.dataset.buy); return; }
+
+  const themeBtn = e.target.closest('[data-select-theme]');
+  if (themeBtn) {
+    save.arenaTheme = Number(themeBtn.dataset.selectTheme) || 0; persistSave(save); applyEngineSettings();
+    sound.play('confirm'); showToast(`${ARENA_THEMES[save.arenaTheme].name} Arena Equipped!`, 'gold'); refreshShop();
+    return;
+  }
+
+  const claimBtn = e.target.closest('[data-claim]');
+  if (claimBtn) { handleClaim(claimBtn.dataset.claim); return; }
+
+  const actBtn = e.target.closest('[data-action]');
+  if (!actBtn) return;
+  const action = actBtn.dataset.action;
+
+  switch (action) {
+    case 'enter-game': sound.play('confirm'); setScreen('home'); break;
+    case 'play-selected': startMatch(save.selectedMode); break;
+    case 'go-home': paused = false; arena = null; if (engine) engine.arena = null; sound.play('tap'); setScreen('home'); break;
+    case 'open-lab': previewDragonId = save.skin; sound.play('tap'); setScreen('lab'); break;
+    case 'open-shop': shopTab = actBtn.dataset.tab || 'crates'; sound.play('tap'); setScreen('shop'); break;
+    case 'open-modal': sound.play('tap'); openModal(actBtn.dataset.modal); break;
+    case 'close-modal': sound.play('tap'); closeModal(); break;
+    case 'roar-dragon': engine?.triggerHeroRoar(); sound.play('roar'); break;
+    case 'unlock-pass': {
+      const res = unlockPremiumPass(save);
+      sound.play(res.ok ? 'reward' : 'error'); showToast(res.msg, res.ok ? 'gold' : 'warn');
+      syncHeaderCurrencies();
+      if (modalKind) $('#modal-body').innerHTML = renderModalContent(modalKind, save);
+      break;
+    }
+    case 'replay-tutorial':
+      save.tutorialDone = false; persistSave(save); closeModal(); startMatch('boss');
+      break;
+    case 'equip-dragon':
+      if (save.ownedSkins.includes(previewDragonId)) {
+        save.skin = previewDragonId; persistSave(save); sound.play('confirm');
+        showToast(`${getDragonById(previewDragonId).name} Equipped!`, 'gold'); refreshLab(); syncHeaderCurrencies();
+      }
+      break;
+    case 'unlock-dragon': {
+      const d = getDragonById(previewDragonId);
+      if (save.coins < d.price) { sound.play('error'); showToast(`Need ${fmt(d.price)} Coins`, 'warn'); break; }
+      save.coins -= d.price; save.ownedSkins.push(d.id); save.dragonLevels[d.id] = 1; save.skin = d.id; persistSave(save);
+      engine?.triggerHeroRoar(); sound.play('reward'); showToast(`${d.name} UNLOCKED & EQUIPPED!`, 'gold');
+      refreshLab(); syncHeaderCurrencies();
+      break;
+    }
+    case 'upgrade-dragon': {
+      const res = upgradeDragon(save, previewDragonId);
+      if (!res.ok) { sound.play('error'); showToast(res.msg, 'warn'); break; }
+      engine?.triggerHeroRoar(); sound.play('upgrade'); showToast(res.msg, 'gold');
+      refreshLab(); syncHeaderCurrencies();
+      break;
+    }
+    case 'pause': if (activeScreen === 'arena') { paused = true; $('#pause-modal')?.classList.remove('hidden'); sound.play('tap'); } break;
+    case 'resume': paused = false; $('#pause-modal')?.classList.add('hidden'); sound.play('tap'); break;
+    case 'fury':
+      if (activeScreen === 'arena' && arena && !paused) {
+        const you = arena.players.find(p => p.id === 'you');
+        if (arena.triggerFury(you)) { engine?.triggerShake(1.1, 0.4); sound.play('fury'); }
+      }
+      break;
+    case 'pwr-magnet': useInventoryPower('magnet'); break;
+    case 'pwr-speed': useInventoryPower('speed'); break;
+    case 'pwr-shield': useInventoryPower('shield'); break;
+    case 'revive-now': executeRevive(); break;
+    case 'skip-revive': finalizeMatch(); break;
+    case 'rematch': startMatch(arena?.mode?.id || save.selectedMode); break;
+    case 'rename-player': {
+      const next = prompt('Enter Dragon Lord Callsign (2-18 chars):', save.name);
+      if (next && next.trim().length >= 2) {
+        save.name = next.trim().slice(0, 18); persistSave(save); syncHeaderCurrencies();
+        if (modalKind) $('#modal-body').innerHTML = renderModalContent(modalKind, save);
+        showToast(`Callsign updated to ${save.name}!`, 'gold');
+      }
+      break;
+    }
+    case 'reset-save':
+      if (confirm('Reset all local Dragon Arena progress?')) {
+        save = createDefaultSave(); persistSave(save); applyEngineSettings(); syncHeaderCurrencies(); closeModal(); setScreen('home');
+        showToast('Save data reset.', 'info');
+      }
+      break;
+  }
+});
+
+document.addEventListener('input', (e) => {
+  const el = e.target.closest('[data-setting]');
+  if (!el) return;
+  const k = el.dataset.setting;
+  if (el.type === 'range') {
+    save.settings[k] = Number(el.value);
+    const label = el.previousElementSibling;
+    if (label) label.textContent = label.textContent.replace(/\(\d+%\)/, `(${Math.round(Number(el.value) * 100)}%)`);
+  } else if (el.type === 'checkbox') save.settings[k] = el.checked;
+  else save.settings[k] = el.value;
+  persistSave(save);
+  applyEngineSettings();
+});
+
+const sceneCanvas = $('#scene3d');
+let stageDrag = null;
+sceneCanvas?.addEventListener('pointerdown', (e) => {
+  if (activeScreen !== 'home' && activeScreen !== 'lab') return;
+  stageDrag = { x: e.clientX, y: e.clientY, moved: false };
+});
+window.addEventListener('pointermove', (e) => {
+  if (!stageDrag) return;
+  const dx = e.clientX - stageDrag.x;
+  if (Math.abs(dx) > 4) stageDrag.moved = true;
+  stageDrag.x = e.clientX;
+  engine?.rotateShowcase(dx * 0.012);
+});
+window.addEventListener('pointerup', () => {
+  if (stageDrag && !stageDrag.moved && (activeScreen === 'home' || activeScreen === 'lab')) {
+    engine?.triggerHeroRoar(); sound.play('roar');
+  }
+  stageDrag = null;
+});
+sceneCanvas?.addEventListener('wheel', (e) => {
+  if (activeScreen !== 'lab') return;
+  e.preventDefault(); engine?.zoomShowcase(e.deltaY > 0 ? -0.09 : 0.09);
+}, { passive: false });
+
+const joyZone = $('#joystick-zone'), joyStick = $('#joystick-stick');
+function setAimVector(dx, dy) {
+  if (!arena || paused) return;
+  const you = arena.players.find(p => p.id === 'you');
+  if (you?.alive && Math.hypot(dx, dy) > 4) you.aimAngle = Math.atan2(dy, dx);
+}
+joyZone?.addEventListener('pointerdown', (e) => {
+  if (activeScreen !== 'arena') return;
+  joystickActive = true; joystickPointerId = e.pointerId; joyZone.setPointerCapture(e.pointerId);
+  const r = joyZone.getBoundingClientRect();
+  joystickOrigin = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  setAimVector(e.clientX - joystickOrigin.x, e.clientY - joystickOrigin.y);
+});
+joyZone?.addEventListener('pointermove', (e) => {
+  if (!joystickActive || e.pointerId !== joystickPointerId) return;
+  const dx = e.clientX - joystickOrigin.x, dy = e.clientY - joystickOrigin.y;
+  setAimVector(dx, dy);
+  const dist = Math.min(34, Math.hypot(dx, dy)), ang = Math.atan2(dy, dx);
+  if (joyStick) joyStick.style.transform = `translate(${Math.cos(ang) * dist}px, ${Math.sin(ang) * dist}px)`;
+});
+const releaseJoy = () => { joystickActive = false; joystickPointerId = null; if (joyStick) joyStick.style.transform = 'translate(0,0)'; };
+joyZone?.addEventListener('pointerup', releaseJoy);
+joyZone?.addEventListener('pointercancel', releaseJoy);
+
+$('#screen-arena')?.addEventListener('pointermove', (e) => {
+  if (activeScreen !== 'arena' || paused || joystickActive || e.pointerType === 'touch' || e.target.closest('button')) return;
+  setAimVector(e.clientX - window.innerWidth / 2, e.clientY - window.innerHeight / 2);
+});
+
+const boostBtn = $('#boost-btn');
+boostBtn?.addEventListener('pointerdown', (e) => { if (activeScreen !== 'arena' || paused) return; boostHeld = true; boostBtn.classList.add('held'); e.preventDefault(); });
+const releaseBoost = () => { boostHeld = false; boostBtn?.classList.remove('held'); };
+['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => boostBtn?.addEventListener(ev, releaseBoost));
+
+window.addEventListener('keydown', (e) => {
+  keys.add(e.code);
+  if (activeScreen === 'arena') {
+    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
+    if (e.code === 'KeyE' || e.code === 'KeyF') {
+      const you = arena?.players.find(p => p.id === 'you');
+      if (arena?.triggerFury(you)) { engine?.triggerShake(1.1, 0.4); sound.play('fury'); }
+    } else if (e.code === 'Digit1') useInventoryPower('magnet');
+    else if (e.code === 'Digit2') useInventoryPower('speed');
+    else if (e.code === 'Digit3') useInventoryPower('shield');
+    else if (e.code === 'Escape') { paused = !paused; $('#pause-modal')?.classList.toggle('hidden', !paused); }
+  }
+});
+window.addEventListener('keyup', (e) => keys.delete(e.code));
+
+function drainArenaEvents() {
+  if (!arena || !arena.events.length) return;
+  for (const ev of arena.events) {
+    if (ev.type === 'pickup') sound.play('pickup', ev);
+    else if (ev.type === 'boost_pad' || ev.type === 'portal') sound.play('power');
+    else if (ev.type === 'pillar_shatter') { sound.play('kill'); engine?.triggerShake(0.9, 0.35); }
+    else if (ev.type === 'powerup') { sound.play('power'); showToast(`${ev.label} ACTIVATED!`, 'gold'); }
+    else if (ev.type === 'fever') { sound.play('fever'); sound.setFever(true); engine?.triggerShake(0.6, 0.3); }
+    else if (ev.type === 'player_kill') {
+      sound.play('kill'); engine?.triggerShake(ev.isBoss ? 1.5 : 1.0, 0.42);
+      showToast(ev.isBoss ? '👑 OBSIDIAN TITAN SLAIN!' : ev.wasBounty ? '🎯 BOUNTY CLAIMED! 2X + FULL FURY!' : `⚔ ELIMINATED ${ev.victimName}!`, 'gold');
+    } else if (ev.type === 'world_event') { sound.play('power'); showToast(`✦ ${ev.title} — ${ev.desc}`, 'gold'); }
+    else if (ev.type === 'player_death') { engine?.triggerShake(1.4, 0.5); showReviveScreen(); }
+    else if (ev.type === 'match_complete') finalizeMatch();
+  }
+  arena.events.length = 0;
+}
+
+function loop(now) {
+  const dt = Math.min(0.1, Math.max(0.001, (now - lastTime) / 1000));
+  lastTime = now;
+  fpsSmooth = fpsSmooth * 0.92 + (1 / dt) * 0.08;
+
+  if (activeScreen === 'arena' && fpsSmooth < 28) {
+    slowFrames++;
+    if (slowFrames > 90 && engine && engine.quality === 'ultra') { engine.quality = 'high'; slowFrames = 0; }
+    else if (slowFrames > 140 && engine && engine.quality === 'high') { engine.quality = 'medium'; slowFrames = 0; }
+  } else slowFrames = Math.max(0, slowFrames - 1);
+
+  if (activeScreen === 'arena' && arena && !paused) {
+    const you = arena.players.find(p => p.id === 'you');
+    if (you?.alive) {
+      const kx = (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0);
+      const ky = (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0) - (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0);
+      if (kx || ky) you.aimAngle = Math.atan2(ky, kx);
+      you.boost = boostHeld || keys.has('Space');
+      sound.setFever(you.feverTimer > 0);
+    }
+
+    accumulator += dt;
+    let steps = 0;
+    while (accumulator >= PHYSICS.fixedDt && steps < 6) {
+      arena.step(PHYSICS.fixedDt);
+      accumulator -= PHYSICS.fixedDt;
+      steps++;
+      drainArenaEvents();
+      if (activeScreen !== 'arena') break;
+    }
+    if (activeScreen === 'arena') hud.syncDOM(arena, save, fpsSmooth, engine?.drawCalls || 0);
+  }
+
+  if (activeScreen === 'revive' && now - reviveTimer >= 1000) {
+    reviveLeft = Math.max(0, reviveLeft - 1);
+    reviveTimer = now;
+    if ($('#revive-countdown')) $('#revive-countdown').textContent = String(reviveLeft);
+    if (reviveLeft <= 0) finalizeMatch();
+  }
+
+  if (engine) {
+    try {
+      engine.render(dt);
+      if (activeScreen === 'arena' && arena) hud.renderOverlay(arena, engine);
+    } catch (err) {
+      logCrashTelemetry('render', err.message);
+    }
+  }
+  requestAnimationFrame(loop);
+}
+
+async function boot() {
+  const bar = $('#splash-bar'), pct = $('#splash-pct'), msg = $('#splash-msg'), btn = $('#splash-enter-btn');
+  const stageStep = (p, text) => {
+    if (bar) bar.style.width = `${p}%`;
+    if (pct) pct.textContent = `${p}%`;
+    if (msg) msg.textContent = text;
+  };
+
+  stageStep(16, 'Verifying Signed IndexedDB Profile...');
+  await hydrateIndexedDBSave(save);
+
+  stageStep(44, 'Compiling WebGL2 HDR Bloom & GPU Instancing Shaders...');
+  try {
+    engine = new DragonWebGLEngine($('#scene3d'));
+  } catch (err) {
+    logCrashTelemetry('webgl2_fallback', err.message);
+    // A canvas that has acquired a WebGL context cannot acquire a 2D context.
+    const previousCanvas = $('#scene3d');
+    const fallbackCanvas = previousCanvas.cloneNode(false);
+    previousCanvas.replaceWith(fallbackCanvas);
+    engine = new Canvas2DFallbackEngine(fallbackCanvas);
+  }
+  applyEngineSettings();
+  engine.heroSkin = save.skin;
+  engine.heroLevel = save.dragonLevels[save.skin] || 1;
+  engine.scene = 'splash';
+
+  await new Promise(r => setTimeout(r, 110));
+  stageStep(78, 'Initializing Spatial Hash Grid, Portals & 6-Archetype AI...');
+  await new Promise(r => setTimeout(r, 110));
+  stageStep(100, engine.isFallback ? 'Compatibility Engine Ready — Tap to Enter!' : 'AAA 3D Engine Ready — Tap to Enter!');
+
+  syncHeaderCurrencies();
+  if (btn) { btn.disabled = false; btn.textContent = '▶ ENTER DRAGON ARENA'; }
+  requestAnimationFrame(loop);
+}
+
+boot();
+window.__dragonArena = { get engine() { return engine; }, get arena() { return arena; }, get save() { return save; }, setScreen, startMatch };

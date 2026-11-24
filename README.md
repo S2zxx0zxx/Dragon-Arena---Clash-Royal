@@ -1,44 +1,19 @@
-## UI polish v0.6.0 (reference sheets 92600/92601)
+# Dragon Arena v3.0 — 3D Sovereign Colosseum (AAA PWA & Play Store TWA)
 
-This is an **offline Android preview, not a production release**. The supplied two sheets are the visual design contract. New work: dynamic 3D home/lab showcase, rarity-specific platform treatments, compact card unlock pricing, drag rotation, live actual-food minimap, larger GLB pickups, seamless deep-space ground, lethal 3D barrier and camera clamp, mobile Result layout, and centered 3D splash with supporting dragons. No backend-enabled payments, global rankings, or multiplayer are claimed.
+A zero-dependency, Unity-inspired **WebGL2 3D Dragon Colosseum** Progressive Web App (PWA) designed for static hosting; Android WebView preview included. TWA setup and store acceptance are not verified.
 
-Run `node --test app/tests/*.test.mjs`. Android debug APK: GitHub Actions `.github/workflows/android-preview.yml` on `feat/reference-locked-premium-3d-ui`. Physical Android GPU/UX QA remains required before merging to main.
+## v3.0 Peak AAA Architecture
+- **WebGL2 3D Engine + Offscreen HDR Bloom + GPU Instancing** (`render/webgl_engine.js`, `mesh_builder.js`): Batched `drawArraysInstanced` rendering for dragon bodies, 3D food, and particles; HDR Bloom post-processing; procedural bite-lunge, boost wing-fold, Lv.1–Lv.5 visual evolution scaling, 3D Crate Opening Ceremony, and automatic **Canvas2D Emergency Fallback** (`canvas2d_fallback.js`).
+- **O(1) Spatial Hash Grid & Zero-GC Object Pooling** (`engine/spatial_grid.js`, `pool.js`, `physics.js`): Spatially partitioned collision checks (performance not benchmarked), 4 paired Runic Teleport Portals, 6 Floor Boost Pads, 4 Destructible Crystal Pillars, Wanted Bounty 2× rewards, 120ms Hit-Stop micro-freeze, Dragon Emotes, and Ghost Rival recording.
+- **Retention & Progression** (`systems/dragon_pass.js`, `progression.js`): 30-tier Free + Premium **Dragon Pass**, **Weekly Leagues & Ghost Rivals**, 24 scaling dragons (Lv.1–5), 3D Crate Opening Ceremony, and 15-second interactive first-time tutorial.
+- **Security & Play Store Production** (`systems/storage_security.js`, `play_billing_sync.js`, `.well-known/assetlinks.json`): Tamper-resistant salted save signatures + IndexedDB persistence, Strict CSP in `index.html`, crash telemetry ring buffer, Play Digital Goods API adapter, and TWA `assetlinks.json`.
 
-# Dragon Arena — Clash Royale (working title)
-
-**Status: prototype / draft. NOT production-ready and NOT merged.** Crystal Creatures is the internal family name of the original dragon/food/death-effect assets.
-
-This repository holds the first original **3D arena game UI-first implementation** locked to the user's two approved reference sheets. It includes 24 different 3D creature sets, 24 death burst meshes, 10 food types, a WebGL2 rendering engine with instanced body segments, a local deterministic arena and 10 reference-aligned screen states. The real checkout, ads and online PvP are **not** included.
-
-### Run locally
-
-```sh
-python serve.py --port 8000
+## Quick Start & Verification
+```bash
+npm test
+python3 serve.py
 ```
+Open `http://localhost:8000/` in Chrome.
 
-Then open `http://localhost:8000/` in a WebGL2-capable browser. The bootstrap automatically restores all original models, PNGs and visual reference images from the checked-in sha256-verified asset packs if they are not already unpacked. Browser requires **landscape** for intended composition. Alternatively run `python tools/unpack_assets.py` and serve the `app` directory.
-
-### Test
-
-```sh
-python tools/unpack_assets.py
-python -m pip install numpy trimesh pillow
-node --test app/tests/*.test.mjs
-python tools/validate_premium_assets.py
-python tests/validate_bundle.py
-```
-
-### Release gate
-
-See [locked screen map](docs/MASTER_IMPLEMENTATION_LOCK.md) and [blocking QA ledger](docs/QA_BLOCKERS.md). Static tests are not substitutes for Chrome/WebGL screenshot capture and physical Android performance/accessibility validation.
-
-### Naming / legal caveat
-
-The word **“Clash Royale”** is the name of an existing Supercell game; using it in public consumer branding entails trademark/store-confusion risk. This is a user-requested **working title**, not a final store-approved brand, and no affiliation is implied. Repository path is `S2zxx0zxx/Dragon-Arena---Clash-Royal` (without final 'e').
-
-### Reference priorities
-
-1. `app/references/LOCKED_BLUEPRINT_SHEET_v2.png` (PRIMARY visual target)
-2. `app/references/LOCKED_GAME_FLOW_SHEET_v1.png` (SECONDARY visual target)
-
-**Do not merge while any release-blocking gate remains unverified.**
+## Android preview release
+Version 3.0.0-preview, code 13, same application ID as 0.9.2. CI builds a debug-signed APK after tests and browser smoke; publishes a new prerelease only from main. Debug signing may require reinstall. No production billing, live multiplayer, secure server-side rankings, or verified TWA association. The old save key is not migrated by this build; preserve the prior APK and data before upgrading.

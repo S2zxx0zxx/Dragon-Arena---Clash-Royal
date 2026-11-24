@@ -42,7 +42,7 @@ public final class MainActivity extends Activity {
         web.setMediaPlaybackRequiresUserGesture(false);
         web.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         web.setDefaultTextEncodingName("UTF-8");
-        web.setUserAgentString(web.getUserAgentString() + " DragonArenaAndroidPreview/0.5.1");
+        web.setUserAgentString(web.getUserAgentString() + " DragonArenaAndroidPreview/3.0.0");
         game.setWebChromeClient(new WebChromeClient());
         game.setWebViewClient(new WebViewClient() {
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
@@ -88,7 +88,7 @@ public final class MainActivity extends Activity {
     }
     @Override public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK && game != null) {
-            game.evaluateJavascript("window.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));", null);
+            game.evaluateJavascript("window.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',code:'Escape',bubbles:true}));", null);
             return true;
         }
         return super.onKeyDown(keyCode, event);

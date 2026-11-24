@@ -1,36 +1,269 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><meta name="theme-color" content="#080529"><meta name="description" content="Dragon Arena — local 3D crystal dragon arena preview. Grow, collect, and clash."><title>Dragon Arena | 3D Crystal Dragons</title><link rel="stylesheet" href="src/styles.css"><link rel="stylesheet" href="src/secondary.css"><link rel="stylesheet" href="src/polish.css"><link rel="stylesheet" href="src/cinematic.css"><link rel="stylesheet" href="src/arena_v09.css"><link rel="manifest" href="manifest.webmanifest"></head><body>
-<div id="app" class="app-shell" data-visual-contract="92541-primary-92540-secondary">
-  <div class="backdrop"></div><canvas id="cosmic-backdrop" aria-hidden="true"></canvas><div class="stars"></div><canvas id="scene3d" aria-label="Live WebGL 3D crystal creature arena"></canvas>
-  <div class="screen active splash-screen" id="splash">
-    <div class="splash-glow"></div><div class="logo-mark"><span class="logo-gem">◆</span><span>DRAGON<br><strong>ARENA</strong></span></div>
-    
-    <div class="splash-bottom"><div class="load-desc">Loading 3D creatures <b id="loadpct">0%</b></div><div class="load-track"><div id="loadbar"></div></div><button id="start-button" class="btn gold" data-action="start" disabled>Initializing...</button></div>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https:; font-src 'self'; object-src 'none'; base-uri 'self';">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1020">
+  <meta name="description" content="Dragon Arena — AAA 3D Crystal Dragon Colosseum Action Game.">
+  <title>Dragon Arena | 3D Colosseum</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/dragon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/dragon-192.png">
+  <link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+  <div id="app" class="app-root">
+    <!-- Live 3D WebGL2 Canvas (auto-falls back to Canvas2D if WebGL2 unavailable) -->
+    <canvas id="scene3d" aria-label="Dragon Arena 3D Engine"></canvas>
+
+    <!-- 1. INTERACTIVE 3D SPLASH / LOADING SCREEN -->
+    <section id="screen-splash" class="screen active">
+      <div class="splash-vignette"></div>
+      <div class="splash-brand">
+        <span class="brand-crest">👑</span>
+        <div class="brand-title">DRAGON<span>ARENA</span></div>
+        <p class="brand-sub">3D SOVEREIGN COLOSSEUM · v3.0</p>
+      </div>
+      <div class="splash-footer">
+        <div class="load-meta"><span id="splash-msg">Booting 3D Engine...</span><b id="splash-pct">0%</b></div>
+        <div class="load-rail"><div id="splash-bar" class="load-fill"></div></div>
+        <button id="splash-enter-btn" class="gbtn gold xl" data-action="enter-game" disabled>INITIALIZING...</button>
+      </div>
+    </section>
+
+    <!-- 2. AAA GAME-ENGINE HOME LOBBY -->
+    <section id="screen-home" class="screen">
+      <header class="top-hud">
+        <button class="profile-chip" data-action="open-modal" data-modal="profile">
+          <span class="avatar-badge">🐉</span>
+          <div class="profile-text">
+            <strong data-player-name>DragonLord</strong>
+            <div class="xp-line"><span>Lv.<b data-level>1</b></span><div class="xp-rail"><i id="home-xp-fill"></i></div></div>
+          </div>
+        </button>
+
+        <div class="currency-bar">
+          <button class="curr-pill" data-action="open-shop" data-tab="resources">⚡ <b data-energy>20/20</b> <em>+</em></button>
+          <button class="curr-pill" data-action="open-shop" data-tab="resources">🪙 <b data-coins>6,500</b> <em>+</em></button>
+          <button class="curr-pill" data-action="open-shop" data-tab="crates">💎 <b data-gems>150</b> <em>+</em></button>
+          <button class="icon-sq" data-action="open-modal" data-modal="settings" aria-label="Settings">⚙</button>
+        </div>
+      </header>
+
+      <aside class="home-left-rail">
+        <button class="rail-btn pass-rail" data-action="open-modal" data-modal="pass"><span>👑</span><small>Pass</small></button>
+        <button class="rail-btn" data-action="open-modal" data-modal="missions"><span>📜</span><small>Missions</small></button>
+        <button class="rail-btn" data-action="open-modal" data-modal="events"><span>🔥</span><small>Events</small></button>
+        <button class="rail-btn" data-action="open-modal" data-modal="rewards"><span>🎁</span><small>Rewards</small></button>
+        <button class="rail-btn" data-action="open-modal" data-modal="leaderboard"><span>🏆</span><small>Leagues</small></button>
+      </aside>
+
+      <div class="home-center-stage">
+        <div id="home-dragon-badge" class="hero-plate">AZURE SKYBLADE · LV.1</div>
+        <small class="stage-tip">Drag to orbit 3D Dragon · Tap to Roar</small>
+      </div>
+
+      <aside class="home-right-panel">
+        <div class="panel-heading">SELECT BATTLE MODE</div>
+        <div id="home-mode-grid" class="mode-grid"></div>
+        <button class="gbtn gold xl play-cta" data-action="play-selected">
+          <span>▶ BATTLE NOW</span>
+          <small id="home-mode-label">CLASSIC ARENA</small>
+        </button>
+      </aside>
+
+      <footer class="home-dock">
+        <button class="dock-btn" data-action="open-lab"><span>🐉</span><b>DRAGON LAB</b></button>
+        <button class="dock-btn" data-action="open-shop" data-tab="crates"><span>🛍</span><b>DRAGON VAULT</b></button>
+        <button class="dock-btn" data-action="open-shop" data-tab="arenas"><span>🏛</span><b>ARENAS</b></button>
+        <button class="dock-btn" data-action="open-modal" data-modal="profile"><span>⚔</span><b>PROFILE</b></button>
+      </footer>
+    </section>
+
+    <!-- 3. LIVE 3D ARENA COMBAT HUD -->
+    <section id="screen-arena" class="screen">
+      <canvas id="arena-overlay" aria-hidden="true"></canvas>
+
+      <header class="arena-top-bar">
+        <div class="stat-pill gold-pill">🏆 <b id="hud-score">0</b></div>
+        <div class="stat-pill">⚔ <b id="hud-kills">0</b></div>
+        <div class="stat-pill">🐉 <b id="hud-alive">12</b></div>
+        <div class="stat-pill">⏱ <b id="hud-timer">00:00</b></div>
+        <div id="hud-fps" class="stat-pill fps-pill" hidden>60 FPS</div>
+        <button class="icon-sq" data-action="pause" aria-label="Pause">⏸</button>
+      </header>
+
+      <div id="hud-tutorial" class="tutorial-banner"></div>
+      <div id="hud-world-event" class="world-event-banner"></div>
+      <div id="hud-combo" class="hud-combo"></div>
+      <div id="boundary-warning" class="boundary-warn">⚠ APPROACHING ARENA BARRIER — TURN BACK!</div>
+
+      <div class="arena-leaderboard">
+        <div class="lb-title">👑 COLOSSEUM TOP</div>
+        <ol id="hud-leaderboard"></ol>
+      </div>
+
+      <div id="hud-killfeed" class="killfeed"></div>
+
+      <div class="emote-bar" aria-label="Dragon Emotes">
+        <button class="emote-btn" data-emote="roar" title="Roar">🔥</button>
+        <button class="emote-btn" data-emote="crown" title="Crown Flex">👑</button>
+        <button class="emote-btn" data-emote="laugh" title="Taunt">😈</button>
+        <button class="emote-btn" data-emote="gg" title="GG">⚔️</button>
+      </div>
+
+      <div class="minimap-shell">
+        <canvas id="minimap-canvas"></canvas>
+      </div>
+
+      <div class="arena-bottom-controls">
+        <div id="joystick-zone" class="joystick-pad">
+          <div id="joystick-stick" class="joystick-knob"></div>
+        </div>
+
+        <div class="center-gauges">
+          <div class="stamina-wrap">
+            <small>STAMINA · LEN <b id="hud-length">9</b></small>
+            <div class="stamina-rail"><div id="stamina-fill" class="stamina-fill"></div></div>
+            <small id="hud-buffs" class="active-buffs"></small>
+          </div>
+        </div>
+
+        <div class="combat-buttons">
+          <div class="pwr-row">
+            <button class="pwr-btn" data-action="pwr-magnet" title="Magnet (1)">🧲<span id="pwr-magnet-cnt">0</span></button>
+            <button class="pwr-btn" data-action="pwr-speed" title="Haste (2)">⚡<span id="pwr-speed-cnt">0</span></button>
+            <button class="pwr-btn" data-action="pwr-shield" title="Shield (3)">🛡<span id="pwr-shield-cnt">0</span></button>
+          </div>
+          <div class="main-act-row">
+            <button id="fury-btn" class="fury-btn" data-action="fury" disabled title="Dragon Fury (E)">
+              <div id="fury-fill" class="fury-fill"></div>
+              <span>🔥<small>FURY</small></span>
+            </button>
+            <button id="boost-btn" class="boost-btn" title="Hold to Boost (Space)">
+              <span>⚡<small>BOOST</small></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. DRAGON LAB -->
+    <section id="screen-lab" class="screen">
+      <header class="sub-header">
+        <button class="icon-sq" data-action="go-home">‹</button>
+        <h1>DRAGON LAB · 24 3D DRAGONS</h1>
+        <div class="currency-bar">
+          <span class="curr-pill static">🪙 <b data-coins>0</b></span>
+          <span class="curr-pill static">💎 <b data-gems>0</b></span>
+        </div>
+      </header>
+      <div class="lab-layout">
+        <div class="lab-stage-controls">
+          <button class="gbtn slate sm" data-action="roar-dragon">🔥 TEST ROAR</button>
+          <span class="stage-tip">Drag 360° · Scroll to Zoom</span>
+        </div>
+        <aside id="lab-info-card" class="lab-info-card"></aside>
+      </div>
+      <div id="lab-carousel" class="lab-carousel"></div>
+    </section>
+
+    <!-- 5. DRAGON VAULT (SHOP) -->
+    <section id="screen-shop" class="screen">
+      <header class="sub-header">
+        <button class="icon-sq" data-action="go-home">‹</button>
+        <h1>DRAGON VAULT</h1>
+        <div class="currency-bar">
+          <span class="curr-pill static">⚡ <b data-energy>20/20</b></span>
+          <span class="curr-pill static">🪙 <b data-coins>0</b></span>
+          <span class="curr-pill static">💎 <b data-gems>0</b></span>
+        </div>
+      </header>
+      <nav class="shop-tabs">
+        <button data-shop-tab="crates" class="active">📦 CRATES</button>
+        <button data-shop-tab="powerups">🧪 POWER-UPS</button>
+        <button data-shop-tab="resources">⚡ RESOURCES</button>
+        <button data-shop-tab="arenas">🏛 ARENAS</button>
+      </nav>
+      <div id="shop-body" class="shop-body"></div>
+    </section>
+
+    <!-- 6. 3D CRATE OPENING CEREMONY SCREEN -->
+    <section id="screen-crate" class="screen crate-screen">
+      <div class="crate-reveal-card">
+        <span id="crate-rarity" class="crate-rarity">MYTHIC · AETHER</span>
+        <h2 id="crate-title">INFINITY SOVEREIGN</h2>
+        <p id="crate-sub">NEW DRAGON ADDED TO YOUR LAB!</p>
+        <div class="dialog-actions">
+          <button class="gbtn royal" data-action="open-lab">🐉 VIEW IN LAB</button>
+          <button class="gbtn gold" data-action="open-shop" data-tab="crates">✓ COLLECT</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. REVIVE COUNTDOWN SCREEN -->
+    <section id="screen-revive" class="screen modal-screen">
+      <div class="dialog-card revive-card">
+        <div class="countdown-orb" id="revive-countdown">5</div>
+        <h2>SECOND WIND!</h2>
+        <p>Keep your length & score with 3s Aegis Shield</p>
+        <div class="mini-stats">
+          <div><small>RANK</small><strong id="revive-rank">#4</strong></div>
+          <div><small>SCORE</small><strong id="revive-score">0</strong></div>
+        </div>
+        <div class="dialog-actions">
+          <button class="gbtn gold" data-action="revive-now">🪙 250 — REVIVE NOW</button>
+          <button class="gbtn slate" data-action="skip-revive">VIEW RESULTS</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. MATCH RESULTS SCREEN -->
+    <section id="screen-result" class="screen modal-screen">
+      <div class="dialog-card result-card">
+        <h2 id="res-banner">MATCH COMPLETE</h2>
+        <div class="result-rank-badge" id="res-rank">#1</div>
+        <div class="result-grid">
+          <div><small>FINAL SCORE</small><strong id="res-score">0</strong></div>
+          <div><small>ELIMINATIONS</small><strong id="res-kills">0</strong></div>
+          <div><small>SURVIVAL</small><strong id="res-time">0m 0s</strong></div>
+          <div><small>COINS</small><strong id="res-coins">+0</strong></div>
+          <div><small>GEMS</small><strong id="res-gems">+0</strong></div>
+          <div><small>EXPERIENCE</small><strong id="res-xp">+0</strong></div>
+        </div>
+        <div class="dialog-actions">
+          <button class="gbtn slate" data-action="go-home">⌂ LOBBY</button>
+          <button class="gbtn gold" data-action="rematch">▶ PLAY AGAIN</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. PAUSE OVERLAY -->
+    <div id="pause-modal" class="overlay-scrim hidden">
+      <div class="dialog-card">
+        <h2>BATTLE PAUSED</h2>
+        <p>Your 3D Colosseum match is safely suspended.</p>
+        <div class="dialog-actions">
+          <button class="gbtn gold" data-action="resume">▶ RESUME</button>
+          <button class="gbtn crimson" data-action="go-home">⌂ LEAVE ARENA</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10. UNIFIED GAME MODAL -->
+    <div id="panel-modal" class="overlay-scrim hidden">
+      <div class="dialog-card wide-modal">
+        <header class="modal-head">
+          <h2 id="modal-title">SETTINGS</h2>
+          <button class="icon-sq" data-action="close-modal">✕</button>
+        </header>
+        <div id="modal-body" class="modal-body"></div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
   </div>
-  <div class="screen consent-screen" id="consent"><div class="dialog consent-dialog"><div class="dialog-crest">◆</div><h1>TERMS &amp; PRIVACY</h1><p>This is a local gameplay prototype. Review the prototype notice before continuing.</p><label class="check"><input id="notice-check" type="checkbox">I understand this is a development preview, not a public multiplayer service.</label><div class="linkline"><button class="text-link" data-action="notice">Prototype notice</button><button class="text-link" data-action="privacy">Privacy summary</button></div><button class="btn gold wide" data-action="agree">ACCEPT &amp; CONTINUE</button></div></div>
-  <div class="screen home-screen" id="home"><div class="home-brand" aria-label="Dragon Arena"><span class="logo-gem">◆</span><span class="brand-text">DRAGON<strong>ARENA</strong></span></div>
-    <header class="game-topbar"><button class="profile-pill" data-action="profile"><span class="avatar">🐉</span><span><b id="player-handle">CrystalPilot</b><small>Lv. <span data-level>1</span> <span class="xp-bar"><i data-xpbar></i></span></small></span></button><div class="currency-row"><div class="currency energy">⚡ <b data-energy>20</b>/20 <button data-action="shop-energy">+</button></div><div class="currency">🪙 <b data-coins>9750</b> <button data-action="shop-coins">+</button></div><div class="currency">💎 <b data-gems>125</b> <button data-action="shop-offers">+</button></div><button class="icon-btn small" data-action="settings" aria-label="Settings">⚙</button></div></header>
-    <nav class="home-left"><button class="nav-tile" data-action="events"><span>🎉</span>Events</button><button class="nav-tile" data-action="missions"><span>📜</span>Missions</button><button class="nav-tile" data-action="leaderboard"><span>🏆</span>Ranking</button><button class="nav-tile" data-action="profile"><span>👤</span>Profile</button></nav>
-    <div class="hero-platform" aria-label="Animated 3D dragon floating above its crystal stage"><span class="arena-portal"></span><span class="portal-halo"></span><span class="stage-crystals" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span id="hero-name" class="visually-hidden">Neon Dragonling</span></div>
-    <div class="home-actions"><div class="home-actions-top"><span class="small-emblem">✦</span><span>ENTER THE DRAGON ARENA</span></div><button class="btn gold play-btn" data-action="play">▶ &nbsp; PLAY ARENA</button><div class="quick-grid"><button class="btn tiny blue" data-action="play">⚡ QUICK PLAY</button><button class="btn tiny purple" data-action="friends">👥 FRIENDS</button><button class="btn tiny violet" data-action="practice">🎯 PRACTICE</button></div></div>
-    <footer class="home-bottom"><button class="btn navy" data-action="creatures">🐉 CREATURE LAB</button><button class="btn navy" data-action="inventory">🧰 WORKSHOP</button><button class="btn navy" data-action="shop">🛍 SHOP</button><button class="btn navy" data-action="rewards">🎁 REWARDS</button></footer>
-  </div>
-  <div class="screen arena-screen" id="arena"><canvas id="arena-effects" aria-hidden="true"></canvas><div class="danger-rim" aria-hidden="true"></div>
-<header class="arena-topline"><div class="arena-logo" aria-label="Dragon Arena">💎 DRAGON<b>ARENA</b></div><span class="arena-separator"></span><div class="arena-hud-stat score">🏆 <b id="live-score">0</b></div><span class="arena-separator"></span><div class="arena-hud-stat">♟ <b id="arena-alive">0</b> Alive</div><div class="arena-hud-stat">⚔ <b id="arena-defeated">0</b> Defeated</div><div class="arena-hud-stat">◷ <b id="arena-timer">00:00</b></div><button class="icon-btn" data-action="pause" aria-label="Pause arena" title="Pause">⏸</button></header>
-<div id="boundary-warning" role="status">⚠ <b>ARENA BOUNDARY</b> Crossing will defeat you!</div><div id="arena-defeat-pop" role="status" aria-live="polite"></div>
-    <div class="hud-leader panel"><h3>♛ TOP PLAYERS <small>LOCAL BOT ARENA</small></h3><ol id="arena-leaders"><li>Loading players...</li></ol></div>
-    <div class="hud-goal panel"><span>🎁</span><div><b>Collect 2,200 mass</b><div class="progress"><i id="quest-progress"></i></div><small id="quest-text">0 / 2,200</small></div></div>
-    <div class="hud-currency panel">🪙 <b data-coins>9750</b> <button data-action="pause" title="Pause">⏸</button></div>
-    <div class="minimap panel" id="minimap" aria-label="Real-time map of arena food and player positions"><canvas id="minimap-canvas" aria-label="Live food pickups and player locations"></canvas><span class="map-key">◆ FOOD &nbsp;➤ PLAYERS</span></div>
-    <div class="hud-bottom"><div class="joystick" id="joystick"><span id="stick"></span></div><div class="match-meta"><small>Mass · <span id="live-length">8</span> segments</small><small id="active-power-status" aria-live="polite"></small></div><div class="boostbar"><button class="power-btn" data-action="magnet">🧲<small id="magnet-count">0</small></button><button class="power-btn" data-action="speed">⇈<small id="speed-count">0</small></button><button class="power-btn" data-action="shield">🛡<small id="shield-count">0</small></button><button class="power-btn big" id="boost-btn" data-action="boost">⚡<small>BOOST</small></button></div></div>
-  </div>
-  <div class="screen revive-screen" id="revive"><div class="modal-scrim"></div><div class="revive-panel"><h1>LAST CHANCE!</h1><p>Your crystals have scattered...</p><div class="countdown-ring" id="revive-clock">5</div><div class="death-stats"><div>🏆 <b id="death-rank">#8</b><small>RANK</small></div><div>💠 <b id="death-mass">0</b><small>MASS</small></div></div><div class="cta-row"><button class="btn violet" data-action="revive-coins">🪙 250 — REVIVE</button><button class="btn gold" data-action="result">SEE RESULTS</button></div><button class="text-link" data-action="result">No, thanks</button><small>Demo revival uses test coins; no ads or payments.</small></div></div>
-  <div class="screen result-screen" id="result"><div class="result-castle"><h1>✦ RESULT ✦</h1><div class="trophy">🏆<strong id="final-rank">8</strong></div><div class="result-score">💠 <strong id="final-score">0</strong><small id="final-earned">+0 🪙</small></div><div class="results-panel"><div>✦ COLLECTED <b id="final-collected">0</b></div><div>⚔ DEFEATED <b id="final-kills">0</b></div><div>⏱ LIFETIME <b id="final-time">0:00</b></div><div>✧ EXPERIENCE <b id="final-xp">+0</b></div></div><div class="cta-row"><button class="btn blue" data-action="home">⌂ HOME</button><button class="btn violet" data-action="share">🔗 SHARE</button><button class="btn green" data-action="play">▶ RESTART</button></div></div></div>
-  <div class="screen shop-screen" id="shop"><header class="subhead"><button class="icon-btn" data-action="home">‹</button><h1>DRAGON VAULT</h1><div class="currency-row"><span class="currency">⚡ <b data-energy>20</b></span><span class="currency">🪙 <b data-coins>9750</b></span><span class="currency">💎 <b data-gems>125</b></span></div><button class="icon-btn close" data-action="home">✕</button></header><nav class="shop-tabs"><button data-shop="offers">✦ OFFERS</button><button data-shop="energy">⚡ ENERGY</button><button data-shop="coins">🪙 COINS</button><button data-shop="powerups">🧪 POWER-UPS</button></nav><div class="shop-art-layer"></div><section class="shop-content"><h2 id="shop-title">SPECIAL OFFERS</h2><div class="shop-grid" id="shop-items"></div></section></div>
-  <div class="screen lab-screen" id="creatures"><header class="subhead"><button class="icon-btn" data-action="home">‹</button><h1>DRAGON LAB <small>24 ORIGINAL GLB CREATURES</small></h1><button class="icon-btn close" data-action="home">✕</button></header><div class="lab-stage" id="lab-stage" aria-label="Interactive foreground 3D dragon preview"><span class="lab-stage-ring"></span><span class="stage-crystals" aria-hidden="true"><i></i><i></i><i></i><i></i></span><div id="lab-gesture" aria-label="Drag to rotate dragon" role="group" tabindex="0"><span class="gesture-hint">⟲ DRAG TO ROTATE · PINCH / SCROLL TO ZOOM</span></div></div><div class="lab-copy"><h2 id="selected-skin-label">NEON DRAGONLING</h2><p>Live GLB preview · 3D rotating showcase</p><div class="lab-view-actions"><button class="btn tiny blue" data-action="rotate-dragon">↻ ROTATE</button><button class="btn tiny navy" data-action="reset-dragon">RESET VIEW</button></div></div><button class="lab-carousel-arrow previous" data-action="lab-prev" aria-label="Previous dragon">‹</button><div class="lab-selector" id="skin-picker"></div><button class="lab-carousel-arrow next" data-action="lab-next" aria-label="Next dragon">›</button><button id="skin-unlock-button" class="btn gold lab-unlock" data-action="unlock-skin">EQUIP</button></div>
-  <div class="screen secondary-screen" id="secondary"><header class="subhead"><button class="icon-btn" data-action="home">‹</button><h1 id="secondary-title">SETTINGS</h1><button class="icon-btn close" data-action="home">✕</button></header><section id="secondary-content" class="secondary-content"></section></div>
-  <div class="pause-layer hidden" id="pause-layer"><div class="dialog"><h2>ARENA PAUSED</h2><p>Local practice only — gameplay is paused.</p><button class="btn gold" data-action="resume">▶ RESUME</button><button class="btn blue" data-action="home">⌂ LEAVE MATCH</button></div></div>
-  <div class="reference-view hidden" id="reference-view"><header><strong>LOCKED VISUAL TARGET — ART REFERENCE (not a functional screen)</strong><button class="btn blue" data-action="close-ref">✕ Close</button></header><img id="reference-image" alt="Approved concept panel for fidelity comparison"><span id="reference-caption"></span></div>
-  <button class="reference-toggle" data-action="reference" title="Compare with approved sheet">◈ VIEW APPROVED ART</button>
-  <div class="toast hidden" id="toast" role="status"></div>
-  <div class="status-chip" id="render-status" aria-live="polite">3D ENGINE BOOT</div>
-</div><script type="module" src="src/main.js"></script></body></html>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
