@@ -12,6 +12,8 @@ try:
         for fallback in (False,True):
             browser=p.chromium.launch(args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
             page=browser.new_page(viewport={'width':1100,'height':650},service_workers='block')
+            # Software WebGL on shared CI runners can stall while creating the arena.
+            page.set_default_timeout(90000)
             errors=[]
             page.on('pageerror',lambda e: errors.append(str(e)))
             if fallback:
