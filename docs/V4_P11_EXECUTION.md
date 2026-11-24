@@ -82,6 +82,22 @@ Run the generated script in the selected WebView's DevTools Console and save the
 
 ## Artifact verification
 
+### Windows QA checkpoint
+
+The operator reports Unity Personal active and Unity `6000.6.10f1` launching from `C:\Unity`. The current Linux workspace has no mount or remote editor access to that Windows PC. The actual Windows Android modules and baseline editor have yet to be observed.
+
+The Windows runner uses the approved private handoff ZIP by SHA-256. From the PR checkout on the activated Windows PC, run the following with Python 3.11 or newer. By default it finds the handoff in Downloads. Supply `--handoff` with its local path if stored elsewhere.
+
+```powershell
+py -3 .\unity-integration\run_p11_windows.py
+```
+
+It reports Android Build Support, the required SDK platform and build tools, NDK and OpenJDK for each discovered editor. It checks `C:\Unity` and Unity Hub's default Windows install path. Use `--unity-root` for an additional install layout or `--preflight-only` to report modules without building. The automatic profile prefers the complete 2021.3.8f1 baseline and can use the verified executable version `6000.6.10f1` when baseline modules are missing. Pass `--editor-version 6000.6.10f1` to explicitly choose the new QA profile. The Unity 6 API updater runs against the freshly reconstructed copy only. The original checkpoint and production build configuration are preserved.
+
+The candidate keeps `io.dragonarena.unityqa`, version 4.0.0, separate from v3. The baseline targets API 30 and the Unity 6.6 QA profile targets API 36. Both require the migration activity as sole launcher and pass signature, package, SDK and native ABI checks before the wrapper reports a verified APK. Default build evidence is under `%USERPROFILE%\P11\<timestamp>\`. Send `QA/P11_NATIVE_STATUS.json` and the failing step log for blockers, or `QA/P11_APK_VERIFICATION.json` after a build. Installation, launch and gameplay on a real phone are separate acceptance gates.
+
+The resumed source run reproduced 2,812 static assertions and prepared all 1,091 files. Canonical candidate manifest SHA-256 is `3a73cdf694b01111ef1bc07a7370a04c7f55d2591fe79a68ab8ced5d0ccd6bf6`. Local fixture checks verified Windows module detection, the modern fallback and QA APK metadata verification. No Windows editor command or device test was executed in this workspace and no playable APK was produced. Both native QA builds and all remaining release gates stay open.
+
 Run `python -m unittest discover -s unity-integration/android -v` for verifier unit cases. Run `python unity-integration/android/verify_android_artifact.py --help` for the private builder command. Pass `--apk-output` with a fresh path to retain the verified release APK. Supply signing inputs only through the private builder. Record device acceptance and source provenance separately.
 
 Use the [Google Play target API requirements](https://developer.android.com/google/play/requirements/target-sdk), [Android page-size guidance](https://developer.android.com/guide/practices/page-sizes), and [Unity Android dependencies](https://docs.unity3d.com/6000.0/Documentation/Manual/android-supported-dependency-versions.html) to confirm the production toolchain before building.

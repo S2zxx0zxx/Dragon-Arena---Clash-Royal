@@ -51,18 +51,53 @@ def lighting_change(data):
     return result
 
 
+def android_build_change(data):
+    newline = b"\r\n" if b"\r\n" in data else b"\n"
+
+    def replace(before, after):
+        nonlocal data
+        anchor = newline.join(before)
+        if data.count(anchor) != 1:
+            raise ValueError("Unexpected Android build source anchor")
+        data = data.replace(anchor, newline.join(after), 1)
+
+    backend = b"            PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);"
+    replace((backend,), (
+        b"#if UNITY_6000_0_OR_NEWER",
+        b"            PlayerSettings.Android.applicationEntry = AndroidApplicationEntry.Activity;",
+        b"#endif",
+        backend,
+    ))
+    validate = b"        public static void Validate() { ValidateCommon(false); }"
+    replace((validate,), (
+        validate,
+        b"        public static void ValidateQA()",
+        b"        {",
+        b"#if UNITY_6000_0_OR_NEWER",
+        b'            if (Application.unityVersion != Required("DRAGON_ARENA_QA_EDITOR"))',
+        b'                throw new Exception("Modern QA editor mismatch");',
+        b"            ValidateCommon(true);",
+        b"#else",
+        b"            Validate();",
+        b"#endif",
+        b"        }",
+    ))
+    build = (b"        public static void BuildAndroidQA()", b"        {")
+    replace((*build, b"            Validate();"), (*build, b"            ValidateQA();"))
+    legacy_sdk = b"            PlayerSettings.Android.targetSdkVersion = (AndroidSdkVersions)30; // exact baseline only; never publish to Play"
+    replace((legacy_sdk,), (
+        b"#if UNITY_6000_0_OR_NEWER",
+        b"            PlayerSettings.Android.targetSdkVersion = (AndroidSdkVersions)36;",
+        b"#else",
+        legacy_sdk,
+        b"#endif",
+    ))
+    return data
+
+
 def repair(data, relative):
     if relative == ANDROID_BUILD:
-        anchor = b"            PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);"
-        if data.count(anchor) != 1:
-            raise ValueError("Expected one Android scripting backend setting")
-        newline = b"\r\n" if b"\r\n" in data else b"\n"
-        selection = newline.join((
-            b"#if UNITY_6000_0_OR_NEWER",
-            b"            PlayerSettings.Android.applicationEntry = AndroidApplicationEntry.Activity;",
-            b"#endif",
-        ))
-        return data.replace(anchor, selection + newline + anchor, 1)
+        return android_build_change(data)
     name = relative.name
     if name in {"Background-02.mat", "GameoverPanel.mat"}:
         texture = b"{fileID: 2800000, guid: " + SUPPLIED_BACKGROUND + b", type: 3}"

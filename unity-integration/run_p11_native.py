@@ -14,8 +14,9 @@ from apply_verified_overlay import apply
 from prepare_p11_dependencies import SCRIPT, prepare
 
 UNITY_VERSION = "2021.3.8f1"
+MODERN_QA_VERSION = "6000.6.10f1"
 EDITOR_STEPS = (
-    ("validate", "PreviewBuild.Validate", "Static scene/prefab inspection passed"),
+    ("validate", "PreviewBuild.ValidateQA", "Static scene/prefab inspection passed"),
     ("save_fixture", "P07SaveFixture.Run", "P07 isolated storage self-test PASS"),
     ("legacy_fixture", "P06AssetFixture.Generate", "P06 legacy fixture created"),
     ("build", "PreviewBuild.BuildAndroidQA", "QA APK compiled;"),
@@ -58,7 +59,7 @@ def prepare_project(checkpoint, source, output):
     if actual != expected:
         raise ValueError("Prepared project differs from the verified P11 source")
     candidate = output / "P11_PROJECT_SHA256.json"
-    candidate.write_text(json.dumps(actual, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    candidate.write_bytes((json.dumps(actual, indent=2, sort_keys=True) + "\n").encode("utf-8"))
     return project, {"files": len(actual), "manifest_sha256": digest(candidate)}
 
 
@@ -72,16 +73,20 @@ def run(args, output, status, record):
 
     unity = args.unity.resolve(strict=True)
     probe = subprocess.run([str(unity), "-version"], capture_output=True, text=True, timeout=60)
-    if probe.returncode != 0 or UNITY_VERSION not in (probe.stdout + probe.stderr).split():
-        raise ValueError(f"Exact baseline Unity {UNITY_VERSION} is required")
+    editor = args.editor_version
+    if probe.returncode != 0 or editor not in (probe.stdout + probe.stderr).split():
+        raise ValueError(f"Unity {editor} is required for this QA run")
+    status["editor_version"] = editor
+    record()
 
     apk = output / "DragonArena-P11-QA.apk"
-    env = dict(os.environ, DRAGON_ARENA_APK=str(apk))
+    env = dict(os.environ, DRAGON_ARENA_APK=str(apk), DRAGON_ARENA_QA_EDITOR=editor)
+    upgrade = ["-accept-apiupdate"] if editor == MODERN_QA_VERSION else []
     for name, method, marker in EDITOR_STEPS:
         log = output / f"{name}.log"
         result = subprocess.run([
             str(unity), "-batchmode", "-nographics", "-quit", "-projectPath", str(project),
-            "-buildTarget", "Android", "-executeMethod", "DragonArena.EditorTools." + method,
+            "-buildTarget", "Android", *upgrade, "-executeMethod", "DragonArena.EditorTools." + method,
             "-logFile", str(log),
         ], env=env, timeout=3600)
         status["steps"][name] = {"exit_code": result.returncode, "log": log.name}
@@ -102,6 +107,7 @@ def main():
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--unity", type=Path, help="Unity executable. Omit to prepare source only.")
+    parser.add_argument("--editor-version", choices=(UNITY_VERSION, MODERN_QA_VERSION), default=UNITY_VERSION)
     args = parser.parse_args()
     output = args.output.resolve()
     if output.is_relative_to(args.checkpoint.resolve()):

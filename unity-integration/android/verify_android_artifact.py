@@ -41,17 +41,17 @@ def verify_migration_launcher(badging):
         raise ValueError('MigrationActivity must be the sole launcher')
 
 
-def verify_apk(path,args,release=False):
+def verify_apk(path,args,release=False,*,qa_target_sdk=30,apksigner_command=None):
  result=inspect_zip(path,release)
  badging=run(args.aapt,'dump','badging',path)
  pkg=re.search(r"package: name='([^']+)' versionCode='(\d+)' versionName='([^']*)'",badging)
  if not pkg or pkg.group(1)!=args.package or int(pkg.group(2))!=args.code or pkg.group(3)!=args.version:raise ValueError('Package/version mismatch')
  minv=re.search(r"sdkVersion:'(\d+)'",badging); target=re.search(r"targetSdkVersion:'(\d+)'",badging)
- if not minv or int(minv.group(1))!=26 or not target or int(target.group(1))!=(36 if release else 30):raise ValueError('SDK mismatch')
+ if not minv or int(minv.group(1))!=26 or not target or int(target.group(1))!=(36 if release else qa_target_sdk):raise ValueError('SDK mismatch')
  verify_migration_launcher(badging)
  if release and 'application-debuggable' in badging:raise ValueError('Debuggable release')
  if re.search(r"uses-permission(?:-sdk-\d+)?: name='android.permission.(?:READ_EXTERNAL_STORAGE|WRITE_EXTERNAL_STORAGE|MANAGE_EXTERNAL_STORAGE|REQUEST_INSTALL_PACKAGES)'",badging):raise ValueError('Unexpected broad permission')
- signer=run(args.apksigner,'verify','--verbose','--print-certs',path)
+ signer=run(*(apksigner_command or (args.apksigner,)),'verify','--verbose','--print-certs',path)
  certs=re.findall(r'certificate SHA-256 digest:\s*([0-9a-fA-F]{64})',signer)
  if not certs:raise ValueError('No verified signing digest')
  if args.cert and [x.lower() for x in certs]!=[args.cert.lower().replace(':','')]:raise ValueError('Certificate mismatch')
@@ -74,12 +74,13 @@ def retain_verified_apk(apk, destination):
 def main():
  p=argparse.ArgumentParser();p.add_argument('artifact',type=Path);p.add_argument('--track',choices=['qa','release'],required=True);p.add_argument('--package',required=True);p.add_argument('--code',required=True,type=int);p.add_argument('--version',default='4.0.0');p.add_argument('--aapt',required=True);p.add_argument('--apksigner',required=True);p.add_argument('--zipalign',required=True);p.add_argument('--cert');p.add_argument('--bundletool',type=Path);p.add_argument('--report',type=Path,required=True)
  p.add_argument('--apk-output', type=Path, help='Keep the verified universal APK derived from the release AAB')
+ p.add_argument('--qa-target-sdk', type=int, choices=(30,36), default=30)
  a=p.parse_args()
  if a.report.exists():raise SystemExit('Use a fresh report path')
  if a.track=='qa':
   if a.apk_output is not None:raise SystemExit('--apk-output is for the release track')
   if a.package!='io.dragonarena.unityqa' or a.code!=15 or a.artifact.suffix!='.apk':raise SystemExit('Wrong QA identity')
-  report=verify_apk(a.artifact,a)
+  report=verify_apk(a.artifact,a,qa_target_sdk=a.qa_target_sdk)
  else:
   if a.package in ('io.dragonarena.unityqa','io.dragonarena.preview') or a.code<=15 or a.artifact.suffix!='.aab' or not a.cert or not a.bundletool:raise SystemExit('Production identity, cert, AAB and bundletool required')
   if a.apk_output is not None and (
