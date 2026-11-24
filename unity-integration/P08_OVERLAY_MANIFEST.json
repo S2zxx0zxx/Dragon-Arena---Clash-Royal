@@ -1,0 +1,34 @@
+{
+  "ProjectSettings/ProjectSettings.asset": {
+    "before": "96fe846a5d43e3a7c5fb60f5a6533a46163d40d3c6828f469801a4efd9056654",
+    "after": "f6a7195a2fcbba554314783a5e5602249b41f416b74bdecdd73977ca8d505c28"
+  },
+  "Assets/Plugins/Android/AndroidManifest.xml": {
+    "before": null,
+    "after": "831e4493278d2b455bc77d70d69d422c8f18f0312976b21b5d1c18156f4bcd7f"
+  },
+  "Assets/Plugins/Android/AndroidManifest.xml.meta": {
+    "before": null,
+    "after": "c02fedc800de11ca99459196b7662470fb7abbd91426a64f0dd64179490285ee"
+  },
+  "Assets/Plugins/Android/MigrationActivity.java": {
+    "before": null,
+    "after": "6fe5b327925a649b2d5221e857b7bdf0dbb7c8bcbce543bdfbbfc300e35e5469"
+  },
+  "Assets/Plugins/Android/MigrationActivity.java.meta": {
+    "before": null,
+    "after": "35029232d81c662484290e7b10fd978aab7f5824a7e75db1c1c3cf22513eb82c"
+  },
+  "Assets/SnakeWarzIO/Classes/GameController.cs": {
+    "before": "6cdc3b08c164f21859902ebf0a88a272f1a02d0dd99574dbdf72893568d323fb",
+    "after": "fa0ae30e8293df2b2d60fbec7608a62226937d3892fb50874b0572476cfe93f0"
+  },
+  "Assets/SnakeWarzIO/Classes/PlayerController.cs": {
+    "before": "86f6b744926da2b83794fd945f493ed81b64b05bfbf7235e230a2433d2d33c11",
+    "after": "95c0b54fdef540c9088680c226c753f66add5b8056cd17e3c5caaef8aacdb81a"
+  },
+  "Assets/DragonArena/Editor/PreviewBuild.cs": {
+    "before": "5eacb21a8e9f3d8ca0354a447fbf2e2a72ac34f4d357120fbd4feae02da38abf",
+    "after": "74c22b65a7edae1371cf60f0ce5ba8d2b86d584a553d68960c223574f2796e92"
+  }
+}
