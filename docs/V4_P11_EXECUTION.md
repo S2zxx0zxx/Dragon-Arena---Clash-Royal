@@ -8,14 +8,36 @@ PR #4 is the only target. The verified starting head is `7c4f30cf084485cffcd7b6a
 | --- | --- | --- |
 | P11-01 Input and source continuity | Pass | Verified SHA-256 and size for all three handoff inputs. The PR head matches eight overlay manifests, the P09 status, and the P10 lock, checker and test files. |
 | P11-02 P00–P10 baseline re-run | Pass, static | 2,812 assertions, 1,091 exact project hashes, 1,068 original payload and metadata hashes, 2,019 archive members, 564 distinct GUIDs. The reconstructed report equals the supplied report after sorting paths and reference locations. Five importer, eight Android helper, seven migration and six P10 tests passed. The release-hold check exited 1 as intended. |
-| P11-03 Native baseline and dependencies | Blocked | Installed Unity 2021.3.8f1 revision `b30333d56e81`. The native runner repeated the 2,812 static assertions and launched the editor. `validate` exited 1 during license activation before import or compilation. Android Build Support for the Unity baseline was absent. All 18 UI GUIDs covering 680 references matched the intended components in the editor's bundled UGUI 1.0.0 package. The four missing non-UI GUIDs have nine references across four materials, two gameplay VFX prefabs and the Game scene. Preserve the original source until genuine dependencies or a reviewable, visually verified repair are available. |
+| P11-03 Native baseline and dependencies | Static overlay verified, native blocked | Unity 2021.3.8f1 revision `b30333d56e81` launched in the previous workspace and stopped at license activation before import. Its bundled UGUI 1.0.0 matched all 18 UI GUIDs. The new compatibility overlay resolves all nine references to the four missing non-UI GUIDs. It changes exactly seven of 1,091 source files and leaves exactly 680 UGUI occurrences. A second apply writes zero files. Unity import, compilation and visual comparison still require an activated builder. |
 | P11-04 Android acceptance | Blocked | Android Platform-Tools and Build-Tools 36.0.0 were installed for analysis. ADB found zero connected devices. Complete the 57-row matrix in the private checkpoint on the compiled baseline and signed candidate, including 20 matches across all five modes, catalog and presentation checks, save recovery, and measured performance. The matrix remains 7 pass, 7 blocked, 43 not run. |
-| P11-05 Legacy APK identity and migration compilation | Verified with blocker | Verified the signatures and release digests of both published v3 APKs. They share `io.dragonarena.preview` and use different debug certificates. Compiled the v3 exporter with JDK 17 and API 35, packaged a private unsigned standalone APK with D8 and AAPT2, and verified its manifest and embedded migration modules. The v4 migration activity independently compiled against API 35 and 36. Unity manifest merge and on-device export and import still require verification. Preserve the original app and use the signer corresponding to the installed copy. |
+| P11-05 Legacy APK identity and migration compilation | Export route tested with fixtures, device blocked | Both published v3 APKs use different verified signing certificates and both declare `application-debuggable`. The previously compiled v3 exporter still needs the installed copy's signer. The read-only WebView export route uses the existing installation and the pinned P10 v3 backup code. Four fixture checks passed, including byte-for-byte original envelope preservation and rejection of wrong origin, missing save, and changed helper input. Seven P10 migration tests also passed. Unity manifest merge and the real device export/import remain open. |
 | P11-06 Release artifact tooling | Implemented and unit-tested | The Android verifier can retain the exact universal APK derived from the inspected AAB. It checks the APK before writing the output, records both digests and preserves pre-existing files. Release-path tests cover retention, rejection, source mutation and overwrite protection. The legacy identity checker exits nonzero on a mismatched signer and was exercised on the two published APKs. |
-| P11-07 Production toolchain, package, and signing | Blocked | Requires an authorized source and a separate private Unity 6 upgrade. Unity's release feed listed 6000.3.29f1 LTS at the time of review. Qualify that editor with a registered release ID and private signing access. Verify target SDK 36 and 16 KB support with the pinned Android tools and a 16 KB Android runtime. Check Play App Signing separately if the app is submitted to Play. |
+| P11-07 Production toolchain, package, and signing | Android verification tools installed, release blocked | Reinstalled Android API 36, Build-Tools 36.0.0 and platform-tools in the resumed workspace. Verified the official bundletool 1.18.3 release digest and ran its version command. ADB reported zero attached devices. Requires authorized source, a separate private Unity 6 upgrade, the registered release ID and access to its signing key. Verify target SDK 36 and 16 KB support on the signed artifact and a 16 KB runtime. |
 | P11-08 Exact-head merge and publication | On hold | At implementation commit `d6db35960a8ef65f47388c8a0c4e5a4a855c11c7`, GitHub run 45464930815 passed public integration and rejected release via the intentional native hold. A detached checkout of that head passed 10 Android verifier and six integration unit tests. Confirm all release-blocking rows with native evidence, use the expected PR head for merge, then verify the merged revision and signed artifacts before publication. |
 
 The [UGUI evidence](V4_P01_UGUI_GUID_EVIDENCE.csv) records the package-relative metadata paths. It verifies the GUID mapping independently of the remaining scene-import and runtime gates.
+
+## Resume checkpoint from `6fe1201`
+
+Reopened the recorded private handoff in the fresh workspace and matched its three input digests. Reconstructed P09 from the supplied original ZIP and reproduced 2,812 assertions before preparing the P11 overlay.
+
+### Non-UI reference overlay
+
+| Missing dependency | Compatibility change | Source evidence and required acceptance |
+| --- | --- | --- |
+| Background texture | Bind the supplied `GameBg-02-Wide.psd` in `Background-02` and `GameoverPanel`, retaining each material's scale and color. | `Background-01` uses the same shader and supplied texture. The four affected materials have no direct serialized runtime consumers and are explicitly used by the P06 legacy-art fixture. Compare the fixture renders, including result-panel tint and texture tiling. |
+| Solid-color texture | Clear the texture slots in `SolidColor-White` and `SolidColor-Cyan`, keeping their original shader and authored colors. | Their original files differ only by material name and color. Compare both fixture swatches in Unity. |
+| Particle light prefab | Clear four references to the absent Light and disable the three enabled modules using it. | No source Light component was available to use as an original prototype. Preserve the particle systems, renderers and other module fields. Verify both referenced hit effects during gameplay. |
+| Game lighting settings | Clear the missing asset reference and use Unity's scene default. | Game has no baked lighting data and the other three scenes serialize the default. Keep its inline settings and rendering configuration. Check gameplay frame appearance and lighting before accepting. |
+
+Generate the overlay from the immutable P10 Unity project, then apply it to a separate project copy for native validation. The lock pins seven before/after hashes and six supporting source files. Keep the private overlay outputs on the licensed builder.
+
+```sh
+python unity-integration/prepare_p11_dependencies.py "$p10_project" "$overlay"
+python unity-integration/apply_verified_overlay.py "$qa_project" "$overlay" "$overlay/P11_OVERLAY_MANIFEST.json"
+```
+
+Run the private editor scene/prefab validation, save fixture, legacy art fixture and Android QA build in that order against the repaired copy. Keep the shipped source untouched until the candidate's in-engine comparisons pass. The 57-row acceptance matrix retains 7 passed, 7 blocked and 43 pending execution.
 
 ## Legacy signer evidence
 
@@ -32,6 +54,16 @@ python unity-integration/android/verify_legacy_upgrade.py installed-v3.apk v3-ex
 ```
 
 An identity match permits proceeding to on-device export and import tests. It records no device installation or save-export result.
+
+### Export from the existing debug installation
+
+With a supported Android System WebView and authorized USB debugging, use Chrome DevTools to inspect the installed v3 WebView at `https://appassets.androidplatform.net/assets/index.html`. Both public v3 APKs declare the debug flag. WebView 113.0.5656.0 and later enables inspection for debuggable apps by default.
+
+```sh
+node unity-integration/android/prepare_legacy_webview_export.mjs "$private_p10/migration" legacy-export-console.js
+```
+
+Run the generated script in the selected WebView's DevTools Console and save the clipboard text as `legacy-v3-import.json`. It reads only the legacy v3 local-storage key and the original IndexedDB save, validates and chooses the candidate with the P10 logic, and copies a native-import envelope. Keep the backup private. Import it into v4's separate application ID and verify the resulting save and preservation of the v3 installation on-device. If the WebView is unavailable for inspection, the separate matching-signer route remains required.
 
 ## Artifact verification
 
