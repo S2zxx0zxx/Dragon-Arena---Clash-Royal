@@ -50,6 +50,10 @@ Keep the shipped source untouched until the candidate's in-engine comparisons pa
 
 Extracted Unity Hub 4.0.1 after package verification against Unity's signed package index. Its official CLI 1.0.0 reports no signed-in Unity account. The full baseline install stopped at the SDK and NDK license prompt. On the build machine, sign in to Unity Hub and complete any browser MFA. In **Settings → Licenses**, verify that Personal is active. If needed, select **Add license → Get a free personal license** and review the terms. On **Installs**, select **Unity 2021.3.8f1** from the archive and include **Android Build Support**, **Android SDK & NDK Tools**, and **OpenJDK**. Review and accept the Android module terms there. [Unity Hub license instructions](https://docs.unity.com/en-us/hub/manage-license)
 
+The official CLI separately installed the 2021.3.8f1 Linux editor and Android Build Support module. The SDK, NDK and JDK child modules remain pending. On commit `3e8ccb50122144cadb2ad58e9615020bdc6918ea`, the native runner rechecked the candidate manifest, launched that exact editor with the Android target, and recorded `validate` exit code 1. The editor reported that it could not connect to its licensing client, a Unity service timeout, and denied network interface enumeration in the workspace. It produced no scene/prefab inspection marker. Import, compilation, runtime checks and APK generation remain unverified. ADB reported no attached device.
+
+At that tested commit, the 11 Android verifier tests and six integration tests passed from the remote tree. [GitHub Actions run 45475717733](https://github.com/S2zxx0zxx/Dragon-Arena---Clash-Royal/actions/runs/45475717733) passed public integration and stopped at the native release hold.
+
 ## Legacy signer evidence
 
 | Published preview | Version code | Verified certificate SHA-256 |
