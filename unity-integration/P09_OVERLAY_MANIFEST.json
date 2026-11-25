@@ -1,0 +1,38 @@
+{
+  "Assets/Plugins.meta": {
+    "before": null,
+    "after": "96e339c7fb20a96ed54f08f844dbefe1db6ece27ead05e87cb2687875c51aeef"
+  },
+  "Assets/DragonArena.meta": {
+    "before": null,
+    "after": "60893e70d9b9b6a68fc59a6e855fb2e944c70aeb60d9678dcdc210076fb86817"
+  },
+  "Assets/Plugins/Android.meta": {
+    "before": null,
+    "after": "4d6df5dd47aecff5ee2fcd57d39c34d0c8b5399f444189259642cf7e685eab65"
+  },
+  "Assets/DragonArena/Branding.meta": {
+    "before": null,
+    "after": "2612967b79fd32999662a770e69ebb9a8cf710f46bfe78da97ffac15e12d3664"
+  },
+  "Assets/DragonArena/Runtime.meta": {
+    "before": null,
+    "after": "eaf063dd99950a15abded2632862204a39600aafe7a10a9e667e43b520166819"
+  },
+  "Assets/DragonArena/Editor.meta": {
+    "before": null,
+    "after": "c64e6eb1bb61f6f65754215d0149e6112de30ac1269d4032a08cea57eed08e12"
+  },
+  "Assets/DragonArena/Editor/PreviewBuild.cs.meta": {
+    "before": null,
+    "after": "580cd90c625f0658f29fb1e7e215a118c2b0bc6c839318f939edd0f95e2cfc76"
+  },
+  "Assets/SnakeWarzIO/Classes/GameController.cs": {
+    "before": "fa0ae30e8293df2b2d60fbec7608a62226937d3892fb50874b0572476cfe93f0",
+    "after": "84f91517c81e6f5c859a17e7da9c53610ce7a0ad0abf241fd7c02d9561bac048"
+  },
+  "Assets/SnakeWarzIO/Classes/WofController.cs": {
+    "before": "4d49e7f61e85a7491ec4073527a03e8fd8e48b727c47811f40eb025b6d1084cb",
+    "after": "4b3734ac73b4bdd0622c5915b1c410d98815ea28dcf7167ac68d2fdfdb602933"
+  }
+}

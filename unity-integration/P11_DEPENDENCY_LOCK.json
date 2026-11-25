@@ -1,0 +1,48 @@
+{
+  "source_evidence": {
+    "Assets/SnakeWarzIO/Materials/Background-01.mat": "14235906417f49157d5dc8a96b1e9cba1a7eacca2c59faaf4cabb16535dbe71e",
+    "Assets/SnakeWarzIO/Textures/Backgrounds/GameBg-02-Wide.psd": "16853029aa3e8e6399e260df6f188fc00da1e0ee5bef1134705970d7d92eeb53",
+    "Assets/SnakeWarzIO/Textures/Backgrounds/GameBg-02-Wide.psd.meta": "09eed3e942782594b2e88babbc47e3d497a4596b8fa452df00d3fd050d06a382",
+    "Assets/SnakeWarzIO/_Scenes/Init.unity": "c3ead7b66455ef9aa88ec646019d83667ec10718c20d7af358c70b9628f902d4",
+    "Assets/SnakeWarzIO/_Scenes/Menu.unity": "688e17154de223393607f0bb4a55e722bb3d151d7503c77bdb44ef02d7831603",
+    "Assets/SnakeWarzIO/_Scenes/Skins.unity": "cfd78f0b2f10fac614c252e9939de86b8d82ab016417e468fe6bc6af5af1af12"
+  },
+  "files": {
+    "Assets/SnakeWarzIO/Materials/Background-02.mat": {
+      "before": "f1f9bee8a258712fd52afc7d8ba31cddbc18f9eb8a9297a61f4fa3b2b2452c2b",
+      "after": "f800e9a3f63d69065bfedcfd3965e25b6dad6c0b9ef04db05e08a485ea817644"
+    },
+    "Assets/SnakeWarzIO/Materials/GameoverPanel.mat": {
+      "before": "8696eb63aaa8e14bd167dd034e53aef88878461124a847964f2c9ebea280a877",
+      "after": "b1e07c7fe50dc697ee46a71e95b78c242e05e46b99bcf048acb5634e4ce720f6"
+    },
+    "Assets/SnakeWarzIO/Materials/SolidColor-Cyan.mat": {
+      "before": "3b3f7449280ef5d44d873c5e3bd67082b548532ac93315d9778535c874244c6a",
+      "after": "144b8e4918695177e2bf76c9c9dbc863702235bf2bfed4f7bb4039d6a8157f2e"
+    },
+    "Assets/SnakeWarzIO/Materials/SolidColor-White.mat": {
+      "before": "3492749a697396c6649b3c68a22d6eb64f948027300f734c7aa299a0a54b0acb",
+      "after": "84c304b081924a799790461a3638283a3a4d851dc768ece7e47b79a28f99d183"
+    },
+    "Assets/SnakeWarzIO/ParticleGfx/Prefab/BigHitEffect-01.prefab": {
+      "before": "13018c222d70b679e4cfba88608f748831967f20d065e307203279aa4bd3b3d6",
+      "after": "5b4422ac47028a144e0147b64d1905c4621b74b3bb7ce90824ee117c28b30f28"
+    },
+    "Assets/SnakeWarzIO/ParticleGfx/Prefab/BigHitEffect-02.prefab": {
+      "before": "7d2b10767c1a8e42f2e4823077fc1c3e23706f287b5829b83b5c9a0b6433db24",
+      "after": "0d80d20c1bf5d89f61b2dd5c407965a813f716484df8a5c650bea5b71e158836"
+    },
+    "Assets/SnakeWarzIO/_Scenes/Game.unity": {
+      "before": "f933a868e529f1184949328dd7295680e5d0dfb538483ba4b4ff7f874552ac3e",
+      "after": "b9e18de34c8fae76e9cdaeda959d4d30464610fa2e564a057a2d4fe1b384e986"
+    },
+    "Assets/DragonArena/Editor/PreviewBuild.cs": {
+      "before": "74c22b65a7edae1371cf60f0ce5ba8d2b86d584a553d68960c223574f2796e92",
+      "after": "d997f3e909e8c7268fcec94c740fd24a1abd907cc9d3cfb7f7b73062114a10a8"
+    },
+    "Assets/Plugins/Android/MigrationActivity.java": {
+      "before": "6fe5b327925a649b2d5221e857b7bdf0dbb7c8bcbce543bdfbbfc300e35e5469",
+      "after": "a01de9285d24e64347bb3d95f9304f9399a0c553fa38c415888c6e77a644b452"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "legacy_main_sha": "b6d130742a87c11840e77510f2744eeaf4672da8",
+  "reviewed_pr_sha": "86594614189ccdb71ad7d922c0d3cc26b1759a5f",
+  "private_p09_sha256": "5b67e6ad7149e4ef8d22c38972f194398d426630f718342fea180f41668afa8e",
+  "manifests": {
+    "P02_OVERLAY_MANIFEST.json": "e947505e3b15a51d967fde6c32c03fbf048629c9",
+    "P03_OVERLAY_MANIFEST.json": "48f126f929f7ed4251f3d4bbef45e84fe31b9ecd",
+    "P04_OVERLAY_MANIFEST.json": "54c80db6dbc2bbaac0f6fba1b7591668249875db",
+    "P05_OVERLAY_MANIFEST.json": "1b60b3d4109ca668ed58d34fd30a197df9343a9c",
+    "P06_OVERLAY_MANIFEST.json": "39a568a37bbaf27112520ff25b99b1a9d6732122",
+    "P07_OVERLAY_MANIFEST.json": "c741e26a356bcda90bddb75bd27b68da5f8c7399",
+    "P08_OVERLAY_MANIFEST.json": "b94843a31eb07d99a1792c6d64084cc1f3835de7",
+    "P09_OVERLAY_MANIFEST.json": "3a43572394347e8e4c57a4f7c18db23c7537ef96"
+  },
+  "overlay_records": 90,
+  "unique_targets": 58,
+  "p09_acceptance": {
+    "total": 57,
+    "pass": 7,
+    "blocked": 7,
+    "not_run": 43
+  }
+}

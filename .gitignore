@@ -11,3 +11,8 @@ android/app/src/main/assets/www/
 *.keystore
 .env
 .env.*
+
+# Generated private Unity project and import evidence
+/UnityProject/
+/private-import-report.json
+*.unitypackage

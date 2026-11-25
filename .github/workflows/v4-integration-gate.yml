@@ -1,0 +1,34 @@
+name: V4 integration and release hold
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [feat/dragon-arena-v4-unity-rebuild]
+permissions:
+  contents: read
+jobs:
+  public-integration:
+    if: github.event_name == 'push' || github.head_ref == 'feat/dragon-arena-v4-unity-rebuild'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m unittest discover -s unity-integration -p 'test_v4_integration.py' -v
+      - run: python unity-integration/check_v4_integration.py
+  native-release-hold:
+    needs: public-integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python unity-integration/check_v4_integration.py --require-release

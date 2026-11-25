@@ -1,0 +1,4 @@
+# P03 acceptance — runtime NOT RUN
+Apply P03Overlay from the private P03 archive to the exact P02 project using apply_verified_overlay.py and P03_OVERLAY_MANIFEST.json; verify the cumulative workspace locally with verify_p03.py. Original Game scene/prefabs/art preserved.
+
+Runtime gates: Quick Play 25 bots/600 food/120 seconds; Infinity elapsed timer, replenishment and respawn; Boss Hunt 100 initial body parts, zero food, elimination growth and timer; Ghetto 300 food without replenishment; Royale 80 bots/500 food/no respawns, rank and victory only after initialization. Validate initial spawn timeout recovery, single food claim, collision/death idempotence, touch/mouse/keyboard, boost focus loss, camera/minimap, leaderboard with fewer than ten snakes, result and rematch/lobby. Profile 25/80 bots and long bodies. Complete 20 matches and device evidence. P01–P03 deferred gates remain release-blocking. Static checks are not Unity build evidence.

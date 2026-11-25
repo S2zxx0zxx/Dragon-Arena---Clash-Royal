@@ -1,0 +1,38 @@
+{
+  "Assets/SnakeWarzIO/Classes/MenuManager.cs": {
+    "before": "eb3f506d1262e1b38ebdf1a66e419665976ab2b2a670adc87dc6fe9fe3e61708",
+    "after": "b0fd79c79e3f4986d3cef4a0966ad3a76872fd749fdaff0936d45d155f4a83ee"
+  },
+  "Assets/SnakeWarzIO/Classes/HelpPanel.cs": {
+    "before": "32ab7f36e5890ffa678cce0d6ee4267b2e7b9d10c2384d3922c5c88003b67ab2",
+    "after": "a2bc8c112e0e4497b4c11a8506f07ccda7a3c5b2bfd8cbe5dfd89ce48e770afa"
+  },
+  "Assets/SnakeWarzIO/Classes/InitManager.cs": {
+    "before": "867ed7d74d82ff6fe05aa41d5f00fc03a8352432434d95527580368e06e56dcc",
+    "after": "5b0a11316471367d7e587d115ab14874534008a3f9023b5653e4dcbcedc1833f"
+  },
+  "Assets/SnakeWarzIO/Classes/ButtonStateController.cs": {
+    "before": "cef17502cd98e603fad4b5523a90d39648d7edf03cbc2929943ce410c8144e9a",
+    "after": "f3390eb0f1b686b7150c066abce49f2253154e6234b200541e4c18de93dc9101"
+  },
+  "ProjectSettings/ProjectSettings.asset": {
+    "before": "8a41bb2c1dc6c313e141806cefd6fa426959b188c96da0637dac812873cca0d9",
+    "after": "96fe846a5d43e3a7c5fb60f5a6533a46163d40d3c6828f469801a4efd9056654"
+  },
+  "Assets/SnakeWarzIO/_Scenes/Menu.unity": {
+    "before": "5da218b1ea1c4fe33d8a9af73bf912817fa0bfe2dfb9506c9b84f38a5fc9fb14",
+    "after": "688e17154de223393607f0bb4a55e722bb3d151d7503c77bdb44ef02d7831603"
+  },
+  "Assets/SnakeWarzIO/_Scenes/Init.unity": {
+    "before": "255d4bbb0f81c57f3559d1f2a45416968605ad874016663ded21cd61fdcffd92",
+    "after": "179fb6274c4f77209504665675e673611891fb862dce78e63e443850ed85ad3f"
+  },
+  "Assets/DragonArena/Branding/DragonArenaLogo.png": {
+    "before": null,
+    "after": "b35892010cc2b426188b6dc5075a1538d7ac26d3d59b7618ec36a1657fcb49b8"
+  },
+  "Assets/DragonArena/Branding/DragonArenaLogo.png.meta": {
+    "before": null,
+    "after": "3be0f788db220a9152697734648ae42c987a0acd73947b77bf289657a803134f"
+  }
+}
