@@ -19,7 +19,11 @@ VERSION = "6000.6.10f1"
 PROJECT = Path(r"C:\DA4\build-002\QA\UnityProject")
 ARTIFACTS = Path(r"C:\DA4\artifacts")
 REL = Path("Assets/DragonArena/Editor/P13Fullscreen.cs")
-META = "fileFormatVersion: 2\nguid: 90a3626424454a439ad75a87c13e01da\n"
+GUID = "90a3626424454a439ad75a87c13e01da"
+META = ("fileFormatVersion: 2\nguid: " + GUID + "\nMonoImporter:\n"
+        "  externalObjects: {}\n  serializedVersion: 2\n  defaultReferences: []\n"
+        "  executionOrder: 0\n  icon: {instanceID: 0}\n  userData: \n"
+        "  assetBundleName: \n  assetBundleVariant: \n")
 CS = r'''// Original Dragon Arena integration. P13-01 only.
 #if UNITY_6000_6_OR_NEWER
 using System;
@@ -84,6 +88,9 @@ namespace DragonArena.EditorTools
 def sha(data):
     return hashlib.sha256(data).hexdigest()
 
+def meta_guid_matches(path):
+    return re.findall(r"^guid: ([0-9a-f]{32})\s*$", path.read_text(encoding="utf-8-sig"), re.M) == [GUID]
+
 def prepare(project, backup):
     project = project.resolve(strict=True)
     version = (project / "ProjectSettings/ProjectVersion.txt").read_text(encoding="utf-8-sig")
@@ -110,7 +117,10 @@ def prepare(project, backup):
     new = {dst: CS.encode("utf-8"), meta: META.encode("utf-8")}
     for p, data in new.items():
         if p.exists() and p.read_bytes() != data:
-            raise ValueError("Conflicting P13 file: " + str(p))
+            if p == meta and meta_guid_matches(p):
+                new[p] = p.read_bytes()
+            else:
+                raise ValueError("Conflicting P13 file: " + str(p))
     backup = backup.resolve()
     if backup.is_relative_to(project):
         raise ValueError("Backup must be outside Unity project")
@@ -145,11 +155,12 @@ def unity_exe(explicit):
         return explicit.resolve(strict=True)
     candidates = [
         Path(r"C:\Unity") / VERSION / "Editor/Unity.exe",
+        Path(r"C:\Unity\Editor") / VERSION / "Editor/Unity.exe",
         Path(r"C:\Unity\Editor\Unity.exe"),
         Path(r"C:\Unity\Unity.exe"),
         Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "Unity/Hub/Editor" / VERSION / "Editor/Unity.exe",
     ]
-    found = [p for p in candidates if p.is_file()]
+    found = sorted({p.resolve() for p in candidates if p.is_file()})
     if len(found) != 1:
         raise ValueError("Unity executable not uniquely found; supply --unity with its exact path")
     return found[0]
@@ -188,7 +199,8 @@ def run(args):
         for rel, entry in records.items():
             entry["after"] = sha((project / rel).read_bytes())
             if entry["expected_after"] is not None and entry["after"] != entry["expected_after"]:
-                raise ValueError("Unexpected P13 source mutation: " + rel)
+                if rel != REL.as_posix() + ".meta" or not meta_guid_matches(project / rel):
+                    raise ValueError("Unexpected P13 source mutation: " + rel)
             if rel != "ProjectSettings/ProjectSettings.asset" and entry["before"] is not None and entry["expected_after"] is None and entry["after"] != entry["before"]:
                 raise ValueError("Unexpected P12 source mutation: " + rel)
         if not args.apply_only:
