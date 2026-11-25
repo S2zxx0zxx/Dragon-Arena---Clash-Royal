@@ -107,6 +107,15 @@ def android_build_change(data):
         legacy_sdk,
         b"#endif",
     ))
+    qa_signer = b"            PlayerSettings.Android.useCustomKeystore = false;"
+    replace((qa_signer,), (
+        b"#if UNITY_6000_0_OR_NEWER",
+        b"            // Keep the QA path on GLES; translated Vulkan crashes before scene load on x86 emulators.",
+        b"            PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android, false);",
+        b"            PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { UnityEngine.Rendering.GraphicsDeviceType.OpenGLES3 });",
+        b"#endif",
+        qa_signer,
+    ))
     return data
 
 
