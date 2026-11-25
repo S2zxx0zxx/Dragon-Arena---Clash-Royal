@@ -39,6 +39,10 @@
     "Assets/DragonArena/Editor/PreviewBuild.cs": {
       "before": "74c22b65a7edae1371cf60f0ce5ba8d2b86d584a553d68960c223574f2796e92",
       "after": "392b885332e63d7436e14b30bf6d97255e873b9ca46e3d09195b811972713860"
+    },
+    "Assets/Plugins/Android/MigrationActivity.java": {
+      "before": "6fe5b327925a649b2d5221e857b7bdf0dbb7c8bcbce543bdfbbfc300e35e5469",
+      "after": "a01de9285d24e64347bb3d95f9304f9399a0c553fa38c415888c6e77a644b452"
     }
   }
 }

@@ -9,6 +9,7 @@ from pathlib import Path
 SCRIPT = Path(__file__).resolve().parent
 ROOT = Path("Assets/SnakeWarzIO")
 ANDROID_BUILD = Path("Assets/DragonArena/Editor/PreviewBuild.cs")
+MIGRATION_ACTIVITY = Path("Assets/Plugins/Android/MigrationActivity.java")
 BACKGROUND = b"12c8895a4e193334c93064441b077296"
 SOLID = b"80b9845f9959e9a4887ea35c0cb4dff7"
 PARTICLE_LIGHT = b"3622f5ddd78508c4f9fd52e7488ebbef"
@@ -109,9 +110,41 @@ def android_build_change(data):
     return data
 
 
+def migration_activity_change(data):
+    newline = b"\r\n" if b"\r\n" in data else b"\n"
+    anchor = b"        setContentView(view);"
+    if data.count(anchor) != 1:
+        raise ValueError("Unexpected migration content view anchor")
+    replacement = newline.join((
+        b"        // Keep the explicit import choice clear of system bars and display cutouts.",
+        b"        view.setOnApplyWindowInsetsListener((v, insets) -> {",
+        b"            int left, top, right, bottom;",
+        b"            if (android.os.Build.VERSION.SDK_INT >= 30) {",
+        b"                android.graphics.Insets bars = insets.getInsets(android.view.WindowInsets.Type.systemBars() | android.view.WindowInsets.Type.displayCutout());",
+        b"                left = bars.left; top = bars.top; right = bars.right; bottom = bars.bottom;",
+        b"            } else {",
+        b"                left = insets.getSystemWindowInsetLeft(); top = insets.getSystemWindowInsetTop();",
+        b"                right = insets.getSystemWindowInsetRight(); bottom = insets.getSystemWindowInsetBottom();",
+        b"                if (android.os.Build.VERSION.SDK_INT >= 28 && insets.getDisplayCutout() != null) {",
+        b"                    android.view.DisplayCutout cutout = insets.getDisplayCutout();",
+        b"                    left = Math.max(left, cutout.getSafeInsetLeft()); top = Math.max(top, cutout.getSafeInsetTop());",
+        b"                    right = Math.max(right, cutout.getSafeInsetRight()); bottom = Math.max(bottom, cutout.getSafeInsetBottom());",
+        b"                }",
+        b"            }",
+        b"            v.setPadding(40 + left, 24 + top, 40 + right, 24 + bottom);",
+        b"            return insets;",
+        b"        });",
+        anchor,
+        b"        view.requestApplyInsets();",
+    ))
+    return data.replace(anchor, replacement, 1)
+
+
 def repair(data, relative):
     if relative == ANDROID_BUILD:
         return android_build_change(data)
+    if relative == MIGRATION_ACTIVITY:
+        return migration_activity_change(data)
     name = relative.name
     if name in {"Background-02.mat", "GameoverPanel.mat"}:
         texture = b"{fileID: 2800000, guid: " + SUPPLIED_BACKGROUND + b", type: 3}"
@@ -129,7 +162,7 @@ def repair(data, relative):
 
 def read_private(project, relative):
     if relative.is_absolute() or ".." in relative.parts or not (
-        relative.is_relative_to(ROOT) or relative == ANDROID_BUILD
+        relative.is_relative_to(ROOT) or relative in (ANDROID_BUILD, MIGRATION_ACTIVITY)
     ):
         raise ValueError(f"Unexpected Unity asset path: {relative}")
     path = (project / relative).resolve(strict=True)
