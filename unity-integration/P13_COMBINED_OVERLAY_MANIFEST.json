@@ -52,7 +52,9 @@
   "Assets/SnakeWarzIO/Classes/BotController.cs": {
     "before": "b4f28cb017bf7f32e913e5055373c6e3261845246d08d1f126550a1d8c1901f1",
     "before_normalized": "b4f28cb017bf7f32e913e5055373c6e3261845246d08d1f126550a1d8c1901f1",
-    "after": "03abc94193d134bc2e85614778e0d53eb26a56f6c860e623d7b21411018e21a5"
+    "after": "a8665fa6ad18fe34261068ccb0eeacef6ec8e95459ac2074a92de6a41a7c3681",
+    "previous_after": "03abc94193d134bc2e85614778e0d53eb26a56f6c860e623d7b21411018e21a5",
+    "previous_after_normalized": "03abc94193d134bc2e85614778e0d53eb26a56f6c860e623d7b21411018e21a5"
   },
   "Assets/SnakeWarzIO/Classes/BotSensorController.cs": {
     "before": "413287ee5d867dd9423cc42072bc3055811b33491801b581e281750d919c9cad",
