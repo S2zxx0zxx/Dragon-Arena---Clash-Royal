@@ -1,10 +1,10 @@
 # V5 R2 execution ledger
 
-Owner-approved planning only. No runtime implementation started. `START V5 MAJOR UPGRADE` authorizes active sequence in this branch, not merging or publishing. Read MAJOR_UPGRADE_SCOPE_LOCK.md first. The expanded private ZIP contains the task-specific mappings and screenshot coordinates; obtain that ZIP and original capture files from the owner before implementation. Each task requires source/commit hash, test evidence and explicit status. No fabricated completion. Stop dependent work at real blockers.
+Owner START received 2026-11-28. Baseline recovery attempted; runtime implementation not started. See [checkpoint 001](EXECUTION_CHECKPOINT_001.md). `START V5 MAJOR UPGRADE` authorizes active sequence in this branch, not merging or publishing. Read MAJOR_UPGRADE_SCOPE_LOCK.md first. The expanded private ZIP contains the task-specific mappings and screenshot coordinates; obtain that ZIP and original capture files from the owner before implementation. Each task requires source/commit hash, test evidence and explicit status. No fabricated completion. Stop dependent work at real blockers.
 
 | Order | ID | Task | Acceptance focus | Status |
 |---:|---|---|---|---|
-| 1 | V5-00 | Recover exact private baseline | Private P13 R4 project, hashes, overlay, own licenses, no protected ref changes | NOT_STARTED |
+| 1 | V5-00 | Recover exact private baseline | Private P13 R4 project, hashes, overlay, own licenses, no protected ref changes | BLOCKED_PRIVATE_R4_AND_EXECUTION_ENVIRONMENT |
 | 2 | V5-01 | Asset and screenshot mapping | 10 captures, five screen families, 55 approximate boxes, own assets only | NOT_STARTED |
 | 3 | V5-26 | Economy foundation | Single transaction authority, stable catalog/IDs, grandfather prior access, atomic persistence | NOT_STARTED |
 | 4 | V5-02 | Splash | Own logo, licensed reveal; no borrowed branding | NOT_STARTED |
