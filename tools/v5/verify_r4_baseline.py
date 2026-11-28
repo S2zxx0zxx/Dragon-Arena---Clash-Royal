@@ -14,7 +14,7 @@ ANCHORS = {
     "Assets/SnakeWarzIO/Classes/BotController.cs": "94b00bf8a5ee01d86d997c7c059b8492a133fbafa7c0e0f6ca9b3472631d3520",
     "Assets/SnakeWarzIO/Classes/BotSensorController.cs": "2341bad41309645e0dc5008fde6cb47b3fbf88fc55159b3209eb9fc2de983d9d",
     "Assets/DragonArena/Runtime/P13SafeArea.cs": "789fc6569dc999496d0b68183aacd523e524ed3ccb27d6b91f1c11852373c02b",
-    "Assets/SnakeWarzIO/Classes/ShopController.cs": "82bac57bf3aad4240b801f9a830400d3c009bac9c57a4e8409519267ae",
+    "Assets/SnakeWarzIO/Classes/ShopController.cs": "82bac57bf3aad4240b80e406801f9a830400d3c009bac9c57a4e8409519267ae",
     "Assets/SnakeWarzIO/_Scenes/Skins.unity": "3c070adcfdf05e79702666a0e712deaf917cfa6c49f5523678174856c61c6ef5",
     "Assets/SnakeWarzIO/Classes/BotSpawner.cs": "a4a23c09b2224dc23a479d9fcf19ca39b5e18c79544ea815ba4016f9ae13018c",
 }
@@ -53,6 +53,8 @@ def version(project):
 
 
 def verify(project, repro, apk):
+    if any(not re.fullmatch(r"[0-9a-f]{64}", h) for h in [*ANCHORS.values(), PREFAB_SHA, APK_SHA]):
+        raise ValueError("Invalid baseline SHA-256 constant")
     if project.resolve() == repro.resolve():
         raise ValueError("Reproduction must be a distinct project, not the same path")
     left, right = tree(project), tree(repro)
