@@ -1,0 +1,109 @@
+{
+  "Assets/SnakeWarzIO/Classes/Joystick.cs": {
+    "before": "bda93e0637ef2f7ed9e079e3c92c446ab507bf8e2ef5c3783a64ebb249a9db00",
+    "before_normalized": "865aa74e558913410aaedb817f0527969493fb69b8564eadba5705788c47f5f3",
+    "after": "8bc4b7bbd7079ac4faa6b066bdfd95d4cbbaea1e58b004ad8e14daf30068fba7"
+  },
+  "Assets/SnakeWarzIO/Classes/IngameJoystick.cs": {
+    "before": "2fdd0fcd0520831c76766399876c8efbb29ca9e1563809150520f13fb9b23f9b",
+    "before_normalized": "8e41774979343c891affbd3da324fa9d5d1e077e3da70c13a7f9b219138db9c4",
+    "after": "92df846caf01dea020a04a3bfe2d31f7ddc991374680390866c22f8986a32895"
+  },
+  "Assets/SnakeWarzIO/Classes/JoystickPositionController.cs": {
+    "before": "ddc642a75132d5c5fe2218afd08a7777953bab2bccb5cc0ae7ee890187f5a5c8",
+    "before_normalized": "caa27f2ebf2403f83892748a4a37b8b1628e441992d2b38d16af3acc9b66e36d",
+    "after": "c2f2d695f6355388a23ef4038427f19bb38ab5cf7363c1bbb71012584944aba7"
+  },
+  "Assets/SnakeWarzIO/Classes/SpeedBoostController.cs": {
+    "before": "5cdee846ecf3a48c36a3b2eeb26b0994ce63c750345f184492e890576cd84b98",
+    "before_normalized": "81c2a96c4adcfaaf3b3a0cc43471baa9d49c61e9bd70f5fbc510956fbc4d8efd",
+    "after": "633d9c463f7e161de3ab2ffdf17860c244f17cc5a71b6fc33548f7861447456e"
+  },
+  "Assets/SnakeWarzIO/Classes/PlayerController.cs": {
+    "before": "95c0b54fdef540c9088680c226c753f66add5b8056cd17e3c5caaef8aacdb81a",
+    "before_normalized": "95c0b54fdef540c9088680c226c753f66add5b8056cd17e3c5caaef8aacdb81a",
+    "after": "9776e8abf281fd72adf64e6317894fad62caace80f543733e37424aaf29cc7f1"
+  },
+  "Assets/DragonArena/Runtime/DurablePrefs.cs": {
+    "before": "a61c71baba2f70686f0e56d6a2cc57da5d183430d03b5098125e599f992cd575",
+    "before_normalized": "a61c71baba2f70686f0e56d6a2cc57da5d183430d03b5098125e599f992cd575",
+    "after": "bbba58f5c1c939e0295434be6c8d98af1db9ab55ffb07065c59c5357a63b6d09"
+  },
+  "Assets/SnakeWarzIO/Classes/SkinManager.cs": {
+    "before": "e95f87830610b05f942b2a508fed1ac1bf69c90d342189ca7f6adacd6ef116bb",
+    "before_normalized": "e95f87830610b05f942b2a508fed1ac1bf69c90d342189ca7f6adacd6ef116bb",
+    "after": "4fc24e67f49ca473c97a4cecff1d0e5bdbe8de75578ab7f69ef958872545f859"
+  },
+  "Assets/SnakeWarzIO/Classes/ShopController.cs": {
+    "before": "504a40c323739f8121863f267ff470c65c11021539bf70ea8a778770308c9f83",
+    "before_normalized": "504a40c323739f8121863f267ff470c65c11021539bf70ea8a778770308c9f83",
+    "after": "15135b15e6115b57d563dc654b60b437009757949a86867a661974f0589e0962"
+  },
+  "Assets/SnakeWarzIO/Classes/ShopItemController.cs": {
+    "before": "cfed9870922b5c8966c09302e572b405ce66f24c1cdcdc206d41b448e073e352",
+    "before_normalized": "cfed9870922b5c8966c09302e572b405ce66f24c1cdcdc206d41b448e073e352",
+    "after": "477a8b60c2e3f483ce2452295bc7549d83a7a7dc42bf81e63742061ee01b975c"
+  },
+  "Assets/SnakeWarzIO/Classes/GameoverPanel.cs": {
+    "before": "ad7156f1c455ec9b48a264e7c02655c1654396f23c17ee5f838fcf463c729565",
+    "before_normalized": "ad7156f1c455ec9b48a264e7c02655c1654396f23c17ee5f838fcf463c729565",
+    "after": "29b8ec16d2d1c290adbd47909e4cc29d8c31ebd30d53b2c2216ccd82e081fde3"
+  },
+  "Assets/SnakeWarzIO/Classes/BotController.cs": {
+    "before": "b4f28cb017bf7f32e913e5055373c6e3261845246d08d1f126550a1d8c1901f1",
+    "before_normalized": "b4f28cb017bf7f32e913e5055373c6e3261845246d08d1f126550a1d8c1901f1",
+    "after": "a8665fa6ad18fe34261068ccb0eeacef6ec8e95459ac2074a92de6a41a7c3681",
+    "previous_after": "03abc94193d134bc2e85614778e0d53eb26a56f6c860e623d7b21411018e21a5",
+    "previous_after_normalized": "03abc94193d134bc2e85614778e0d53eb26a56f6c860e623d7b21411018e21a5"
+  },
+  "Assets/SnakeWarzIO/Classes/BotSensorController.cs": {
+    "before": "413287ee5d867dd9423cc42072bc3055811b33491801b581e281750d919c9cad",
+    "before_normalized": "0091ca889d6c8bcf228191cfc998f18adec67609bb0a672d26d1b620daabb9e0",
+    "after": "28e340fc9f9848dab6ac64882b87b62b7ce524ae584bddb8aa4b89e1bb2a82c3"
+  },
+  "Assets/SnakeWarzIO/Classes/BotSpawner.cs": {
+    "before": "b166215d97d5d1c56e68ebb6b508f0cffc777810fb2835d9abf50743fb8faba1",
+    "before_normalized": "af03eae34726c9a86dd031745dd258d49fbfcd6d99c81c74fec74baea7bda6c1",
+    "after": "5d717a758eb5ef57f81a8d4ce5c9c79efe4fda3975efa2b9abcaed0a89812322"
+  },
+  "Assets/SnakeWarzIO/Classes/GameController.cs": {
+    "before": "84f91517c81e6f5c859a17e7da9c53610ce7a0ad0abf241fd7c02d9561bac048",
+    "before_normalized": "84f91517c81e6f5c859a17e7da9c53610ce7a0ad0abf241fd7c02d9561bac048",
+    "after": "7ffd3b96477adfdb7789f953c88121b0e7862d82694d94cbe8367eca4a14832b"
+  },
+  "Assets/SnakeWarzIO/Classes/FoodSpawner.cs": {
+    "before": "efeb8177a87774eb7093b528cdc2b176fb31140bf71b343fe28102cc21cda723",
+    "before_normalized": "c5fd6f40e980e14d0fe27963d685ae415767a7f7fc8c595931d64a589a78e1aa",
+    "after": "a54c970e9a60568c4698e88e1de9f4f0e3f9effc9f2bfe6504fb2b4d4bf2e88e"
+  },
+  "Assets/SnakeWarzIO/Classes/FoodController.cs": {
+    "before": "1cd7d8002f8eb81e4e86065f719feba424cd2650495f749fab0183d221f78415",
+    "before_normalized": "1cd7d8002f8eb81e4e86065f719feba424cd2650495f749fab0183d221f78415",
+    "after": "0c05d257c6fbc515c3bdf36713eb778d544738567d196d03a76114c175746ec0"
+  },
+  "Assets/SnakeWarzIO/Classes/MenuManager.cs": {
+    "before": "b317b5290c5a566ca7c441c94c5fa1e68e4e96cf7e4748a98f57d6d7abdfe037",
+    "before_normalized": "b317b5290c5a566ca7c441c94c5fa1e68e4e96cf7e4748a98f57d6d7abdfe037",
+    "after": "8ca9d8ac85b3b407680b73717209195efe948b8153ae9b75add7e94287b87cb8"
+  },
+  "Assets/DragonArena/Runtime/P13SafeArea.cs": {
+    "before": null,
+    "before_normalized": null,
+    "after": "ed7f0f6c43c671a9856c4440a35ad709e99579645209c8ed8a8577bfaeff2b6f"
+  },
+  "Assets/DragonArena/Runtime/P13SafeArea.cs.meta": {
+    "before": null,
+    "before_normalized": null,
+    "after": "5829c50554b0b7d542e23a02bc431699f7ce8ef04c2bc12f80a22fad72ac8260"
+  },
+  "Assets/DragonArena/Editor/P13CombinedBuild.cs": {
+    "before": null,
+    "before_normalized": null,
+    "after": "64c206eebceac03919c328e0ad94644dae2bcd6d76f7c7f90d7057827910938a"
+  },
+  "Assets/DragonArena/Editor/P13CombinedBuild.cs.meta": {
+    "before": null,
+    "before_normalized": null,
+    "after": "f78dca09ffdb4f3e080b56247ddde338140cfcb9b197b04709eb6862ca9ab5b0"
+  }
+}

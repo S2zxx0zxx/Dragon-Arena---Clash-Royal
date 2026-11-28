@@ -1,0 +1,23 @@
+name: Play compliance tools
+on:
+  pull_request:
+    paths:
+      - 'tools/play_compliance/**'
+      - '.github/workflows/play-compliance-tools.yml'
+  push:
+    branches:
+      - fix/p13-01-android-fullscreen
+    paths:
+      - 'tools/play_compliance/**'
+      - '.github/workflows/play-compliance-tools.yml'
+permissions:
+  contents: read
+jobs:
+  tools:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s tools/play_compliance -p 'test_*.py' -v

@@ -1,0 +1,12 @@
+# Dragon Arena — Terms of Use (internal draft)
+Not yet effective. Confirm legal developer name, contact, applicable markets, age audience, monetization, asset rights and final app behavior before publication.
+ 
+1. Dragon Arena is an entertainment game. By using it, you agree to these terms and any applicable Google Play terms. If you are a minor, use the game only as permitted by applicable law and with any required parent or guardian permission.
+2. You may use the game for personal entertainment under a limited, non-exclusive license subject to applicable law. The game's original materials and licensed third-party materials remain the property of their respective owners. Do not redistribute game assets or bypass technical protections, except where applicable law permits.
+3. Do not use cheats, exploits, malicious code or unauthorized automation to interfere with game services or other players. Offline play is supported where available. The game is not a real-money investment or cash-out service; game coins and skins are in-game items, subject to confirmation of final mechanics.
+4. Play Games Services may provide platform authentication and game backup. Separate Google terms apply. Local or unsynced progress may be lost if an app is uninstalled or storage is cleared. Cloud restoration depends on successful sync and platform availability. See the Privacy Policy for data choices.
+5. If paid features are included in the final release, describe the actual price, purchase, refund and virtual-item rules here. Applicable Google Play and statutory consumer protections are preserved. Do not add this clause as a claim that paid features exist.
+6. We may update the game for compatibility, safety and maintenance. We will not intentionally misrepresent availability of existing features. Any limits of liability are subject to mandatory consumer law; these terms do not exclude rights that cannot lawfully be excluded.
+7. For questions, support and privacy requests contact [verified developer support address]. Provider: [verified legal/store developer name]. Effective date: [approved date]. Applicable law and dispute process: [review according to developer and distribution markets].
+ 
+Do not publish placeholders. No forced arbitration or blanket waiver added without legal review. Terms of Use is recommended rather than a universal Play requirement; privacy policy and applicable deletion disclosures are separate mandatory items.
