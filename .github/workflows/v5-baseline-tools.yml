@@ -1,0 +1,23 @@
+name: V5 baseline verifier tests
+on:
+  pull_request:
+    paths:
+      - 'tools/v5/**'
+      - '.github/workflows/v5-baseline-tools.yml'
+  push:
+    branches: [feat/dragon-arena-v5-major-upgrade]
+    paths:
+      - 'tools/v5/**'
+      - '.github/workflows/v5-baseline-tools.yml'
+permissions:
+  contents: read
+jobs:
+  synthetic-fixtures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s tools/v5 -p 'test_*.py' -v
