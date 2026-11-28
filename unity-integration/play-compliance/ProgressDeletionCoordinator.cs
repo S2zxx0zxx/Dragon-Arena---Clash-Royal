@@ -8,6 +8,8 @@ namespace DragonArena.ReleaseCompliance
     {
         bool PersistSyncBarrier(string profileContext);
         bool HasSyncBarrier(string profileContext);
+        bool PersistCloudDeletionIntent(string profileContext);
+        bool HasCloudDeletionIntent(string profileContext);
         bool ClearLocalProgressAndPendingWrites(string profileContext);
     }
 
@@ -37,14 +39,15 @@ namespace DragonArena.ReleaseCompliance
         {
             if (!confirmed || String.IsNullOrWhiteSpace(profile) || cloud.Busy ||
                 !String.Equals(profile, cloud.LocalProfileContext, StringComparison.Ordinal) ||
-                !local.PersistSyncBarrier(profile) || !local.HasSyncBarrier(profile))
+                !local.PersistSyncBarrier(profile) || !local.HasSyncBarrier(profile) ||
+                !local.PersistCloudDeletionIntent(profile) || !local.HasCloudDeletionIntent(profile))
             { done(PlayGamesSaveTransport.Result.Failed); return; }
             cloud.RequestSlotDeletion(done);
         }
 
         public void ObserveAndClearLocal(string profile, Action<PlayGamesSaveTransport.Result, bool> done)
         {
-            if (String.IsNullOrWhiteSpace(profile) || !local.HasSyncBarrier(profile) ||
+            if (String.IsNullOrWhiteSpace(profile) || !local.HasSyncBarrier(profile) || !local.HasCloudDeletionIntent(profile) ||
                 !String.Equals(profile, cloud.LocalProfileContext, StringComparison.Ordinal))
             { done(PlayGamesSaveTransport.Result.Failed, false); return; }
             cloud.ObserveDeletion(result =>

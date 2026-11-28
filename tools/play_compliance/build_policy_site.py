@@ -19,12 +19,12 @@ def validate(cfg):
         if not isinstance(v,str) or not v.strip() or BAD.search(v):
             raise ValueError("missing or draft "+k)
     email=cfg["support_email"]
-    if not re.fullmatch(r"[A-Za-z0-9.!#$%&'*+/=?^_\x60{|}~-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}",email):
+    if not re.fullmatch(r"[A-Za-z0-9._+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}",email):
         raise ValueError("invalid support email")
-    if email.lower().split("@")[-1] in {"example.com","example.org","example.net","invalid.test"}:
+    if email.lower().split("@")[-1] in {"example.com","example.org","example.net"} or email.lower().endswith((".invalid",".test",".example",".localhost")):
         raise ValueError("example support address")
     u=urlsplit(cfg["base_url"])
-    if u.scheme!="https" or not u.hostname or u.username or u.password or u.query or u.fragment or u.hostname in {"localhost","example.com","example.org","example.net"}:
+    if u.scheme!="https" or not u.hostname or u.username or u.password or u.query or u.fragment or u.hostname in {"localhost","example.com","example.org","example.net"} or u.hostname.endswith((".invalid",".test",".example",".localhost")):
         raise ValueError("real HTTPS base URL required")
     datetime.date.fromisoformat(cfg["effective_date"])
     pages=cfg.get("pages")
@@ -43,7 +43,7 @@ def render(cfg,key):
     return """<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
-<title>"""+e(PAGES[key])+""" | Dragon Arena</title><link rel="canonical" href=" """ .strip()+e(canonical,quote=True)+"""">
+<title>"""+e(PAGES[key])+' | Dragon Arena</title><link rel="canonical" href="'+e(canonical,quote=True)+"""">
 <style>body{font:16px/1.65 system-ui,sans-serif;color:#222;background:#fff;margin:0}main,nav{max-width:760px;margin:auto;padding:24px}nav{display:flex;flex-wrap:wrap;gap:16px;border-bottom:1px solid #ddd}a{color:#164c83}h1{line-height:1.2}footer{border-top:1px solid #ddd;margin-top:32px;padding-top:20px}</style></head>
 <body><nav aria-label="Legal navigation">"""+links+"""</nav><main><h1>"""+e(PAGES[key])+"""</h1><p>Dragon Arena · """+e(cfg["developer"])+""" · Effective """+e(cfg["effective_date"])+"""</p>"""+body+"""<footer>Contact: <a href="mailto:"""+e(cfg["support_email"],quote=True)+"""">"""+e(cfg["support_email"])+"""</a></footer></main></body></html>"""
 

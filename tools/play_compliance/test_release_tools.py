@@ -8,8 +8,8 @@ from build_policy_site import build, validate
 
 class ReleaseToolsTest(unittest.TestCase):
     def config(self):
-        return {"approved":True,"developer":"Fixture Developer","support_email":"help@fixture-domain.invalid",
-            "base_url":"https://fixture-domain.invalid/legal","effective_date":"2026-11-28",
+        return {"approved":True,"developer":"Fixture Developer","support_email":"help@fixture-domain.dev",
+            "base_url":"https://fixture-domain.dev/legal","effective_date":"2026-11-28",
             "approval_evidence":"fixture-approval",
             "pages":{k:"A synthetic test body for layout checks only. Contact support for the synthetic test procedure. <script>alert(1)</script>"
                      for k in ("privacy","terms","delete-data","support")}}
@@ -28,8 +28,8 @@ class ReleaseToolsTest(unittest.TestCase):
             page=(out/"privacy/index.html").read_text()
             self.assertIn("&lt;script&gt;",page)
             self.assertNotIn("<script>",page)
-            self.assertIn('href="mailto:help@fixture-domain.invalid"',page)
-            self.assertIn('href="https://fixture-domain.invalid/legal/privacy/"',page)
+            self.assertIn('href="mailto:help@fixture-domain.dev"',page)
+            self.assertIn('href="https://fixture-domain.dev/legal/privacy/"',page)
             with self.assertRaises(FileExistsError): build(self.config(),out)
     def test_inventory_exact_coverage(self):
         with tempfile.TemporaryDirectory() as d:
